@@ -1,0 +1,11 @@
+buildApplet/*
+buildSysmodule/*
+*.nro
+*.nacp
+*.elf
+*.nsp
+*.npdm
+*.nso
+.vscode
+*.code-workspace
+*.flag

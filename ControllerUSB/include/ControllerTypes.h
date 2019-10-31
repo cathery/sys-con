@@ -1,0 +1,23 @@
+#pragma once
+
+enum ControllerType
+{
+    CONTROLLER_UNDEFINED,
+    CONTROLLER_XBOX360,
+    CONTROLLER_XBOXONE,
+};
+
+enum VendorIDs
+{
+    VENDOR_MICROSOFT = 0x45e,
+};
+
+enum ProductIDs
+{
+    PRODUCT_XBOX360 = 0x28e,
+    PRODUCT_XBOXONE2013 = 0x2d1,
+    PRODUCT_XBOXONE2015 = 0x2dd,
+    PRODUCT_XBOXONEELITE = 0x2e3,
+    PRODUCT_XBOXONES = 0x2ea,
+    PRODUCT_XBOXADAPTIVE = 0xb0a,
+};
