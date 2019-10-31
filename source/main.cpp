@@ -4,16 +4,13 @@
 
 //ISSUES:
 // when exiting the applet, only one of the controllers is reset
-// in sysmodule, when you go to change the controllers, all the hdl handlers are erased but the code doesn't detect it
 // Rumble is currently missing on all controllers
 // Kosmos Toolbox doesn't allow this sysmodule to be turned on after turning it off, probably due to heap memory not being freed up
 
 //TODO:
-// Figure out and remove unnecessary services initialized on sysmodule init
-// Figure out and shirnk unneessary heap memory/stack size used for the sysmodule
-// Figure out if you can connect controllers paired through a bluetooth adapter
-// Figure out if you can connect controllers through usbDs
-// Comment the functions before public release
+// Shrink unneessary heap memory/stack size used for the sysmodule
+// Allow to connect controllers paired through a bluetooth adapter
+// Allow to connect controllers through usbDs (directly to switch)
 // Make a config application companion to test controller input and edit various preferences (buttons, deadzones)
 
 
