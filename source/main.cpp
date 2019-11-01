@@ -13,8 +13,6 @@
 // Allow to connect controllers through usbDs (directly to switch)
 // Make a config application companion to test controller input and edit various preferences (buttons, deadzones)
 
-
-
 extern "C"
 {
 // Adjust size as needed.
@@ -83,12 +81,12 @@ extern "C"
     }
 }
 
-
 int main(int argc, char *argv[])
 {
     Result rc;
 
 #ifdef __APPLET__
+    appletLockExit();
     consoleInit(nullptr);
 #endif
 
@@ -96,6 +94,8 @@ int main(int argc, char *argv[])
 
 #ifdef __APPLET__
     consoleExit(nullptr);
+    userAppExit();
+    appletUnlockExit();
 #endif
 
     return rc;
