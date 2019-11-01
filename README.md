@@ -32,6 +32,6 @@ If you want to make sure, the file should be located in `sdmc:/atmosphere/titles
 - [ ] **[\[5.0.0-7.0.0\] FW Version Support](https://github.com/cathery/sys-con/issues/2)**
 
 ## Support
-[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](ko-fi.com/cathery)
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
 
 If you wish to see added support for more controllers, consider funding my project on Ko-fi!
