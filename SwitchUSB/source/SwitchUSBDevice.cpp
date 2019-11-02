@@ -1,5 +1,4 @@
 #include "SwitchUSBDevice.h"
-#include "libnxFix.h"
 #include <cstring>  //for memset
 #include "malloc.h" //for memalign
 
@@ -39,13 +38,8 @@ void SwitchUSBDevice::Reset()
     //I'm expecting all interfaces to point to one device decsriptor
     // as such resetting on any of them should do the trick
     //TODO: needs testing
-    for (auto &&interface : m_interfaces)
-    {
-        interface->Reset();
-    }
-
-    //if (m_interfaces.size() != 0)
-    //m_interfaces[0]->Reset();
+    if (m_interfaces.size() != 0)
+        m_interfaces[0]->Reset();
 }
 
 void SwitchUSBDevice::SetInterfaces(UsbHsInterface *interfaces, int length)
