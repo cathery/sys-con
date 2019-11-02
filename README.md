@@ -29,7 +29,7 @@ If you want to make sure, the file should be located in `sdmc:/atmosphere/titles
 - [ ] **[Dualshock 3 Support](https://github.com/cathery/sys-con/issues/3)**
 - [ ] **[Dualshock 4 Support](https://github.com/cathery/sys-con/issues/4)**
 - [ ] **Config application**
-- [x] **~~[\[5.0.0-7.0.0\] FW Version Support](https://github.com/cathery/sys-con/issues/2)~~**
+- [x] **~~\[5.0.0-7.0.0\] FW Version Support~~**
 
 ## Support
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
