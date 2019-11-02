@@ -8,6 +8,7 @@
 class SwitchVirtualGamepadHandler
 {
 protected:
+    u32 m_vibrationDeviceHandle;
     SwitchControllerHandler m_controllerHandler;
 
     bool m_keepInputThreadRunning;
@@ -49,4 +50,5 @@ public:
     //Get the raw controller handler pointer
     inline SwitchControllerHandler *GetControllerHandler() { return &m_controllerHandler; }
     inline IController *GetController() { return m_controllerHandler.GetController(); }
+    inline u32 *GetVibrationHandle() { return &m_vibrationDeviceHandle; }
 };

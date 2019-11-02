@@ -1,6 +1,7 @@
 #include "SwitchAbstractedPadHandler.h"
 #include <cmath>
 #include <array>
+#include "../../source/log.h"
 
 SwitchAbstractedPadHandler::SwitchAbstractedPadHandler(std::unique_ptr<IController> &&controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
@@ -18,9 +19,36 @@ Result SwitchAbstractedPadHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
+    hidScanInput();
+    HidControllerID lastOfflineID;
+    for (int i = 0; i != 8; ++i)
+    {
+        if (!hidIsControllerConnected(static_cast<HidControllerID>(i)))
+        {
+            lastOfflineID = static_cast<HidControllerID>(i);
+            break;
+        }
+    }
+    WriteToLog("Found last offline ID: ", lastOfflineID);
+
     rc = InitAbstractedPadState();
     if (R_FAILED(rc))
         return rc;
+
+    svcSleepThread(1e+7L);
+    hidScanInput();
+
+    WriteToLog("Is last offline id connected? ", hidIsControllerConnected(lastOfflineID));
+    WriteToLog("Last offline id type: ", hidGetControllerType(lastOfflineID));
+
+    Result rc2 = hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, lastOfflineID, hidGetControllerType(lastOfflineID));
+    if (R_SUCCEEDED(rc2))
+    {
+        WriteToLog("Initializing vibration device with handle ", m_vibrationDeviceHandle);
+        InitOutputThread();
+    }
+    else
+        WriteToLog("Failed to iniitalize vibration with error ", rc2);
 
     InitInputThread();
     return rc;
@@ -31,7 +59,7 @@ void SwitchAbstractedPadHandler::Exit()
     ExitAbstractedPadState();
     m_controllerHandler.Exit();
     ExitInputThread();
-    //ExitRumbleThread();
+    ExitOutputThread();
 }
 
 //Used to give out unique ids to abstracted pads
@@ -129,5 +157,13 @@ void SwitchAbstractedPadHandler::UpdateInput()
 
 void SwitchAbstractedPadHandler::UpdateOutput()
 {
+    Result rc;
+    HidVibrationValue value;
+    rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
+    if (R_FAILED(rc))
+        return;
+
+    rc = GetController()->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
+
     svcSleepThread(1e+7L);
 }

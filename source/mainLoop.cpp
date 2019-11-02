@@ -20,6 +20,8 @@ Result mainLoop()
     s32 total_entries;
     std::vector<uint16_t> vendors = GetVendors();
     bool useAbstractedPad = hosversionBetween(5, 7);
+    hidPermitVibration(false);
+    hidPermitVibration(true);
     VendorEvent events[vendors.size()];
     std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
@@ -50,6 +52,45 @@ Result mainLoop()
 #ifdef __APPLET__
         hidScanInput();
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+
+        if (kDown & KEY_Y)
+        {
+            for (int i = 0; i != 8; ++i)
+            {
+                bool isConnected = hidIsControllerConnected(static_cast<HidControllerID>(i));
+                WriteToLog("Is controller ", i, " connected: ", isConnected);
+                if (isConnected)
+                {
+                    HidControllerType type = hidGetControllerType(static_cast<HidControllerID>(i));
+                    WriteToLog("Controller ", i, " type: ", type);
+                }
+            }
+        }
+
+        if (kDown & KEY_X)
+        {
+            WriteToLog("Sending rumble to all controllers\n");
+            for (auto &&con : controllerInterfaces)
+            {
+                u32 *vibrationHandle = con->GetVibrationHandle();
+                bool flag;
+                Result rc = hidIsVibrationDeviceMounted(vibrationHandle, &flag);
+                if (R_SUCCEEDED(rc))
+                {
+                    WriteToLog("Is vibration device mounted: ", flag);
+                    HidVibrationValue value;
+                    value.amp_high = 0.5f;
+                    value.amp_low = 0.5f;
+                    value.freq_high = 320.0f;
+                    value.freq_low = 160.0f;
+                    rc = hidSendVibrationValue(vibrationHandle, &value);
+                    WriteToLog("SendVirationValue result: ", rc);
+                }
+                else
+                    WriteToLog("failed to check for vibration device");
+            }
+        }
+
         if (kDown & KEY_B)
             break;
 #endif

@@ -10,7 +10,6 @@
 class SwitchHDLHandler : public SwitchVirtualGamepadHandler
 {
 private:
-    u32 m_vibrationDeviceHandle;
     u64 m_hdlHandle;
     HiddbgHdlsDeviceInfo m_deviceInfo;
     HiddbgHdlsState m_hdlState;
@@ -37,6 +36,4 @@ public:
     void FillHdlState(const NormalizedButtonData &data);
     //Passes the HDL state to HID so that it could register the inputs
     Result UpdateHdlState();
-
-    inline u32 *GetVibrationHandle() { return &m_vibrationDeviceHandle; }
 };

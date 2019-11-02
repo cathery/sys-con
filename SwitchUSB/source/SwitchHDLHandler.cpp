@@ -1,5 +1,6 @@
 #include "SwitchHDLHandler.h"
 #include <cmath>
+#include "../../source/log.h"
 
 SwitchHDLHandler::SwitchHDLHandler(std::unique_ptr<IController> &&controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
@@ -17,16 +18,39 @@ Result SwitchHDLHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
+    hidScanInput();
+    HidControllerID lastOfflineID;
+    for (int i = 0; i != 8; ++i)
+    {
+        if (!hidIsControllerConnected(static_cast<HidControllerID>(i)))
+        {
+            lastOfflineID = static_cast<HidControllerID>(i);
+            break;
+        }
+    }
+    WriteToLog("Found last offline ID: ", lastOfflineID);
+
     rc = InitHdlState();
     if (R_FAILED(rc))
         return rc;
 
-    if (R_SUCCEEDED(hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, CONTROLLER_PLAYER_2, static_cast<HidControllerType>(TYPE_PROCONTROLLER | TYPE_SYSTEM_EXT))))
+    svcSleepThread(1e+7L);
+    hidScanInput();
+
+    WriteToLog("Is last offline id connected? ", hidIsControllerConnected(lastOfflineID));
+    WriteToLog("Last offline id type: ", hidGetControllerType(lastOfflineID));
+
+    Result rc2 = hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, lastOfflineID, hidGetControllerType(lastOfflineID));
+    if (R_SUCCEEDED(rc2))
     {
+        WriteToLog("Initializing vibration device with handle ", m_vibrationDeviceHandle);
         InitOutputThread();
     }
+    else
+        WriteToLog("Failed to iniitalize vibration with error ", rc2);
 
     InitInputThread();
+
     return rc;
 }
 
@@ -45,7 +69,7 @@ Result SwitchHDLHandler::InitHdlState()
     m_hdlState = {0};
 
     // Set the controller type to Pro-Controller, and set the npadInterfaceType.
-    m_deviceInfo.deviceType = HidDeviceType_FullKey3;
+    m_deviceInfo.deviceType = HidDeviceType_FullKey15;
     m_deviceInfo.npadInterfaceType = NpadInterfaceType_USB;
     // Set the controller colors. The grip colors are for Pro-Controller on [9.0.0+].
     m_deviceInfo.singleColorBody = RGBA8_MAXALPHA(107, 107, 107);
