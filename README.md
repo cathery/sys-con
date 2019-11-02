@@ -3,7 +3,7 @@
 # sys-con
 
 #### A Nintedo Switch sysmodule for third-party controller support. No man-in-the-middle required! 
-###### \[Switch FW 7.0.0+\]
+###### \[Switch FW 5.0.0+\]
 
 
 ## Description
