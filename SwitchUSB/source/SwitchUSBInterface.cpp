@@ -33,12 +33,12 @@ Result SwitchUSBInterface::Open()
         //we're adjusting appropriately
         for (int i = 0; i != 15; ++i)
         {
-            m_inEndpoints.push_back(std::make_unique<SwitchUSBEndpoint>(m_session, m_session.inf.inf.output_endpoint_descs[i]));
+            m_inEndpoints.push_back(std::make_unique<SwitchUSBEndpoint>(m_session, m_session.inf.inf.input_endpoint_descs[i]));
         }
 
         for (int i = 0; i != 15; ++i)
         {
-            m_outEndpoints.push_back(std::make_unique<SwitchUSBEndpoint>(m_session, m_session.inf.inf.input_endpoint_descs[i]));
+            m_outEndpoints.push_back(std::make_unique<SwitchUSBEndpoint>(m_session, m_session.inf.inf.output_endpoint_descs[i]));
         }
     }
     return rc;

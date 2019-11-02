@@ -48,19 +48,19 @@ extern "C"
         Result rc = 0;
         rc = hiddbgInitialize();
         if (R_FAILED(rc))
-            fatalSimple(rc);
+            fatalThrow(rc);
 
         rc = hiddbgAttachHdlsWorkBuffer();
         if (R_FAILED(rc))
-            fatalSimple(rc);
+            fatalThrow(rc);
 
         rc = usbHsInitialize();
         if (R_FAILED(rc))
-            fatalSimple(rc);
+            fatalThrow(rc);
 
         rc = usbCommsInitialize();
         if (R_FAILED(rc))
-            fatalSimple(rc);
+            fatalThrow(rc);
     }
 
     void __attribute__((weak)) userAppExit(void)

@@ -105,7 +105,6 @@ Status XboxOneController::GetInput()
             if (S_FAILED(rc))
                 return rc;
         }
-        //TODO: add ack check and send ack report!
     }
 
     return rc;
