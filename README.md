@@ -19,17 +19,17 @@ Grab the latest zip from the [releases page](https://github.com/cathery/sys-con/
 If you want to make sure, the file should be located in `sdmc:/atmosphere/titles/690000000000000D/exefs.nsp`
 
 ## Progress roadmap
-- [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
-- [ ] **Undocked USB Support**
 - [x] **~~Docked USB Support~~**
-- [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
-
+- [x] **~~\[5.0.0-7.0.0\] FW Version Support~~**
 - [x] **~~Xbox 360 Controller Support~~**
 - [x] **~~Xbox One X/S Controller Support~~**
+- [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
+- [ ] **Undocked USB Support**
+- [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
 - [ ] **[Dualshock 3 Support](https://github.com/cathery/sys-con/issues/3)**
 - [ ] **[Dualshock 4 Support](https://github.com/cathery/sys-con/issues/4)**
 - [ ] **Config application**
-- [x] **~~\[5.0.0-7.0.0\] FW Version Support~~**
+
 
 ## Support
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
