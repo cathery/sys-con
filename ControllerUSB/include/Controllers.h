@@ -3,10 +3,12 @@
 //Catch-all header to include all the controllers
 #include "Controllers/Xbox360Controller.h"
 #include "Controllers/XboxOneController.h"
+#include "Controllers/Dualshock3Controller.h"
+#include "Controllers/Dualshock4Controller.h"
 
 std::vector<uint16_t> GetVendors()
 {
-    return {VENDOR_MICROSOFT};
+    return {VENDOR_MICROSOFT, VENDOR_SONY};
 }
 
 std::vector<uint16_t> GetVendorProducts(uint16_t vendor_id)
@@ -20,6 +22,9 @@ std::vector<uint16_t> GetVendorProducts(uint16_t vendor_id)
                 PRODUCT_XBOXONEELITE,
                 PRODUCT_XBOXONES,
                 PRODUCT_XBOXADAPTIVE};
+    case VENDOR_SONY:
+        return {PRODUCT_DUALSHOCK3,
+                PRODUCT_DUALSHOCK4};
     }
     return {};
 }
@@ -34,6 +39,10 @@ std::unique_ptr<IController> ConstructControllerFromType(ControllerType type, st
         return std::make_unique<Xbox360Controller>(std::move(device));
     case CONTROLLER_XBOXONE:
         return std::make_unique<XboxOneController>(std::move(device));
+    case CONTROLLER_DUALSHOCK3:
+        return std::make_unique<Dualshock3Controller>(std::move(device));
+    case CONTROLLER_DUALSHOCK4:
+        return std::make_unique<Dualshock4Controller>(std::move(device));
     default:
         break;
     }
@@ -55,6 +64,15 @@ ControllerType GetControllerTypeFromIds(uint16_t vendor_id, uint16_t product_id)
         case PRODUCT_XBOXONES:
         case PRODUCT_XBOXADAPTIVE:
             return CONTROLLER_XBOXONE;
+        }
+        break;
+    case VENDOR_SONY:
+        switch (product_id)
+        {
+        case PRODUCT_DUALSHOCK3:
+            return CONTROLLER_DUALSHOCK3;
+        case PRODUCT_DUALSHOCK4:
+            return CONTROLLER_DUALSHOCK4;
         }
         break;
     default:

@@ -20,27 +20,28 @@ Result mainLoop()
     s32 total_entries;
     std::vector<uint16_t> vendors = GetVendors();
     bool useAbstractedPad = hosversionBetween(5, 7);
-    hidPermitVibration(false);
-    hidPermitVibration(true);
+    //hidPermitVibration(false);
+    //hidPermitVibration(true);
     VendorEvent events[vendors.size()];
     std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
     WriteToLog("\n\nNew sysmodule session started");
 
-    UsbHsInterfaceFilter filter;
-    filter.Flags = UsbHsInterfaceFilterFlags_idVendor;
     {
         int i = 0;
         for (auto &&vendor : vendors)
         {
+            UsbHsInterfaceFilter filter;
+            filter.Flags = UsbHsInterfaceFilterFlags_idVendor;
             filter.idVendor = vendor;
-            auto &&event = events[i++] = {vendor, Event()};
+            auto &&event = events[i] = {vendor, Event()};
 
-            rc = usbHsCreateInterfaceAvailableEvent(&event.event, true, 0, &filter);
+            rc = usbHsCreateInterfaceAvailableEvent(&event.event, true, i, &filter);
             if (R_FAILED(rc))
                 WriteToLog("Failed to open event ", event.vendor);
             else
                 WriteToLog("Successfully created event ", event.vendor);
+            ++i;
         }
     }
 
@@ -81,10 +82,16 @@ Result mainLoop()
                     HidVibrationValue value;
                     value.amp_high = 0.5f;
                     value.amp_low = 0.5f;
-                    value.freq_high = 320.0f;
-                    value.freq_low = 160.0f;
+                    value.freq_high = 0.0f;
+                    value.freq_low = 0.0f;
                     rc = hidSendVibrationValue(vibrationHandle, &value);
                     WriteToLog("SendVirationValue result: ", rc);
+                    rc = hidGetActualVibrationValue(vibrationHandle, &value);
+                    WriteToLog("hidGetActualVibrationValue result: ", rc);
+                    if (R_SUCCEEDED(rc))
+                    {
+                        WriteToLog("Amp high: ", value.amp_high, " Amp low: ", value.amp_low, " Freq high: ", value.freq_high, " Freq low: ", value.freq_low);
+                    }
                 }
                 else
                     WriteToLog("failed to check for vibration device");

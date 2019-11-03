@@ -19,7 +19,7 @@ Result SwitchHDLHandler::Initialize()
         return rc;
 
     hidScanInput();
-    HidControllerID lastOfflineID;
+    HidControllerID lastOfflineID = CONTROLLER_PLAYER_1;
     for (int i = 0; i != 8; ++i)
     {
         if (!hidIsControllerConnected(static_cast<HidControllerID>(i)))
@@ -28,7 +28,7 @@ Result SwitchHDLHandler::Initialize()
             break;
         }
     }
-    WriteToLog("Found last offline ID: ", lastOfflineID);
+    //WriteToLog("Found last offline ID: ", lastOfflineID);
 
     rc = InitHdlState();
     if (R_FAILED(rc))
@@ -37,13 +37,33 @@ Result SwitchHDLHandler::Initialize()
     svcSleepThread(1e+7L);
     hidScanInput();
 
-    WriteToLog("Is last offline id connected? ", hidIsControllerConnected(lastOfflineID));
-    WriteToLog("Last offline id type: ", hidGetControllerType(lastOfflineID));
+    //WriteToLog("Is last offline id connected? ", hidIsControllerConnected(lastOfflineID));
+    //WriteToLog("Last offline id type: ", hidGetControllerType(lastOfflineID));
 
     Result rc2 = hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, lastOfflineID, hidGetControllerType(lastOfflineID));
     if (R_SUCCEEDED(rc2))
     {
+        /*
+        m_vibrationDeviceHandle = 3 | (lastOfflineID & 0xff) << 8;
+
         WriteToLog("Initializing vibration device with handle ", m_vibrationDeviceHandle);
+        Service IActiveVibrationDeviceList;
+        WriteToLog("Got vibration device list object_id ", IActiveVibrationDeviceList.object_id);
+        if (R_SUCCEEDED(serviceDispatch(hidGetServiceSession(), 203, .out_num_objects = 1, .out_objects = &IActiveVibrationDeviceList)))
+        {
+            WriteToLog("Got vibration device list object_id ", IActiveVibrationDeviceList.object_id);
+
+            Result rc69 = serviceDispatchIn(&IActiveVibrationDeviceList, 0, m_vibrationDeviceHandle);
+            serviceClose(&IActiveVibrationDeviceList);
+            if (R_SUCCEEDED(rc69))
+            {
+                WriteToLog("Activated vibration handle");
+                InitOutputThread();
+            }
+            else
+                WriteToLog("Failed to activate handle, result: ", rc69);
+        }
+        */
         InitOutputThread();
     }
     else
