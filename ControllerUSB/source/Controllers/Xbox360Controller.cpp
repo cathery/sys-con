@@ -46,7 +46,7 @@ Status Xbox360Controller::OpenInterfaces()
         if (!m_inPipe)
         {
             IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 0);
-            if (inEndpoint->GetDescriptor()->bLength != 0)
+            if (inEndpoint)
             {
                 rc = inEndpoint->Open();
                 if (S_FAILED(rc))
@@ -59,7 +59,7 @@ Status Xbox360Controller::OpenInterfaces()
         if (!m_outPipe)
         {
             IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, 0);
-            if (outEndpoint->GetDescriptor()->bLength != 0)
+            if (outEndpoint)
             {
                 rc = outEndpoint->Open();
                 if (S_FAILED(rc))
@@ -191,8 +191,8 @@ NormalizedButtonData Xbox360Controller::GetNormalizedButtonData()
     return normalData;
 }
 
-Status Xbox360Controller::SetRumble(uint8_t strong_magnitude,uint8_t weak_magnitude)
+Status Xbox360Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
-    uint8_t rumbleData[]{0x00,sizeof(Xbox360RumbleData), 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00};
+    uint8_t rumbleData[]{0x00, sizeof(Xbox360RumbleData), 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00};
     return m_outPipe->Write(rumbleData, sizeof(rumbleData));
 }

@@ -7,10 +7,12 @@ SwitchUSBEndpoint::SwitchUSBEndpoint(UsbHsClientIfSession &if_session, usb_endpo
     : m_ifSession(if_session),
       m_descriptor(desc)
 {
+    m_buffer = memalign(0x1000, 0x100);
 }
 
 SwitchUSBEndpoint::~SwitchUSBEndpoint()
 {
+    free(m_buffer);
     Close();
 }
 
@@ -30,47 +32,38 @@ void SwitchUSBEndpoint::Close()
 Result SwitchUSBEndpoint::Write(void *inBuffer, size_t bufferSize)
 {
     Result rc = -1;
-    void *tmpbuf = memalign(0x1000, bufferSize);
-    if (tmpbuf != nullptr)
+    if (m_buffer != nullptr)
     {
         u32 transferredSize = 0;
-        memset(tmpbuf, 0, bufferSize);
+        memset(m_buffer, 0, bufferSize);
 
         for (size_t byte = 0; byte != bufferSize; ++byte)
         {
-            static_cast<uint8_t *>(tmpbuf)[byte] = static_cast<uint8_t *>(inBuffer)[byte];
+            static_cast<uint8_t *>(m_buffer)[byte] = static_cast<uint8_t *>(inBuffer)[byte];
         }
 
-        rc = usbHsEpPostBuffer(&m_epSession, tmpbuf, bufferSize, &transferredSize);
-        if (rc == 0xcc8c)
-            rc = 0;
-
-        free(tmpbuf);
+        rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
     }
     return rc;
 }
 
 Result SwitchUSBEndpoint::Read(void *outBuffer, size_t bufferSize)
 {
-    void *tmpbuf = memalign(0x1000, bufferSize);
-    if (tmpbuf == nullptr)
+    if (m_buffer == nullptr)
         return -1;
 
     u32 transferredSize;
-    Result rc = usbHsEpPostBuffer(&m_epSession, tmpbuf, bufferSize, &transferredSize);
+    memset(m_buffer, 0, bufferSize);
 
-    if (rc == 0xcc8c)
-        rc = 0;
+    Result rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
 
     if (R_SUCCEEDED(rc))
     {
-        for (size_t byte = 0; byte != bufferSize; ++byte)
+        for (u32 byte = 0; byte != transferredSize; ++byte)
         {
-            static_cast<uint8_t *>(outBuffer)[byte] = static_cast<uint8_t *>(tmpbuf)[byte];
+            static_cast<uint8_t *>(outBuffer)[byte] = static_cast<uint8_t *>(m_buffer)[byte];
         }
     }
-
-    free(tmpbuf);
     return rc;
 }
 

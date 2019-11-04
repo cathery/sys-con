@@ -15,7 +15,7 @@ struct VendorEvent
 
 Result mainLoop()
 {
-    Result rc;
+    Result rc = 0;
     UsbHsInterface interfaces[16];
     s32 total_entries;
     std::vector<uint16_t> vendors = GetVendors();
@@ -120,7 +120,8 @@ Result mainLoop()
                     }
 
                     UsbHsInterfaceFilter tempFilter;
-                    tempFilter.Flags = UsbHsInterfaceFilterFlags_idProduct;
+                    tempFilter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
+                    tempFilter.idVendor = event.vendor;
                     tempFilter.idProduct = product;
                     rc = usbHsQueryAvailableInterfaces(&tempFilter, interfaces, sizeof(interfaces), &total_entries);
 

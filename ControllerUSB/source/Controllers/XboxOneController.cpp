@@ -47,7 +47,7 @@ Status XboxOneController::OpenInterfaces()
         if (interface->GetDescriptor()->bNumEndpoints >= 2)
         {
             IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 1);
-            if (inEndpoint->GetDescriptor()->bLength != 0)
+            if (inEndpoint)
             {
                 rc = inEndpoint->Open();
                 if (S_FAILED(rc))
@@ -57,7 +57,7 @@ Status XboxOneController::OpenInterfaces()
             }
 
             IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, 1);
-            if (outEndpoint->GetDescriptor()->bLength != 0)
+            if (outEndpoint)
             {
                 rc = outEndpoint->Open();
                 if (S_FAILED(rc))

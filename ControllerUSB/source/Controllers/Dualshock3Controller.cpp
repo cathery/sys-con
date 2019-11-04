@@ -19,9 +19,6 @@ Status Dualshock3Controller::Initialize()
     if (S_FAILED(rc))
         return rc;
 
-    rc = SendInitBytes();
-    if (S_FAILED(rc))
-        return rc;
     return rc;
 }
 void Dualshock3Controller::Exit()
@@ -36,52 +33,54 @@ Status Dualshock3Controller::OpenInterfaces()
     if (S_FAILED(rc))
         return rc;
 
-    //This will open each interface and try to acquire Xbox One controller's in and out endpoints, if it hasn't already
+    //Open each interface, send it a setup packet and get the endpoints if it succeeds
     std::vector<std::unique_ptr<IUSBInterface>> &interfaces = m_device->GetInterfaces();
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
         if (S_FAILED(rc))
             return rc;
-        //TODO: check for numEndpoints before trying to open them!
         if (interface->GetDescriptor()->bNumEndpoints >= 2)
         {
-            IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 1);
-            if (inEndpoint->GetDescriptor()->bLength != 0)
+            uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
+            rc = interface->ControlTransfer(0x21, 0x09, 0x03F4, 0, 0x04, initBytes);
+            if (S_FAILED(rc))
+                return 60;
+
+            IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 0);
+            if (inEndpoint)
             {
                 rc = inEndpoint->Open();
                 if (S_FAILED(rc))
-                    return 5555;
+                    return 61;
 
                 m_inPipe = inEndpoint;
             }
 
             IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, 1);
-            if (outEndpoint->GetDescriptor()->bLength != 0)
+            if (outEndpoint)
             {
                 rc = outEndpoint->Open();
                 if (S_FAILED(rc))
-                    return 6666;
+                    return 62;
 
                 m_outPipe = outEndpoint;
             }
+
+            if (!m_inPipe || !m_outPipe)
+                return 69;
         }
     }
-
-    if (!m_inPipe || !m_outPipe)
-        return 69;
-
     return rc;
 }
 void Dualshock3Controller::CloseInterfaces()
 {
-    m_device->Reset();
+    //m_device->Reset();
     m_device->Close();
 }
 
 Status Dualshock3Controller::GetInput()
 {
-    return 9;
     /*
     uint8_t input_bytes[64];
 
@@ -89,55 +88,11 @@ Status Dualshock3Controller::GetInput()
     if (S_FAILED(rc))
         return rc;
 
-    uint8_t type = input_bytes[0];
+    m_buttonData = *reinterpret_cast<Dualshock3ButtonData *>(input_bytes);
 
-    if (type == XBONEINPUT_BUTTON) //Button data
-    {
-        m_buttonData = *reinterpret_cast<Dualshock3ButtonData *>(input_bytes);
-    }
-    else if (type == XBONEINPUT_GUIDEBUTTON) //Guide button status
-    {
-        m_buttonData.sync = input_bytes[4];
-
-        //Xbox one S needs to be sent an ack report for guide buttons
-        //TODO: needs testing
-        if (input_bytes[1] == 0x30)
-        {
-            rc = WriteAckGuideReport(input_bytes[2]);
-            if (S_FAILED(rc))
-                return rc;
-        }
-        //TODO: add ack check and send ack report!
-    }
-    
     return rc;
     */
-}
-
-Status Dualshock3Controller::SendInitBytes()
-{
-    /*
-    UCHAR hidCommandEnable[DS3_HID_COMMAND_ENABLE_SIZE] =
-    {
-        0x42, 0x0C, 0x00, 0x00
-    };
-
-        Context,
-        BmRequestHostToDevice,
-        BmRequestClass,
-        SetReport,
-        Ds3FeatureStartDevice,
-        0,
-        hidCommandEnable,
-        DS3_HID_COMMAND_ENABLE_SIZE
-
-    */
-    uint8_t init_bytes[]{
-        0x05,
-        0x20, 0x00, 0x01, 0x00};
-
-    Status rc = m_outPipe->Write(init_bytes, sizeof(init_bytes));
-    return rc;
+    return 9;
 }
 
 float Dualshock3Controller::NormalizeTrigger(uint16_t value)
