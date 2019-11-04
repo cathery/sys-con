@@ -70,7 +70,7 @@ public:
 
     virtual NormalizedButtonData GetNormalizedButtonData();
 
-    virtual ControllerType GetType() { return CONTROLLER_XBOX360; }
+    virtual ControllerType GetType() { return CONTROLLER_DUALSHOCK4; }
 
     inline const Dualshock4ButtonData &GetButtonData() { return m_buttonData; };
 

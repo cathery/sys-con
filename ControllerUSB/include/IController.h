@@ -68,5 +68,5 @@ public:
 
     inline IUSBDevice *GetDevice() { return m_device.get(); }
     virtual ControllerType GetType() = 0;
-    virtual Status SetRumble(uint8_t strong_magnitude,uint8_t weak_magnitude) = 0;
+    virtual Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude) = 0;
 };

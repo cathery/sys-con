@@ -34,6 +34,11 @@ Result mainLoop()
             UsbHsInterfaceFilter filter;
             filter.Flags = UsbHsInterfaceFilterFlags_idVendor;
             filter.idVendor = vendor;
+            if (vendor == VENDOR_SONY)
+            {
+                filter.Flags |= UsbHsInterfaceFilterFlags_idProduct;
+                filter.idProduct = PRODUCT_DUALSHOCK3;
+            }
             auto &&event = events[i] = {vendor, Event()};
 
             rc = usbHsCreateInterfaceAvailableEvent(&event.event, true, i, &filter);

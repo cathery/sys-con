@@ -42,8 +42,9 @@ Status Dualshock3Controller::OpenInterfaces()
             return rc;
         if (interface->GetDescriptor()->bNumEndpoints >= 2)
         {
+            //Send an initial control packet
             uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
-            rc = interface->ControlTransfer(0x21, 0x09, 0x03F4, 0, 0x04, initBytes);
+            rc = interface->ControlTransfer(0x21, 0x09, Ds3FeatureStartDevice, 0, sizeof(initBytes), initBytes);
             if (S_FAILED(rc))
                 return 60;
 
@@ -81,21 +82,21 @@ void Dualshock3Controller::CloseInterfaces()
 
 Status Dualshock3Controller::GetInput()
 {
-    /*
+
     uint8_t input_bytes[64];
 
     Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
     if (S_FAILED(rc))
         return rc;
 
-    m_buttonData = *reinterpret_cast<Dualshock3ButtonData *>(input_bytes);
-
+    if (input_bytes[0] == Ds3InputPacket_Button)
+    {
+        m_buttonData = *reinterpret_cast<Dualshock3ButtonData *>(input_bytes);
+    }
     return rc;
-    */
-    return 9;
 }
 
-float Dualshock3Controller::NormalizeTrigger(uint16_t value)
+float Dualshock3Controller::NormalizeTrigger(uint8_t value)
 {
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
     return value < kTriggerDeadzone
@@ -104,14 +105,14 @@ float Dualshock3Controller::NormalizeTrigger(uint16_t value)
                      (kTriggerMax - kTriggerDeadzone);
 }
 
-void Dualshock3Controller::NormalizeAxis(int16_t x,
-                                         int16_t y,
-                                         int16_t deadzone,
+void Dualshock3Controller::NormalizeAxis(uint8_t x,
+                                         uint8_t y,
+                                         uint8_t deadzone,
                                          float *x_out,
                                          float *y_out)
 {
-    float x_val = x;
-    float y_val = y;
+    float x_val = x - 127.0f;
+    float y_val = 127.0f - y;
     // Determine how far the stick is pushed.
     //This will never exceed 32767 because if the stick is
     //horizontally maxed in one direction, vertically it must be neutral(0) and vice versa
@@ -120,15 +121,13 @@ void Dualshock3Controller::NormalizeAxis(int16_t x,
     if (real_magnitude > deadzone)
     {
         // Clip the magnitude at its expected maximum value.
-        float magnitude = std::min(32767.0f, real_magnitude);
+        float magnitude = std::min(127.0f, real_magnitude);
         // Adjust magnitude relative to the end of the dead zone.
         magnitude -= deadzone;
         // Normalize the magnitude with respect to its expected range giving a
         // magnitude value of 0.0 to 1.0
         //ratio = (currentValue / maxValue) / realValue
-        float ratio = (magnitude / (32767 - deadzone)) / real_magnitude;
-        // Y is negated because xbox controllers have an opposite sign from
-        // the 'standard controller' recommendations.
+        float ratio = (magnitude / (127 - deadzone)) / real_magnitude;
         *x_out = x_val * ratio;
         *y_out = y_val * ratio;
     }
@@ -144,10 +143,10 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
 {
     NormalizedButtonData normalData;
 
-    normalData.bottom_action = m_buttonData.a;
-    normalData.right_action = m_buttonData.b;
-    normalData.left_action = m_buttonData.x;
-    normalData.top_action = m_buttonData.y;
+    normalData.bottom_action = m_buttonData.cross;
+    normalData.right_action = m_buttonData.circle;
+    normalData.left_action = m_buttonData.square;
+    normalData.top_action = m_buttonData.triangle;
 
     normalData.dpad_up = m_buttonData.dpad_up;
     normalData.dpad_down = m_buttonData.dpad_down;
@@ -166,10 +165,10 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
     normalData.capture = false;
     normalData.home = false;
 
-    //normalData.guide = m_buttonData.sync;
+    normalData.guide = m_buttonData.guide;
 
-    normalData.left_trigger = NormalizeTrigger(m_buttonData.trigger_left);
-    normalData.right_trigger = NormalizeTrigger(m_buttonData.trigger_right);
+    normalData.left_trigger = m_buttonData.trigger_left;
+    normalData.right_trigger = m_buttonData.trigger_right;
 
     NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, kLeftThumbDeadzone,
                   &normalData.left_stick_x, &normalData.left_stick_y);
@@ -181,15 +180,6 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
 
 Status Dualshock3Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
+    //Not implemented yet
     return 9;
-    /*
-    uint8_t rumble_data[]{
-        0x09, 0x00,
-        m_rumbleDataCounter++,
-        0x09, 0x00, 0x0f, 0x00, 0x00,
-        strong_magnitude,
-        weak_magnitude,
-        0xff, 0x00, 0x00};
-    return m_outPipe->Write(rumble_data, sizeof(rumble_data));
-    */
 }
