@@ -1,5 +1,3 @@
-# ⚠ THIS IS A WORK IN PROGRESS ⚠
-
 # sys-con
 
 #### A Nintedo Switch sysmodule for third-party controller support. No man-in-the-middle required! 
@@ -34,4 +32,4 @@ If you want to make sure, the file should be located in `sdmc:/atmosphere/titles
 ## Support
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
 
-If you wish to see added support for more controllers, consider funding my project on Ko-fi!
+At the current moment I don't have a Dualshock 4 or a Bluetooth adapter, or the means to afford them. If you wish to see added support for it in the future, consider funding my project on Ko-fi!
