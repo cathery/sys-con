@@ -79,11 +79,12 @@ private:
     IUSBEndpoint *m_outPipe = nullptr;
 
     XboxOneButtonData m_buttonData;
+    bool m_GuidePressed;
 
-    int16_t kLeftThumbDeadzone = 0;  //7849;
-    int16_t kRightThumbDeadzone = 0; //8689;
-    uint16_t kTriggerMax = 0;        //1023;
-    uint16_t kTriggerDeadzone = 0;   //120;
+    int16_t kLeftThumbDeadzone = 2500;  //7849;
+    int16_t kRightThumbDeadzone = 3500; //8689;
+    uint16_t kTriggerMax = 0;           //1023;
+    uint16_t kTriggerDeadzone = 0;      //120;
     uint8_t m_rumbleDataCounter = 0;
 
 public:
@@ -109,5 +110,5 @@ public:
 
     Status SendInitBytes();
     Status WriteAckGuideReport(uint8_t sequence);
-    Status SetRumble(uint8_t strong_magnitude,uint8_t weak_magnitude);
+    Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 };

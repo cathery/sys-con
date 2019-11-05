@@ -68,10 +68,10 @@ private:
 
     Xbox360ButtonData m_buttonData;
 
-    int16_t kLeftThumbDeadzone = 0;  //7849;
-    int16_t kRightThumbDeadzone = 0; //8689;
-    uint16_t kTriggerMax = 0;        //1023;
-    uint16_t kTriggerDeadzone = 0;   //120;
+    int16_t kLeftThumbDeadzone = 8000;  //7849;
+    int16_t kRightThumbDeadzone = 8000; //8689;
+    uint16_t kTriggerMax = 0;           //1023;
+    uint16_t kTriggerDeadzone = 0;      //120;
 
 public:
     Xbox360Controller(std::unique_ptr<IUSBDevice> &&interface);

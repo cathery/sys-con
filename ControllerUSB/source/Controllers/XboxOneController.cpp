@@ -95,7 +95,7 @@ Status XboxOneController::GetInput()
     }
     else if (type == XBONEINPUT_GUIDEBUTTON) //Guide button status
     {
-        m_buttonData.sync = input_bytes[4];
+        m_GuidePressed = input_bytes[4];
 
         //Xbox one S needs to be sent an ack report for guide buttons
         //TODO: needs testing
@@ -188,10 +188,10 @@ NormalizedButtonData XboxOneController::GetNormalizedButtonData()
     normalData.left_stick_click = m_buttonData.stick_left_click;
     normalData.right_stick_click = m_buttonData.stick_right_click;
 
-    normalData.capture = false;
+    normalData.capture = m_buttonData.sync;
     normalData.home = false;
 
-    normalData.guide = m_buttonData.sync;
+    normalData.guide = m_GuidePressed;
 
     normalData.left_trigger = NormalizeTrigger(m_buttonData.trigger_left);
     normalData.right_trigger = NormalizeTrigger(m_buttonData.trigger_right);

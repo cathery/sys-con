@@ -155,8 +155,8 @@ private:
 
     Dualshock3ButtonData m_buttonData;
 
-    int8_t kLeftThumbDeadzone = 0;
-    int8_t kRightThumbDeadzone = 0;
+    int8_t kLeftThumbDeadzone = 10;
+    int8_t kRightThumbDeadzone = 10;
     int8_t kTriggerMax = 0;
     int8_t kTriggerDeadzone = 0;
 
