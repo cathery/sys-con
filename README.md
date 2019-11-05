@@ -23,11 +23,11 @@ If you want to make sure, the file should be located in `sdmc:/atmosphere/titles
 - [x] **~~\[5.0.0-7.0.0\] FW Version Support~~**
 - [x] **~~Xbox 360 Controller Support~~**
 - [x] **~~Xbox One X/S Controller Support~~**
-- [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
-- [ ] **Undocked USB Support**
-- [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
-- [ ] **[Dualshock 3 Support](https://github.com/cathery/sys-con/issues/3)**
+- [ ] **~~Dualshock 3 Support~~**
 - [ ] **[Dualshock 4 Support](https://github.com/cathery/sys-con/issues/4)**
+- [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
+- [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
+- [ ] **Undocked USB Support**
 - [ ] **Config application**
 
 
