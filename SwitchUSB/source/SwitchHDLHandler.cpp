@@ -115,8 +115,8 @@ Result SwitchHDLHandler::UpdateHdlState()
 {
     //Checks if the virtual device was erased, in which case re-attach the device
     bool found_flag = false;
-    HiddbgHdlsNpadAssignment list;
-    hiddbgDumpHdlsNpadAssignmentState(&list);
+    HiddbgHdlsStateList list;
+    hiddbgDumpHdlsStates(&list);
     for (int i = 0; i != list.total_entries; ++i)
     {
         if (list.entries[i].HdlsHandle == m_hdlHandle)

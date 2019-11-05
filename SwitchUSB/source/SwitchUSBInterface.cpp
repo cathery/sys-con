@@ -54,7 +54,6 @@ void SwitchUSBInterface::Close()
         if (endpoint)
         {
             endpoint->Close();
-            endpoint.release();
         }
     }
     for (auto &&endpoint : m_outEndpoints)
@@ -62,7 +61,6 @@ void SwitchUSBInterface::Close()
         if (endpoint)
         {
             endpoint->Close();
-            endpoint.release();
         }
     }
     usbHsIfClose(&m_session);
