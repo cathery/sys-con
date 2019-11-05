@@ -58,10 +58,6 @@ extern "C"
         if (R_FAILED(rc))
             fatalThrow(rc);
 
-        rc = usbCommsInitialize();
-        if (R_FAILED(rc))
-            fatalThrow(rc);
-
 #ifndef __APPLET__
         rc = hidInitialize();
         if (R_FAILED(rc))
@@ -74,7 +70,6 @@ extern "C"
 #ifndef __APPLET__
         hidExit();
 #endif
-        usbCommsExit();
         usbHsExit();
         hiddbgReleaseHdlsWorkBuffer();
         hiddbgExit();

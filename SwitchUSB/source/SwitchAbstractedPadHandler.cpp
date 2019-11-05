@@ -19,6 +19,8 @@ Result SwitchAbstractedPadHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
+    /*
+
     hidScanInput();
     HidControllerID lastOfflineID = CONTROLLER_PLAYER_1;
     for (int i = 0; i != 8; ++i)
@@ -30,11 +32,13 @@ Result SwitchAbstractedPadHandler::Initialize()
         }
     }
     //WriteToLog("Found last offline ID: ", lastOfflineID);
+    */
 
     rc = InitAbstractedPadState();
     if (R_FAILED(rc))
         return rc;
 
+    /*
     svcSleepThread(1e+7L);
     hidScanInput();
 
@@ -43,33 +47,10 @@ Result SwitchAbstractedPadHandler::Initialize()
 
     Result rc2 = hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, lastOfflineID, hidGetControllerType(lastOfflineID));
     if (R_SUCCEEDED(rc2))
-    {
-        /*
-        u32 tmp_type = 0x20;
-        m_vibrationDeviceHandle = tmp_type | (lastOfflineID & 0xff) << 8;
-
-        WriteToLog("Initializing vibration device with handle ", m_vibrationDeviceHandle);
-        Service IActiveVibrationDeviceList;
-
-        if (R_SUCCEEDED(serviceDispatch(hidGetServiceSession(), 203, .out_num_objects = 1, .out_objects = &IActiveVibrationDeviceList)))
-        {
-            WriteToLog("Got vibration device list object_id ", IActiveVibrationDeviceList.object_id);
-
-            Result rc69 = serviceDispatchIn(&IActiveVibrationDeviceList, 0, m_vibrationDeviceHandle);
-            serviceClose(&IActiveVibrationDeviceList);
-            if (R_SUCCEEDED(rc69))
-            {
-                WriteToLog("Activated vibration handle");
-                InitOutputThread();
-            }
-            else
-                WriteToLog("Failed to activate handle, result: ", rc69);
-        }
-        */
         InitOutputThread();
-    }
     else
         WriteToLog("Failed to iniitalize vibration device with error ", rc2);
+    */
 
     InitInputThread();
     return rc;

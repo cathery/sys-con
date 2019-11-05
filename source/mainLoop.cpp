@@ -72,6 +72,7 @@ Result mainLoop()
                 }
             }
         }
+        /*
 
         if (kDown & KEY_X)
         {
@@ -102,6 +103,7 @@ Result mainLoop()
                     WriteToLog("failed to check for vibration device");
             }
         }
+        */
 
         if (kDown & KEY_B)
             break;
