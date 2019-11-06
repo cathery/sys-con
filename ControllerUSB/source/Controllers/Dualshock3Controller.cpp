@@ -1,6 +1,8 @@
 #include "Controllers/Dualshock3Controller.h"
 #include <cmath>
 
+static ControllerConfig _dualshock3ControllerConfig{};
+
 Dualshock3Controller::Dualshock3Controller(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
 {
@@ -76,7 +78,7 @@ Status Dualshock3Controller::OpenInterfaces()
 }
 void Dualshock3Controller::CloseInterfaces()
 {
-    //m_device->Reset();
+    m_device->Reset();
     m_device->Close();
 }
 
@@ -99,10 +101,10 @@ Status Dualshock3Controller::GetInput()
 float Dualshock3Controller::NormalizeTrigger(uint8_t value)
 {
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
-    return value < kTriggerDeadzone
+    return value < _dualshock3ControllerConfig.triggerDeadzone
                ? 0
-               : static_cast<float>(value - kTriggerDeadzone) /
-                     (kTriggerMax - kTriggerDeadzone);
+               : static_cast<float>(value - _dualshock3ControllerConfig.triggerDeadzone) /
+                     (UINT8_MAX - _dualshock3ControllerConfig.triggerDeadzone);
 }
 
 void Dualshock3Controller::NormalizeAxis(uint8_t x,
@@ -170,9 +172,9 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
     normalData.left_trigger = m_buttonData.trigger_left;
     normalData.right_trigger = m_buttonData.trigger_right;
 
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, kLeftThumbDeadzone,
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock3ControllerConfig.leftStickDeadzone,
                   &normalData.left_stick_x, &normalData.left_stick_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, kRightThumbDeadzone,
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock3ControllerConfig.rightStickDeadzone,
                   &normalData.right_stick_x, &normalData.right_stick_y);
 
     return normalData;
@@ -182,4 +184,9 @@ Status Dualshock3Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_ma
 {
     //Not implemented yet
     return 9;
+}
+
+void Dualshock3Controller::LoadConfig(const ControllerConfig *config)
+{
+    _dualshock3ControllerConfig = *config;
 }

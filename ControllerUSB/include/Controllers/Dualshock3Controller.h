@@ -155,10 +155,12 @@ private:
 
     Dualshock3ButtonData m_buttonData;
 
+    /*
     int8_t kLeftThumbDeadzone = 10;
     int8_t kRightThumbDeadzone = 10;
     int8_t kTriggerMax = 0;
     int8_t kTriggerDeadzone = 0;
+    */
 
 public:
     Dualshock3Controller(std::unique_ptr<IUSBDevice> &&interface);
@@ -183,4 +185,6 @@ public:
 
     Status SendInitBytes();
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+
+    static void LoadConfig(const ControllerConfig *config);
 };

@@ -1,6 +1,8 @@
 #include "Controllers/Dualshock4Controller.h"
 #include <cmath>
 
+static ControllerConfig _dualshock4ControllerConfig{};
+
 Dualshock4Controller::Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
 {
@@ -143,10 +145,10 @@ Status Dualshock4Controller::SendInitBytes()
 float Dualshock4Controller::NormalizeTrigger(uint16_t value)
 {
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
-    return value < kTriggerDeadzone
+    return value < _dualshock4ControllerConfig.triggerDeadzone
                ? 0
-               : static_cast<float>(value - kTriggerDeadzone) /
-                     (kTriggerMax - kTriggerDeadzone);
+               : static_cast<float>(value - _dualshock4ControllerConfig.triggerDeadzone) /
+                     (UINT16_MAX - _dualshock4ControllerConfig.triggerDeadzone);
 }
 
 void Dualshock4Controller::NormalizeAxis(int16_t x,
@@ -216,9 +218,9 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
     normalData.left_trigger = NormalizeTrigger(m_buttonData.trigger_left);
     normalData.right_trigger = NormalizeTrigger(m_buttonData.trigger_right);
 
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, kLeftThumbDeadzone,
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock4ControllerConfig.leftStickDeadzone,
                   &normalData.left_stick_x, &normalData.left_stick_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, kRightThumbDeadzone,
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock4ControllerConfig.rightStickDeadzone,
                   &normalData.right_stick_x, &normalData.right_stick_y);
 
     return normalData;
@@ -237,4 +239,9 @@ Status Dualshock4Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_ma
         0xff, 0x00, 0x00};
     return m_outPipe->Write(rumble_data, sizeof(rumble_data));
     */
+}
+
+void Dualshock4Controller::LoadConfig(const ControllerConfig *config)
+{
+    _dualshock4ControllerConfig = *config;
 }

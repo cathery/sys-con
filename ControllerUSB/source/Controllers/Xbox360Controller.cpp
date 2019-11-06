@@ -1,6 +1,8 @@
 #include "Controllers/Xbox360Controller.h"
 #include <cmath>
 
+static ControllerConfig _xbox360ControllerConfig{};
+
 Xbox360Controller::Xbox360Controller(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
 {
@@ -110,10 +112,10 @@ Status Xbox360Controller::SendInitBytes()
 float Xbox360Controller::NormalizeTrigger(uint16_t value)
 {
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
-    return value < kTriggerDeadzone
+    return value < _xbox360ControllerConfig.triggerDeadzone
                ? 0
-               : static_cast<float>(value - kTriggerDeadzone) /
-                     (kTriggerMax - kTriggerDeadzone);
+               : static_cast<float>(value - _xbox360ControllerConfig.triggerDeadzone) /
+                     (UINT16_MAX - _xbox360ControllerConfig.triggerDeadzone);
 }
 
 void Xbox360Controller::NormalizeAxis(int16_t x,
@@ -183,9 +185,9 @@ NormalizedButtonData Xbox360Controller::GetNormalizedButtonData()
     normalData.left_trigger = NormalizeTrigger(m_buttonData.trigger_left);
     normalData.right_trigger = NormalizeTrigger(m_buttonData.trigger_right);
 
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, kLeftThumbDeadzone,
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _xbox360ControllerConfig.leftStickDeadzone,
                   &normalData.left_stick_x, &normalData.left_stick_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, kRightThumbDeadzone,
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _xbox360ControllerConfig.rightStickDeadzone,
                   &normalData.right_stick_x, &normalData.right_stick_y);
 
     return normalData;
@@ -195,4 +197,9 @@ Status Xbox360Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magni
 {
     uint8_t rumbleData[]{0x00, sizeof(Xbox360RumbleData), 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00};
     return m_outPipe->Write(rumbleData, sizeof(rumbleData));
+}
+
+void Xbox360Controller::LoadConfig(const ControllerConfig *config)
+{
+    _xbox360ControllerConfig = *config;
 }

@@ -3,9 +3,10 @@
 #include "log.h"
 
 #include "SwitchUSBDevice.h"
-#include "Controllers.h"
+#include "ControllerHelpers.h"
 #include "SwitchHDLHandler.h"
 #include "SwitchAbstractedPadHandler.h"
+#include "configFile.h"
 
 struct VendorEvent
 {
@@ -48,6 +49,7 @@ Result mainLoop()
     }
 
     controllerInterfaces.reserve(8);
+    LoadAllConfigs();
 
     while (appletMainLoop())
     {

@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <fstream>
 #include <iostream>
+#include "configFile.h"
 
 template <typename... T>
 void WriteToLog(T &&... text)
@@ -21,7 +22,7 @@ void WriteToLog(T &&... text)
     struct tm *time = localtime((const time_t *)&unixTime);
 
     fstream fs;
-    fs.open("/atmosphere/titles/690000000000000D/log.txt", fstream::app);
+    fs.open(CONFIG_PATH "log.txt", fstream::app);
 
     //Print time
     fs << setfill('0');

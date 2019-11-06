@@ -81,11 +81,15 @@ private:
     XboxOneButtonData m_buttonData;
     bool m_GuidePressed{false};
 
+    uint8_t m_rumbleDataCounter = 0;
+    /*
+
     int16_t kLeftThumbDeadzone = 2500;  //7849;
     int16_t kRightThumbDeadzone = 3500; //8689;
     uint16_t kTriggerMax = 0;           //1023;
     uint16_t kTriggerDeadzone = 0;      //120;
-    uint8_t m_rumbleDataCounter = 0;
+    
+    */
 
 public:
     XboxOneController(std::unique_ptr<IUSBDevice> &&interface);
@@ -111,4 +115,6 @@ public:
     Status SendInitBytes();
     Status WriteAckGuideReport(uint8_t sequence);
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+
+    static void LoadConfig(const ControllerConfig *config);
 };
