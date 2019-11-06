@@ -6,7 +6,7 @@
 SwitchUSBInterface::SwitchUSBInterface(UsbHsInterface &interface)
     : m_interface(interface)
 {
-    m_controlTransferBuffer = memalign(0x1000, 0x100);
+    m_controlTransferBuffer = memalign(0x1000, 64);
 }
 
 SwitchUSBInterface::~SwitchUSBInterface()

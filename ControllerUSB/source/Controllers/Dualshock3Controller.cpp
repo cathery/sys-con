@@ -83,7 +83,7 @@ void Dualshock3Controller::CloseInterfaces()
 Status Dualshock3Controller::GetInput()
 {
 
-    uint8_t input_bytes[64];
+    uint8_t input_bytes[49];
 
     Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
     if (S_FAILED(rc))

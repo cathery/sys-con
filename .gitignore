@@ -9,3 +9,6 @@ buildSysmodule/*
 .vscode
 *.code-workspace
 *.flag
+*.rar
+*.xml
+*.png

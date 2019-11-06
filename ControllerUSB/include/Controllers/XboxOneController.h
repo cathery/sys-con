@@ -79,7 +79,7 @@ private:
     IUSBEndpoint *m_outPipe = nullptr;
 
     XboxOneButtonData m_buttonData;
-    bool m_GuidePressed;
+    bool m_GuidePressed{false};
 
     int16_t kLeftThumbDeadzone = 2500;  //7849;
     int16_t kRightThumbDeadzone = 3500; //8689;

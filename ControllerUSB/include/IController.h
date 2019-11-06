@@ -2,7 +2,6 @@
 #include "IUSBDevice.h"
 #include "ControllerTypes.h"
 #include <memory>
-#include "Status.h"
 
 struct NormalizedButtonData
 {

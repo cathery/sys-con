@@ -7,8 +7,8 @@ class SwitchUSBEndpoint : public IUSBEndpoint
 {
 private:
     UsbHsClientEpSession m_epSession{};
-    UsbHsClientIfSession m_ifSession;
-    usb_endpoint_descriptor m_descriptor;
+    UsbHsClientIfSession *m_ifSession;
+    usb_endpoint_descriptor *m_descriptor;
 
     void *m_buffer;
 

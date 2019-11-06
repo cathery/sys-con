@@ -1,6 +1,5 @@
 #include "SwitchHDLHandler.h"
 #include <cmath>
-#include "../../source/log.h"
 
 SwitchHDLHandler::SwitchHDLHandler(std::unique_ptr<IController> &&controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
@@ -50,7 +49,9 @@ Result SwitchHDLHandler::Initialize()
         WriteToLog("Failed to iniitalize vibration with error ", rc2);
     */
 
-    InitInputThread();
+    rc = InitInputThread();
+    if (R_FAILED(rc))
+        return rc;
 
     return rc;
 }
@@ -75,8 +76,8 @@ Result SwitchHDLHandler::InitHdlState()
     // Set the controller colors. The grip colors are for Pro-Controller on [9.0.0+].
     m_deviceInfo.singleColorBody = RGBA8_MAXALPHA(107, 107, 107);
     m_deviceInfo.singleColorButtons = RGBA8_MAXALPHA(0, 0, 0);
-    m_deviceInfo.colorLeftGrip = RGBA8_MAXALPHA(23, 125, 62);
-    m_deviceInfo.colorRightGrip = RGBA8_MAXALPHA(23, 125, 62);
+    m_deviceInfo.colorLeftGrip = RGBA8_MAXALPHA(70, 70, 70);
+    m_deviceInfo.colorRightGrip = RGBA8_MAXALPHA(70, 70, 70);
 
     m_hdlState.batteryCharge = 4; // Set battery charge to full.
     m_hdlState.joysticks[JOYSTICK_LEFT].dx = 0x1234;
@@ -95,19 +96,39 @@ Result SwitchHDLHandler::ExitHdlState()
 Result SwitchHDLHandler::UpdateHdlState()
 {
     //Checks if the virtual device was erased, in which case re-attach the device
-    bool found_flag = false;
-    HiddbgHdlsStateList list;
-    hiddbgDumpHdlsStates(&list);
-    for (int i = 0; i != list.total_entries; ++i)
+
+    if (R_SUCCEEDED(serviceDispatch(hiddbgGetServiceSession(), 327)))
     {
-        if (list.entries[i].HdlsHandle == m_hdlHandle)
+        bool found_flag = false;
+
+        if (hosversionBefore(9, 0, 0))
         {
-            found_flag = true;
-            break;
+            HiddbgHdlsStateListV7 *stateList = static_cast<HiddbgHdlsStateListV7 *>(hiddbgGetWorkBufferTransferMemoryAddress()->src_addr);
+            for (int i = 0; i != stateList->total_entries; ++i)
+            {
+                if (stateList->entries[i].HdlsHandle == m_hdlHandle)
+                {
+                    found_flag = true;
+                    break;
+                }
+            }
         }
+        else
+        {
+            HiddbgHdlsStateList *stateList = static_cast<HiddbgHdlsStateList *>(hiddbgGetWorkBufferTransferMemoryAddress()->src_addr);
+            for (int i = 0; i != stateList->total_entries; ++i)
+            {
+                if (stateList->entries[i].HdlsHandle == m_hdlHandle)
+                {
+                    found_flag = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found_flag)
+            hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
     }
-    if (!found_flag)
-        hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
 
     return hiddbgSetHdlsState(m_hdlHandle, &m_hdlState);
 }

@@ -16,7 +16,7 @@
 extern "C"
 {
 // Adjust size as needed.
-#define INNER_HEAP_SIZE 0x100000
+#define INNER_HEAP_SIZE 0x40000
 #ifndef __APPLET__
 
     u32 __nx_applet_type = AppletType_None;
@@ -73,15 +73,6 @@ extern "C"
         usbHsExit();
         hiddbgReleaseHdlsWorkBuffer();
         hiddbgExit();
-    }
-
-    alignas(16) u8 __nx_exception_stack[0x1000];
-    u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
-    __attribute__((weak)) u32 __nx_exception_ignoredebug = 1;
-
-    void __libnx_exception_handler(ThreadExceptionDump *ctx)
-    {
-        WriteToLog("Sysmodule crashed with error ", ctx->error_desc);
     }
 }
 

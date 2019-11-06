@@ -4,10 +4,8 @@
 #include "IController.h"
 #include "SwitchControllerHandler.h"
 #include "SwitchVirtualGamepadHandler.h"
-#include <thread>
 
 //Wrapper for AbstractedPad for switch versions [5.0.0 - 8.1.0]
-//DOESN'T WORK PROPERLY. See inside SwitchAbstractedPadHandler::FillAbstractedState()
 class SwitchAbstractedPadHandler : public SwitchVirtualGamepadHandler
 {
 private:

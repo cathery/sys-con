@@ -2,7 +2,6 @@
 #include "switch.h"
 #include "IController.h"
 #include "SwitchControllerHandler.h"
-#include <thread>
 
 //This class is a base class for SwitchHDLHandler and SwitchAbstractedPaadHandler.
 class SwitchVirtualGamepadHandler
@@ -12,10 +11,10 @@ protected:
     SwitchControllerHandler m_controllerHandler;
 
     bool m_keepInputThreadRunning;
-    std::thread m_inputThread;
+    Thread m_inputThread;
 
     bool m_keepOutputThreadRunning;
-    std::thread m_outputThread;
+    Thread m_outputThread;
 
 public:
     SwitchVirtualGamepadHandler(std::unique_ptr<IController> &&controller);
@@ -33,12 +32,12 @@ public:
     virtual void Exit();
 
     //Separately init the input-reading thread
-    void InitInputThread();
+    Result InitInputThread();
     //Separately close the input-reading thread
     void ExitInputThread();
 
     //Separately init the rumble sending thread
-    void InitOutputThread();
+    Result InitOutputThread();
     //Separately close the rumble sending thread
     void ExitOutputThread();
 
@@ -48,6 +47,8 @@ public:
     virtual void UpdateOutput() = 0;
 
     //Get the raw controller handler pointer
+    inline bool *GetInputThreadBool() { return &m_keepInputThreadRunning; }
+    inline bool *GetOutputThreadBool() { return &m_keepOutputThreadRunning; }
     inline SwitchControllerHandler *GetControllerHandler() { return &m_controllerHandler; }
     inline IController *GetController() { return m_controllerHandler.GetController(); }
     inline u32 *GetVibrationHandle() { return &m_vibrationDeviceHandle; }

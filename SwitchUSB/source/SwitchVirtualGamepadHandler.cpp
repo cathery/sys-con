@@ -18,46 +18,58 @@ void SwitchVirtualGamepadHandler::Exit()
 {
 }
 
-void inputThreadLoop(bool *keepThreadRunning, SwitchVirtualGamepadHandler *handler)
+void inputThreadLoop(void *handler)
 {
     svcSleepThread(1e+7L);
+    SwitchVirtualGamepadHandler *switchHandler = static_cast<SwitchVirtualGamepadHandler *>(handler);
+    bool *keepThreadRunning = switchHandler->GetInputThreadBool();
+
     while (*keepThreadRunning)
     {
-        handler->UpdateInput();
+        switchHandler->UpdateInput();
     }
 }
 
-void outputThreadLoop(bool *keepThreadRunning, SwitchVirtualGamepadHandler *handler)
+void outputThreadLoop(void *handler)
 {
     svcSleepThread(1e+7L);
+    SwitchVirtualGamepadHandler *switchHandler = static_cast<SwitchVirtualGamepadHandler *>(handler);
+    bool *keepThreadRunning = switchHandler->GetInputThreadBool();
+
     while (*keepThreadRunning)
     {
-        handler->UpdateOutput();
+        switchHandler->UpdateOutput();
     }
 }
 
-void SwitchVirtualGamepadHandler::InitInputThread()
+Result SwitchVirtualGamepadHandler::InitInputThread()
 {
     m_keepInputThreadRunning = true;
-    m_inputThread = std::thread(inputThreadLoop, &m_keepInputThreadRunning, this);
+    Result rc = threadCreate(&m_inputThread, inputThreadLoop, this, NULL, 0x400, 0x3B, -2);
+    if (R_FAILED(rc))
+        return rc;
+    return threadStart(&m_inputThread);
 }
 
 void SwitchVirtualGamepadHandler::ExitInputThread()
 {
     m_keepInputThreadRunning = false;
-    if (m_inputThread.joinable())
-        m_inputThread.join();
+    threadWaitForExit(&m_inputThread);
+    threadClose(&m_inputThread);
 }
 
-void SwitchVirtualGamepadHandler::InitOutputThread()
+Result SwitchVirtualGamepadHandler::InitOutputThread()
 {
     m_keepOutputThreadRunning = true;
-    m_outputThread = std::thread(outputThreadLoop, &m_keepOutputThreadRunning, this);
+    Result rc = threadCreate(&m_outputThread, outputThreadLoop, this, NULL, 0x400, 0x3B, -2);
+    if (R_FAILED(rc))
+        return rc;
+    return threadStart(&m_outputThread);
 }
 
 void SwitchVirtualGamepadHandler::ExitOutputThread()
 {
     m_keepOutputThreadRunning = false;
-    if (m_outputThread.joinable())
-        m_outputThread.join();
+    threadWaitForExit(&m_outputThread);
+    threadClose(&m_outputThread);
 }

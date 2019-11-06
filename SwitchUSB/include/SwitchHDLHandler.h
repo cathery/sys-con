@@ -4,7 +4,6 @@
 #include "IController.h"
 #include "SwitchControllerHandler.h"
 #include "SwitchVirtualGamepadHandler.h"
-#include <thread>
 
 //Wrapper for HDL functions for switch versions [7.0.0+]
 class SwitchHDLHandler : public SwitchVirtualGamepadHandler

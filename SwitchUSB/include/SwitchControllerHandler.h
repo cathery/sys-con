@@ -2,7 +2,6 @@
 
 #include "switch.h"
 #include "IController.h"
-#include <thread>
 
 class SwitchControllerHandler
 {

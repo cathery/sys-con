@@ -1,7 +1,6 @@
 #include "SwitchAbstractedPadHandler.h"
 #include <cmath>
 #include <array>
-#include "../../source/log.h"
 
 SwitchAbstractedPadHandler::SwitchAbstractedPadHandler(std::unique_ptr<IController> &&controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
@@ -52,7 +51,10 @@ Result SwitchAbstractedPadHandler::Initialize()
         WriteToLog("Failed to iniitalize vibration device with error ", rc2);
     */
 
-    InitInputThread();
+    rc = InitInputThread();
+    if (R_FAILED(rc))
+        return rc;
+
     return rc;
 }
 

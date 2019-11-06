@@ -1,13 +1,12 @@
 #include "SwitchUSBEndpoint.h"
 #include <cstring>
-#include <cstdio>
 #include <malloc.h>
 
 SwitchUSBEndpoint::SwitchUSBEndpoint(UsbHsClientIfSession &if_session, usb_endpoint_descriptor &desc)
-    : m_ifSession(if_session),
-      m_descriptor(desc)
+    : m_ifSession(&if_session),
+      m_descriptor(&desc)
 {
-    m_buffer = memalign(0x1000, 0x100);
+    m_buffer = memalign(0x1000, 64);
 }
 
 SwitchUSBEndpoint::~SwitchUSBEndpoint()
@@ -18,7 +17,7 @@ SwitchUSBEndpoint::~SwitchUSBEndpoint()
 
 Result SwitchUSBEndpoint::Open()
 {
-    Result rc = usbHsIfOpenUsbEp(&m_ifSession, &m_epSession, 1, m_descriptor.wMaxPacketSize, &m_descriptor);
+    Result rc = usbHsIfOpenUsbEp(m_ifSession, &m_epSession, 1, m_descriptor->wMaxPacketSize, m_descriptor);
     if (R_FAILED(rc))
         return 73011;
     return rc;
@@ -69,10 +68,10 @@ Result SwitchUSBEndpoint::Read(void *outBuffer, size_t bufferSize)
 
 IUSBEndpoint::Direction SwitchUSBEndpoint::GetDirection()
 {
-    return ((m_descriptor.bEndpointAddress & USB_ENDPOINT_IN) ? USB_ENDPOINT_IN : USB_ENDPOINT_OUT);
+    return ((m_descriptor->bEndpointAddress & USB_ENDPOINT_IN) ? USB_ENDPOINT_IN : USB_ENDPOINT_OUT);
 }
 
 IUSBEndpoint::EndpointDescriptor *SwitchUSBEndpoint::GetDescriptor()
 {
-    return reinterpret_cast<IUSBEndpoint::EndpointDescriptor *>(&m_descriptor);
+    return reinterpret_cast<IUSBEndpoint::EndpointDescriptor *>(m_descriptor);
 }
