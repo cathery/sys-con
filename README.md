@@ -6,7 +6,7 @@
 
 ## Description
 This sysmodule aims to provide complete functionality for most popular game controllers not supported by Nintendo Switch.
-At the current moment, **only Docked USB** is supported. 
+At the current moment, **only USB connection** is supported. 
 
 This app is missing a lot of features. For more information, see the [issues page](https://github.com/cathery/sys-con/issues).
 
@@ -27,6 +27,7 @@ If you want to make sure, the file should be located in `sdmc:/atmosphere/titles
 - [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
 - [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
 - [ ] **[Motion Controls Support](https://github.com/cathery/sys-con/issues/9)**
+- [ ] **Xbox 360 Wireless adapter**
 - [ ] **Config application**
 
 
