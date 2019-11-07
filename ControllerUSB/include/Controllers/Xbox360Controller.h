@@ -113,8 +113,8 @@ public:
 
     inline const Xbox360ButtonData &GetButtonData() { return m_buttonData; };
 
-    float NormalizeTrigger(uint16_t value);
-    void NormalizeAxis(int16_t x, int16_t y, int16_t deadzone, float *x_out, float *y_out);
+    float NormalizeTrigger(uint8_t value);
+    void NormalizeAxis(int16_t x, int16_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
 
     Status SendInitBytes();
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);

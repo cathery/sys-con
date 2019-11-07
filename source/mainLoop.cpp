@@ -16,15 +16,19 @@ struct VendorEvent
 
 Result mainLoop()
 {
+    WriteToLog("\n\nNew sysmodule session started");
     Result rc = 0;
-
     bool useAbstractedPad = hosversionBetween(5, 7);
-    //hidPermitVibration(false);
-    //hidPermitVibration(true);
+
     VendorEvent events[2];
     std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
-    WriteToLog("\n\nNew sysmodule session started");
+    UTimer filecheckTimer;
+    Waiter filecheckTimerWaiter = waiterForUTimer(&filecheckTimer);
+    utimerCreate(&filecheckTimer, 1e+9L, TimerType_Repeating);
+    utimerStart(&filecheckTimer);
+    CheckForFileChanges();
+    LoadAllConfigs();
 
     {
         UsbHsInterfaceFilter filter;
@@ -49,7 +53,6 @@ Result mainLoop()
     }
 
     controllerInterfaces.reserve(8);
-    LoadAllConfigs();
 
     while (appletMainLoop())
     {
@@ -194,6 +197,16 @@ Result mainLoop()
                         WriteToLog("Controller erased!");
                     }
                 }
+            }
+        }
+
+        rc = waitSingle(filecheckTimerWaiter, 0);
+        if (R_SUCCEEDED(rc))
+        {
+            if (CheckForFileChanges())
+            {
+                WriteToLog("File check succeeded! Loading configs...");
+                LoadAllConfigs();
             }
         }
 

@@ -10,12 +10,23 @@ std::vector<uint16_t> GetVendorProducts(uint16_t vendor_id)
     switch (vendor_id)
     {
     case VENDOR_MICROSOFT:
-        return {PRODUCT_XBOX360,
-                PRODUCT_XBOXONE2013,
-                PRODUCT_XBOXONE2015,
-                PRODUCT_XBOXONEELITE,
-                PRODUCT_XBOXONES,
-                PRODUCT_XBOXADAPTIVE};
+        return {
+            PRODUCT_XBOX360,
+            PRODUCT_XBOXONE2013,
+            PRODUCT_XBOXONE2015,
+            PRODUCT_XBOXONEELITE,
+            PRODUCT_XBOXONES,
+            PRODUCT_XBOXADAPTIVE,
+            /*
+            PRODUCT_XBOX360_WIRELESS,
+            PRODUCT_XBOX360_WIRELESS_MODULE,
+            PRODUCT_XBOX360_WIRELESS_ADAPTER,
+            PRODUCT_XBOX360_WIRELESS_N_ADAPTER,
+            PRODUCT_XBOX360_WIRELESS_NETWORK_ADAPTER,
+            PRODUCT_XBOX360_WIRELESS_RECEIVER,
+            PRODUCT_XBOX360_WIRELESS_RECEIVER_2
+            */
+        };
     case VENDOR_SONY:
         return {PRODUCT_DUALSHOCK3,
                 PRODUCT_DUALSHOCK4};
@@ -51,6 +62,15 @@ ControllerType GetControllerTypeFromIds(uint16_t vendor_id, uint16_t product_id)
         switch (product_id)
         {
         case PRODUCT_XBOX360:
+            /*
+        case PRODUCT_XBOX360_WIRELESS:
+        case PRODUCT_XBOX360_WIRELESS_MODULE:
+        case PRODUCT_XBOX360_WIRELESS_ADAPTER:
+        case PRODUCT_XBOX360_WIRELESS_N_ADAPTER:
+        case PRODUCT_XBOX360_WIRELESS_NETWORK_ADAPTER:
+        case PRODUCT_XBOX360_WIRELESS_RECEIVER:
+        case PRODUCT_XBOX360_WIRELESS_RECEIVER_2:
+        */
             return CONTROLLER_XBOX360;
         case PRODUCT_XBOXONE2013:
         case PRODUCT_XBOXONE2015:

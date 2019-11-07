@@ -89,7 +89,7 @@ Status Xbox360Controller::OpenInterfaces()
 }
 void Xbox360Controller::CloseInterfaces()
 {
-    m_device->Reset();
+    //m_device->Reset();
     m_device->Close();
 }
 
@@ -119,18 +119,18 @@ Status Xbox360Controller::SendInitBytes()
     return rc;
 }
 
-float Xbox360Controller::NormalizeTrigger(uint16_t value)
+float Xbox360Controller::NormalizeTrigger(uint8_t value)
 {
+    uint16_t deadzone = (UINT8_MAX * _xbox360ControllerConfig.triggerDeadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
-    return value < _xbox360ControllerConfig.triggerDeadzone
+    return value < deadzone
                ? 0
-               : static_cast<float>(value - _xbox360ControllerConfig.triggerDeadzone) /
-                     (UINT16_MAX - _xbox360ControllerConfig.triggerDeadzone);
+               : static_cast<float>(value - deadzone) / (UINT8_MAX - deadzone);
 }
 
 void Xbox360Controller::NormalizeAxis(int16_t x,
                                       int16_t y,
-                                      int16_t deadzone,
+                                      uint8_t deadzonePercent,
                                       float *x_out,
                                       float *y_out)
 {
@@ -140,17 +140,18 @@ void Xbox360Controller::NormalizeAxis(int16_t x,
     //This will never exceed 32767 because if the stick is
     //horizontally maxed in one direction, vertically it must be neutral(0) and vice versa
     float real_magnitude = std::sqrt(x_val * x_val + y_val * y_val);
+    float real_deadzone = (32767 * deadzonePercent) / 100;
     // Check if the controller is outside a circular dead zone.
-    if (real_magnitude > deadzone)
+    if (real_magnitude > real_deadzone)
     {
         // Clip the magnitude at its expected maximum value.
         float magnitude = std::min(32767.0f, real_magnitude);
         // Adjust magnitude relative to the end of the dead zone.
-        magnitude -= deadzone;
+        magnitude -= real_deadzone;
         // Normalize the magnitude with respect to its expected range giving a
         // magnitude value of 0.0 to 1.0
         //ratio = (currentValue / maxValue) / realValue
-        float ratio = (magnitude / (32767 - deadzone)) / real_magnitude;
+        float ratio = (magnitude / (32767 - real_deadzone)) / real_magnitude;
         // Y is negated because xbox controllers have an opposite sign from
         // the 'standard controller' recommendations.
         *x_out = x_val * ratio;
@@ -168,37 +169,40 @@ NormalizedButtonData Xbox360Controller::GetNormalizedButtonData()
 {
     NormalizedButtonData normalData;
 
-    normalData.bottom_action = m_buttonData.a;
-    normalData.right_action = m_buttonData.b;
-    normalData.left_action = m_buttonData.x;
-    normalData.top_action = m_buttonData.y;
+    normalData.triggers[0] = NormalizeTrigger(m_buttonData.trigger_left);
+    normalData.triggers[1] = NormalizeTrigger(m_buttonData.trigger_right);
 
-    normalData.dpad_up = m_buttonData.dpad_up;
-    normalData.dpad_down = m_buttonData.dpad_down;
-    normalData.dpad_left = m_buttonData.dpad_left;
-    normalData.dpad_right = m_buttonData.dpad_right;
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _xbox360ControllerConfig.leftStickDeadzonePercent,
+                  &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _xbox360ControllerConfig.rightStickDeadzonePercent,
+                  &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
 
-    normalData.back = m_buttonData.back;
-    normalData.start = m_buttonData.start;
+    bool buttons[NUM_CONTROLLERBUTTONS]{
+        m_buttonData.y,
+        m_buttonData.b,
+        m_buttonData.a,
+        m_buttonData.x,
+        m_buttonData.stick_left_click,
+        m_buttonData.stick_right_click,
+        m_buttonData.bumper_left,
+        m_buttonData.bumper_right,
+        normalData.triggers[0] > 0,
+        normalData.triggers[1] > 0,
+        m_buttonData.back,
+        m_buttonData.start,
+        m_buttonData.dpad_up,
+        m_buttonData.dpad_right,
+        m_buttonData.dpad_down,
+        m_buttonData.dpad_left,
+        false,
+        m_buttonData.guide,
+    };
 
-    normalData.left_bumper = m_buttonData.bumper_left;
-    normalData.right_bumper = m_buttonData.bumper_right;
-
-    normalData.left_stick_click = m_buttonData.stick_left_click;
-    normalData.right_stick_click = m_buttonData.stick_right_click;
-
-    normalData.capture = false;
-    normalData.home = false;
-
-    normalData.guide = m_buttonData.guide;
-
-    normalData.left_trigger = NormalizeTrigger(m_buttonData.trigger_left);
-    normalData.right_trigger = NormalizeTrigger(m_buttonData.trigger_right);
-
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _xbox360ControllerConfig.leftStickDeadzone,
-                  &normalData.left_stick_x, &normalData.left_stick_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _xbox360ControllerConfig.rightStickDeadzone,
-                  &normalData.right_stick_x, &normalData.right_stick_y);
+    for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
+    {
+        ControllerButton button = _xbox360ControllerConfig.buttons[i];
+        normalData.buttons[(button != NOT_SET ? button : i)] = buttons[i];
+    }
 
     return normalData;
 }

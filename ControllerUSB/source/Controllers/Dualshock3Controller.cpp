@@ -95,7 +95,7 @@ Status Dualshock3Controller::OpenInterfaces()
 }
 void Dualshock3Controller::CloseInterfaces()
 {
-    m_device->Reset();
+    //m_device->Reset();
     m_device->Close();
 }
 
@@ -117,16 +117,16 @@ Status Dualshock3Controller::GetInput()
 
 float Dualshock3Controller::NormalizeTrigger(uint8_t value)
 {
+    uint8_t deadzone = (UINT8_MAX * _dualshock3ControllerConfig.triggerDeadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
-    return value < _dualshock3ControllerConfig.triggerDeadzone
+    return value < deadzone
                ? 0
-               : static_cast<float>(value - _dualshock3ControllerConfig.triggerDeadzone) /
-                     (UINT8_MAX - _dualshock3ControllerConfig.triggerDeadzone);
+               : static_cast<float>(value - deadzone) / (UINT8_MAX - deadzone);
 }
 
 void Dualshock3Controller::NormalizeAxis(uint8_t x,
                                          uint8_t y,
-                                         uint8_t deadzone,
+                                         uint8_t deadzonePercent,
                                          float *x_out,
                                          float *y_out)
 {
@@ -136,17 +136,18 @@ void Dualshock3Controller::NormalizeAxis(uint8_t x,
     //This will never exceed 32767 because if the stick is
     //horizontally maxed in one direction, vertically it must be neutral(0) and vice versa
     float real_magnitude = std::sqrt(x_val * x_val + y_val * y_val);
+    float real_deadzone = (127 * deadzonePercent) / 100;
     // Check if the controller is outside a circular dead zone.
-    if (real_magnitude > deadzone)
+    if (real_magnitude > real_deadzone)
     {
         // Clip the magnitude at its expected maximum value.
         float magnitude = std::min(127.0f, real_magnitude);
         // Adjust magnitude relative to the end of the dead zone.
-        magnitude -= deadzone;
+        magnitude -= real_deadzone;
         // Normalize the magnitude with respect to its expected range giving a
         // magnitude value of 0.0 to 1.0
         //ratio = (currentValue / maxValue) / realValue
-        float ratio = (magnitude / (127 - deadzone)) / real_magnitude;
+        float ratio = (magnitude / (127 - real_deadzone)) / real_magnitude;
         *x_out = x_val * ratio;
         *y_out = y_val * ratio;
     }
@@ -162,37 +163,40 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
 {
     NormalizedButtonData normalData;
 
-    normalData.bottom_action = m_buttonData.cross;
-    normalData.right_action = m_buttonData.circle;
-    normalData.left_action = m_buttonData.square;
-    normalData.top_action = m_buttonData.triangle;
+    normalData.triggers[0] = NormalizeTrigger(m_buttonData.trigger_left_pressure);
+    normalData.triggers[1] = NormalizeTrigger(m_buttonData.trigger_right_pressure);
 
-    normalData.dpad_up = m_buttonData.dpad_up;
-    normalData.dpad_down = m_buttonData.dpad_down;
-    normalData.dpad_left = m_buttonData.dpad_left;
-    normalData.dpad_right = m_buttonData.dpad_right;
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock3ControllerConfig.leftStickDeadzonePercent,
+                  &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock3ControllerConfig.rightStickDeadzonePercent,
+                  &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
 
-    normalData.back = m_buttonData.back;
-    normalData.start = m_buttonData.start;
+    bool buttons[NUM_CONTROLLERBUTTONS] = {
+        m_buttonData.triangle,
+        m_buttonData.circle,
+        m_buttonData.cross,
+        m_buttonData.square,
+        m_buttonData.stick_left_click,
+        m_buttonData.stick_right_click,
+        m_buttonData.bumper_left,
+        m_buttonData.bumper_right,
+        normalData.triggers[0] > 0,
+        normalData.triggers[1] > 0,
+        m_buttonData.back,
+        m_buttonData.start,
+        m_buttonData.dpad_up,
+        m_buttonData.dpad_right,
+        m_buttonData.dpad_down,
+        m_buttonData.dpad_left,
+        false,
+        m_buttonData.guide,
+    };
 
-    normalData.left_bumper = m_buttonData.bumper_left;
-    normalData.right_bumper = m_buttonData.bumper_right;
-
-    normalData.left_stick_click = m_buttonData.stick_left_click;
-    normalData.right_stick_click = m_buttonData.stick_right_click;
-
-    normalData.capture = false;
-    normalData.home = false;
-
-    normalData.guide = m_buttonData.guide;
-
-    normalData.left_trigger = m_buttonData.trigger_left;
-    normalData.right_trigger = m_buttonData.trigger_right;
-
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock3ControllerConfig.leftStickDeadzone,
-                  &normalData.left_stick_x, &normalData.left_stick_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock3ControllerConfig.rightStickDeadzone,
-                  &normalData.right_stick_x, &normalData.right_stick_y);
+    for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
+    {
+        ControllerButton button = _dualshock3ControllerConfig.buttons[i];
+        normalData.buttons[(button != NOT_SET ? button : i)] = buttons[i];
+    }
 
     return normalData;
 }
