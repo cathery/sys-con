@@ -20,6 +20,8 @@ Status Xbox360Controller::Initialize()
     rc = OpenInterfaces();
     if (S_FAILED(rc))
         return rc;
+
+    SetLED(XBOX360LED_TOPLEFT);
     return rc;
 }
 void Xbox360Controller::Exit()
@@ -47,27 +49,35 @@ Status Xbox360Controller::OpenInterfaces()
 
         if (!m_inPipe)
         {
-            IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 0);
-            if (inEndpoint)
+            for (int i = 0; i != 15; ++i)
             {
-                rc = inEndpoint->Open();
-                if (S_FAILED(rc))
-                    return 55555;
+                IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, i);
+                if (inEndpoint)
+                {
+                    rc = inEndpoint->Open();
+                    if (S_FAILED(rc))
+                        return 55555;
 
-                m_inPipe = inEndpoint;
+                    m_inPipe = inEndpoint;
+                    break;
+                }
             }
         }
 
         if (!m_outPipe)
         {
-            IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, 0);
-            if (outEndpoint)
+            for (int i = 0; i != 15; ++i)
             {
-                rc = outEndpoint->Open();
-                if (S_FAILED(rc))
-                    return 66666;
+                IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, i);
+                if (outEndpoint)
+                {
+                    rc = outEndpoint->Open();
+                    if (S_FAILED(rc))
+                        return 66666;
 
-                m_outPipe = outEndpoint;
+                    m_outPipe = outEndpoint;
+                    break;
+                }
             }
         }
     }
@@ -197,6 +207,12 @@ Status Xbox360Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magni
 {
     uint8_t rumbleData[]{0x00, sizeof(Xbox360RumbleData), 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00};
     return m_outPipe->Write(rumbleData, sizeof(rumbleData));
+}
+
+Status Xbox360Controller::SetLED(Xbox360LEDValue value)
+{
+    uint8_t ledPacket[]{0x01, 0x03, static_cast<uint8_t>(value)};
+    return m_outPipe->Write(ledPacket, sizeof(ledPacket));
 }
 
 void Xbox360Controller::LoadConfig(const ControllerConfig *config)

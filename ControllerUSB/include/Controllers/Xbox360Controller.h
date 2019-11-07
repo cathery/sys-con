@@ -60,6 +60,26 @@ enum Xbox360InputPacketType
     XBOX360INPUT_RUMBLE = 3,
 };
 
+enum Xbox360LEDValue
+{
+    XBOX360LED_OFF,
+    XBOX360LED_ALLBLINK,
+    XBOX360LED_TOPLEFTBLINK,
+    XBOX360LED_TOPRIGHTBLINK,
+    XBOX360LED_BOTTOMLEFTBLINK,
+    XBOX360LED_BOTTOMRIGHTBLINK,
+    XBOX360LED_TOPLEFT,
+    XBOX360LED_TOPRIGHT,
+    XBOX360LED_BOTTOMLEFT,
+    XBOX360LED_BOTTOMRIGHT,
+    XBOX360LED_ROTATE,
+    XBOX360LED_BLINK,
+    XBOX360LED_SLOWBLINK,
+    XBOX360LED_ROTATE_2,
+    XBOX360LED_ALLSLOWBLINK,
+    XBOX360LED_BLINKONCE,
+};
+
 class Xbox360Controller : public IController
 {
 private:
@@ -98,6 +118,8 @@ public:
 
     Status SendInitBytes();
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+
+    Status SetLED(Xbox360LEDValue value);
 
     static void LoadConfig(const ControllerConfig *config);
 };
