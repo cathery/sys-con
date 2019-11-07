@@ -98,60 +98,33 @@ struct Dualshock3ButtonData
 } __attribute__((packed));
 
 /*
-
-typedef enum _DS3_FEATURE_VALUE
-{
-    Ds3FeatureDeviceAddress = 0x03F2,
-    Ds3FeatureStartDevice = 0x03F4,
-    Ds3FeatureHostAddress = 0x03F5
-
-} DS3_FEATURE_VALUE;
-#define DS3_HID_COMMAND_ENABLE_SIZE             0x04
-#define DS3_HID_OUTPUT_REPORT_SIZE              0x30
-
 #define DS3_VENDOR_ID                           0x054C
 #define DS3_PRODUCT_ID                          0x0268
-
-#define DS4_HID_OUTPUT_REPORT_SIZE              0x20
-#define DS4_VENDOR_ID                           0x054C
-#define DS4_PRODUCT_ID                          0x05C4
-#define DS4_2_PRODUCT_ID                        0x09CC
-#define DS4_WIRELESS_ADAPTER_PRODUCT_ID         0x0BA0
-
 #define PS_MOVE_NAVI_PRODUCT_ID                 0x042F
-
-const uint8_t PS3_REPORT_BUFFER[] = {
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-//Used to set the LEDs on the controllers
-const uint8_t LEDS[] = {
-        0x01, // LED1
-        0x02, // LED2
-        0x04, // LED3
-        0x08, // LED4
-
-        0x09, // LED5
-        0x0A, // LED6
-        0x0C, // LED7
-        0x0D, // LED8
-        0x0E, // LED9
-        0x0F // LED10
-};
 */
+
+enum Dualshock3LEDValue
+{
+    DS3LED_1 = 0x01,
+    DS3LED_2 = 0x02,
+    DS3LED_3 = 0x04,
+    DS3LED_4 = 0x08,
+    DS3LED_5 = 0x09,
+    DS3LED_6 = 0x0A,
+    DS3LED_7 = 0x0C,
+    DS3LED_8 = 0x0D,
+    DS3LED_9 = 0x0E,
+    DS3LED_10 = 0x0F,
+};
+
+#define LED_PERMANENT 0xff, 0x27, 0x00, 0x00, 0x32
 
 class Dualshock3Controller : public IController
 {
 private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
+    IUSBInterface *m_interface = nullptr;
 
     Dualshock3ButtonData m_buttonData;
 
@@ -185,6 +158,10 @@ public:
 
     Status SendInitBytes();
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+
+    static Status SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, void *buffer, uint16_t size);
+
+    Status SetLED(Dualshock3LEDValue value);
 
     static void LoadConfig(const ControllerConfig *config);
 };

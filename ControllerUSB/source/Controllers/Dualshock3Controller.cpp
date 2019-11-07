@@ -21,6 +21,7 @@ Status Dualshock3Controller::Initialize()
     if (S_FAILED(rc))
         return rc;
 
+    SetLED(DS3LED_1);
     return rc;
 }
 void Dualshock3Controller::Exit()
@@ -46,28 +47,44 @@ Status Dualshock3Controller::OpenInterfaces()
         {
             //Send an initial control packet
             uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
-            rc = interface->ControlTransfer(0x21, 0x09, Ds3FeatureStartDevice, 0, sizeof(initBytes), initBytes);
+            rc = SendCommand(interface.get(), Ds3FeatureStartDevice, initBytes, sizeof(initBytes));
             if (S_FAILED(rc))
                 return 60;
 
-            IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 0);
-            if (inEndpoint)
-            {
-                rc = inEndpoint->Open();
-                if (S_FAILED(rc))
-                    return 61;
+            m_interface = interface.get();
 
-                m_inPipe = inEndpoint;
+            if (!m_inPipe)
+            {
+                for (int i = 0; i != 15; ++i)
+                {
+                    IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, i);
+                    if (inEndpoint)
+                    {
+                        rc = inEndpoint->Open();
+                        if (S_FAILED(rc))
+                            return 61;
+
+                        m_inPipe = inEndpoint;
+                        break;
+                    }
+                }
             }
 
-            IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, 1);
-            if (outEndpoint)
+            if (!m_outPipe)
             {
-                rc = outEndpoint->Open();
-                if (S_FAILED(rc))
-                    return 62;
+                for (int i = 0; i != 15; ++i)
+                {
+                    IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, i);
+                    if (outEndpoint)
+                    {
+                        rc = outEndpoint->Open();
+                        if (S_FAILED(rc))
+                            return 62;
 
-                m_outPipe = outEndpoint;
+                        m_outPipe = outEndpoint;
+                        break;
+                    }
+                }
             }
 
             if (!m_inPipe || !m_outPipe)
@@ -184,6 +201,23 @@ Status Dualshock3Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_ma
 {
     //Not implemented yet
     return 9;
+}
+
+Status Dualshock3Controller::SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, void *buffer, uint16_t size)
+{
+    return interface->ControlTransfer(0x21, 0x09, static_cast<uint16_t>(feature), 0, size, buffer);
+}
+
+Status Dualshock3Controller::SetLED(Dualshock3LEDValue value)
+{
+    uint8_t ledPacket[]{
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        static_cast<uint8_t>(value << 1),
+        LED_PERMANENT,
+        LED_PERMANENT,
+        LED_PERMANENT,
+        LED_PERMANENT};
+    return SendCommand(m_interface, Ds3FeatureUnknown1, ledPacket, sizeof(ledPacket));
 }
 
 void Dualshock3Controller::LoadConfig(const ControllerConfig *config)
