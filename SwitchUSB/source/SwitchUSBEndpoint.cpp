@@ -42,6 +42,11 @@ Result SwitchUSBEndpoint::Write(const void *inBuffer, size_t bufferSize)
         }
 
         rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
+
+        if (R_SUCCEEDED(rc))
+        {
+            svcSleepThread(m_descriptor->bInterval * 1e+6L);
+        }
     }
     return rc;
 }
