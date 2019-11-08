@@ -47,25 +47,25 @@ Result mainLoop()
 
     {
         UsbHsInterfaceFilter filter;
-        filter.Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min;
-        filter.bcdDevice_Min = 0;
-        rc = usbHsCreateInterfaceAvailableEvent(&catchAllEvent, true, 0, &filter);
-        if (R_FAILED(rc))
-            WriteToLog("Failed to open catch-all event");
-        else
-            WriteToLog("Successfully created catch-all event");
-
         //filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bcdDevice_Min;
         //filter.bInterfaceClass = USB_CLASS_HID;
         //filter.bcdDevice_Min = 0;
         filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
         filter.idVendor = VENDOR_SONY;
         filter.idProduct = PRODUCT_DUALSHOCK3;
-        rc = usbHsCreateInterfaceAvailableEvent(&ds3Event, true, 1, &filter);
+        rc = usbHsCreateInterfaceAvailableEvent(&ds3Event, true, 0, &filter);
         if (R_FAILED(rc))
             WriteToLog("Failed to open event for Dualshock 3");
         else
             WriteToLog("Successfully created event for Dualshock 3");
+
+        filter.Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min;
+        filter.bcdDevice_Min = 0;
+        rc = usbHsCreateInterfaceAvailableEvent(&catchAllEvent, true, 1, &filter);
+        if (R_FAILED(rc))
+            WriteToLog("Failed to open catch-all event");
+        else
+            WriteToLog("Successfully created catch-all event");
     }
 
     controllerInterfaces.reserve(8);
@@ -209,8 +209,8 @@ Result mainLoop()
 
     //After we break out of the loop, close all events and exit
     WriteToLog("Destroying events");
-    usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 0);
-    usbHsDestroyInterfaceAvailableEvent(&ds3Event, 1);
+    usbHsDestroyInterfaceAvailableEvent(&ds3Event, 0);
+    usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 1);
 
     //controllerInterfaces.clear();
     return rc;
