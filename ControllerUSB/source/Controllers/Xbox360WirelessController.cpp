@@ -2,6 +2,9 @@
 #include <cmath>
 
 static ControllerConfig _xbox360WControllerConfig{};
+static const uint8_t reconnectPacket[]{0x08, 0x00, 0x0F, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t poweroffPacket[]{0x00, 0x00, 0x08, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t ledPacket[]{0x00, 0x00, 0x08, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 Xbox360WirelessController::Xbox360WirelessController(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
@@ -16,12 +19,14 @@ Xbox360WirelessController::~Xbox360WirelessController()
 Status Xbox360WirelessController::Initialize()
 {
     Status rc;
+    m_outputBuffer.clear();
+    m_outputBuffer.reserve(4);
 
     rc = OpenInterfaces();
     if (S_FAILED(rc))
         return rc;
 
-    rc = ReconnectController();
+    rc = m_outPipe->Write(reconnectPacket, sizeof(reconnectPacket));
     if (S_FAILED(rc))
         return rc;
 
@@ -97,7 +102,7 @@ Status Xbox360WirelessController::OpenInterfaces()
 void Xbox360WirelessController::CloseInterfaces()
 {
     if (m_presence)
-        PowerOffController();
+        m_outPipe->Write(poweroffPacket, sizeof(poweroffPacket));
 
     //m_device->Reset();
     m_device->Close();
@@ -120,9 +125,12 @@ Status Xbox360WirelessController::GetInput()
             m_presence = newPresence;
 
             if (m_presence)
-                ReconnectController();
+            {
+                m_outputBuffer.push_back(OutputPacket{reconnectPacket, sizeof(reconnectPacket)});
+                m_outputBuffer.push_back(OutputPacket{ledPacket, sizeof(ledPacket)});
+            }
             else
-                PowerOffController();
+                m_outputBuffer.push_back(OutputPacket{poweroffPacket, sizeof(poweroffPacket)});
         }
     }
 
@@ -131,7 +139,7 @@ Status Xbox360WirelessController::GetInput()
 
     if (type == XBOX360INPUT_BUTTON)
     {
-        m_buttonData = *reinterpret_cast<Xbox360ButtonData *>(input_bytes);
+        m_buttonData = *reinterpret_cast<Xbox360ButtonData *>(input_bytes + 4);
     }
 
     return rc;
@@ -237,19 +245,17 @@ Status Xbox360WirelessController::SetLED(Xbox360LEDValue value)
     return m_outPipe->Write(ledPacket, sizeof(ledPacket));
 }
 
-Status Xbox360WirelessController::PowerOffController()
-{
-    uint8_t poweroffPacket[]{0x00, 0x00, 0x08, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    return m_outPipe->Write(poweroffPacket, sizeof(poweroffPacket));
-}
-
-Status Xbox360WirelessController::ReconnectController()
-{
-    uint8_t reconnectPacket[]{0x08, 0x00, 0x0F, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    return m_outPipe->Write(reconnectPacket, sizeof(reconnectPacket));
-}
-
 void Xbox360WirelessController::LoadConfig(const ControllerConfig *config)
 {
     _xbox360WControllerConfig = *config;
+}
+
+Status Xbox360WirelessController::OutputBuffer()
+{
+    if (m_outputBuffer.empty())
+        return 1;
+
+    Status rc = m_outPipe->Write(m_outputBuffer[0].packet, m_outputBuffer[0].length);
+    m_outputBuffer.erase(m_outputBuffer.begin());
+    return rc;
 }

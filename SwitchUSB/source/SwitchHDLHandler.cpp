@@ -1,4 +1,5 @@
 #include "SwitchHDLHandler.h"
+#include "ControllerHelpers.h"
 #include <cmath>
 
 SwitchHDLHandler::SwitchHDLHandler(std::unique_ptr<IController> &&controller)
@@ -48,6 +49,13 @@ Result SwitchHDLHandler::Initialize()
     else
         WriteToLog("Failed to iniitalize vibration with error ", rc2);
     */
+
+    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_PAIRING))
+    {
+        rc = InitOutputThread();
+        if (R_FAILED(rc))
+            return rc;
+    }
 
     rc = InitInputThread();
     if (R_FAILED(rc))
@@ -155,14 +163,17 @@ void SwitchHDLHandler::UpdateInput()
 
 void SwitchHDLHandler::UpdateOutput()
 {
-    //Implement rumble here
-    Result rc;
-    HidVibrationValue value;
-    rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
-    if (R_FAILED(rc))
+    if (R_SUCCEEDED(m_controllerHandler.GetController()->OutputBuffer()))
         return;
 
-    rc = GetController()->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
+    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_RUMBLE))
+    {
+        Result rc;
+        HidVibrationValue value;
+        rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
+        if (R_SUCCEEDED(rc))
+            GetController()->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
+    }
 
     svcSleepThread(1e+7L);
 }

@@ -6,6 +6,12 @@
 //References used:
 //https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c
 
+struct OutputPacket
+{
+    const uint8_t *packet;
+    uint8_t length;
+};
+
 class Xbox360WirelessController : public IController
 {
 private:
@@ -15,6 +21,8 @@ private:
     Xbox360ButtonData m_buttonData;
 
     bool m_presence;
+
+    std::vector<OutputPacket> m_outputBuffer;
 
 public:
     Xbox360WirelessController(std::unique_ptr<IUSBDevice> &&interface);
@@ -39,8 +47,8 @@ public:
 
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
     Status SetLED(Xbox360LEDValue value);
-    Status PowerOffController();
-    Status ReconnectController();
 
     static void LoadConfig(const ControllerConfig *config);
+
+    Status OutputBuffer();
 };

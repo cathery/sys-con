@@ -8,6 +8,10 @@ bool DoesControllerSupport(ControllerType type, ControllerSupport supportType)
         if (supportType == SUPPORTS_RUMBLE)
             return true;
         return false;
+    case CONTROLLER_XBOX360W:
+        if (supportType == SUPPORTS_PAIRING)
+            return true;
+        return false;
     case CONTROLLER_XBOXONE:
         switch (supportType)
         {

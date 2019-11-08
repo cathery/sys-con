@@ -1,4 +1,5 @@
 #include "SwitchAbstractedPadHandler.h"
+#include "ControllerHelpers.h"
 #include <cmath>
 #include <array>
 
@@ -50,6 +51,13 @@ Result SwitchAbstractedPadHandler::Initialize()
     else
         WriteToLog("Failed to iniitalize vibration device with error ", rc2);
     */
+
+    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_PAIRING))
+    {
+        rc = InitOutputThread();
+        if (R_FAILED(rc))
+            return rc;
+    }
 
     rc = InitInputThread();
     if (R_FAILED(rc))
@@ -164,13 +172,17 @@ void SwitchAbstractedPadHandler::UpdateInput()
 
 void SwitchAbstractedPadHandler::UpdateOutput()
 {
-    Result rc;
-    HidVibrationValue value;
-    rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
-    if (R_FAILED(rc))
+    if (R_SUCCEEDED(m_controllerHandler.GetController()->OutputBuffer()))
         return;
 
-    rc = GetController()->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
+    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_RUMBLE))
+    {
+        Result rc;
+        HidVibrationValue value;
+        rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
+        if (R_SUCCEEDED(rc))
+            GetController()->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
+    }
 
     svcSleepThread(1e+7L);
 }
