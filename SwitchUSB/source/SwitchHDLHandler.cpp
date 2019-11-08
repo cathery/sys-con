@@ -146,10 +146,7 @@ void SwitchHDLHandler::UpdateInput()
 void SwitchHDLHandler::UpdateOutput()
 {
     if (R_SUCCEEDED(GetController()->OutputBuffer()))
-    {
-        svcSleepThread(1e+7L);
         return;
-    }
 
     if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_RUMBLE))
     {
