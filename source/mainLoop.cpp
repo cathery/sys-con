@@ -34,8 +34,8 @@ Result mainLoop()
     Result rc = 0;
     bool useAbstractedPad = hosversionBetween(5, 7);
 
-    Event xinputEvent;
-    Event dinputEvent;
+    Event catchAllEvent;
+    Event ds3Event;
     std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
     UTimer filecheckTimer;
@@ -47,13 +47,13 @@ Result mainLoop()
 
     {
         UsbHsInterfaceFilter filter;
-        filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass;
-        filter.bInterfaceClass = USB_CLASS_VENDOR_SPEC;
-        rc = usbHsCreateInterfaceAvailableEvent(&xinputEvent, true, 0, &filter);
+        filter.Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min;
+        filter.bcdDevice_Min = 0;
+        rc = usbHsCreateInterfaceAvailableEvent(&catchAllEvent, true, 0, &filter);
         if (R_FAILED(rc))
-            WriteToLog("Failed to open event for XInput");
+            WriteToLog("Failed to open catch-all event");
         else
-            WriteToLog("Successfully created event for XInput");
+            WriteToLog("Successfully created catch-all event");
 
         //filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bcdDevice_Min;
         //filter.bInterfaceClass = USB_CLASS_HID;
@@ -61,11 +61,11 @@ Result mainLoop()
         filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
         filter.idVendor = VENDOR_SONY;
         filter.idProduct = PRODUCT_DUALSHOCK3;
-        rc = usbHsCreateInterfaceAvailableEvent(&dinputEvent, true, 1, &filter);
+        rc = usbHsCreateInterfaceAvailableEvent(&ds3Event, true, 1, &filter);
         if (R_FAILED(rc))
-            WriteToLog("Failed to open event for DInput");
+            WriteToLog("Failed to open event for Dualshock 3");
         else
-            WriteToLog("Successfully created event for DInput");
+            WriteToLog("Successfully created event for Dualshock 3");
     }
 
     controllerInterfaces.reserve(8);
@@ -82,10 +82,10 @@ Result mainLoop()
         if (kDown & KEY_B)
             break;
 #endif
-        rc = eventWait(&xinputEvent, 0);
+        rc = eventWait(&catchAllEvent, 0);
         if (R_SUCCEEDED(rc))
         {
-            WriteToLog("XInput went off");
+            WriteToLog("Catch-all event went off");
             UsbHsInterface interfaces[8];
             s32 total_entries;
 
@@ -101,6 +101,12 @@ Result mainLoop()
                 devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
                 controllerPtr = std::make_unique<Xbox360WirelessController>(std::move(devicePtr));
             }
+            else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, 0x58, 0x42, 0x00)))
+            {
+                WriteToLog("Registering Xbox One controller");
+                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                controllerPtr = std::make_unique<XboxController>(std::move(devicePtr));
+            }
             else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 71, 208)))
             {
                 WriteToLog("Registering Xbox One controller");
@@ -108,10 +114,10 @@ Result mainLoop()
                 controllerPtr = std::make_unique<XboxOneController>(std::move(devicePtr));
             }
         }
-        rc = eventWait(&dinputEvent, 0);
+        rc = eventWait(&ds3Event, 0);
         if (R_SUCCEEDED(rc))
         {
-            WriteToLog("DInput went off");
+            WriteToLog("Dualshock 3 event went off");
             UsbHsInterface interfaces[4];
             s32 total_entries;
 
@@ -203,8 +209,8 @@ Result mainLoop()
 
     //After we break out of the loop, close all events and exit
     WriteToLog("Destroying events");
-    usbHsDestroyInterfaceAvailableEvent(&xinputEvent, 0);
-    usbHsDestroyInterfaceAvailableEvent(&dinputEvent, 1);
+    usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 0);
+    usbHsDestroyInterfaceAvailableEvent(&ds3Event, 1);
 
     //controllerInterfaces.clear();
     return rc;

@@ -38,7 +38,7 @@ Status Dualshock4Controller::OpenInterfaces()
     if (S_FAILED(rc))
         return rc;
 
-    //This will open each interface and try to acquire Xbox One controller's in and out endpoints, if it hasn't already
+    //This will open each interface and try to acquire Dualshock 4 controller's in and out endpoints, if it hasn't already
     std::vector<std::unique_ptr<IUSBInterface>> &interfaces = m_device->GetInterfaces();
     for (auto &&interface : interfaces)
     {

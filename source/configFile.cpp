@@ -11,6 +11,7 @@
 
 #define GLOBALCONFIG "config_global.ini"
 
+#define XBOXCONFIG "config_xboxorig.ini"
 #define XBOX360CONFIG "config_xbox360.ini"
 #define XBOXONECONFIG "config_xboxone.ini"
 #define DUALSHOCK3CONFIG "config_dualshock3.ini"
@@ -102,6 +103,13 @@ static Result _ReadFromConfig(const char *path)
 
 void LoadAllConfigs()
 {
+    if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH XBOXCONFIG)))
+    {
+        XboxController::LoadConfig(&temp_config);
+    }
+    else
+        WriteToLog("Failed to read from xbox orig config!");
+
     if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH XBOXONECONFIG)))
         XboxOneController::LoadConfig(&temp_config);
     else
@@ -131,6 +139,7 @@ bool CheckForFileChanges()
     bool filesChanged = false;
 
     static time_t globalConfigLastModified;
+    static time_t xboxConfigLastModified;
     static time_t xbox360ConfigLastModified;
     static time_t xboxOneConfigLastModified;
     static time_t dualshock3ConfigLastModified;
@@ -141,6 +150,13 @@ bool CheckForFileChanges()
         if (globalConfigLastModified != result.st_mtime)
         {
             globalConfigLastModified = result.st_mtime;
+            filesChanged = true;
+        }
+
+    if (stat(CONFIG_PATH XBOXCONFIG, &result) == 0)
+        if (xboxConfigLastModified != result.st_mtime)
+        {
+            xboxConfigLastModified = result.st_mtime;
             filesChanged = true;
         }
 

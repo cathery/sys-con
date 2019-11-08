@@ -4,7 +4,7 @@
 #include "Xbox360Controller.h"
 
 //References used:
-//https://cs.chromium.org/chromium/src/device/gamepad/xbox_controller_mac.mm
+//https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c
 
 class Xbox360WirelessController : public IController
 {
