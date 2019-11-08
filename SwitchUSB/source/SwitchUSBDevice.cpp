@@ -44,10 +44,15 @@ void SwitchUSBDevice::Reset()
 
 void SwitchUSBDevice::SetInterfaces(UsbHsInterface *interfaces, int length)
 {
-    m_interfaces.clear();
-    m_interfaces.reserve(length);
-    for (int i = 0; i != length; ++i)
+    if (length > 0)
     {
-        m_interfaces.push_back(std::make_unique<SwitchUSBInterface>(interfaces[i]));
+        m_vendorID = interfaces->device_desc.idVendor;
+        m_productID = interfaces->device_desc.idProduct;
+        m_interfaces.clear();
+        m_interfaces.reserve(length);
+        for (int i = 0; i != length; ++i)
+        {
+            m_interfaces.push_back(std::make_unique<SwitchUSBInterface>(interfaces[i]));
+        }
     }
 }
