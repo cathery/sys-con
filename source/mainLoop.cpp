@@ -14,13 +14,28 @@ struct VendorEvent
     Event event;
 };
 
+Result QueryInterfaces(UsbHsInterface *interfaces, size_t interfaces_size, s32 *total_entries, u8 infclass, u8 infsubclass, u8 infprotocol)
+{
+    UsbHsInterfaceFilter filter;
+    filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bInterfaceSubClass | UsbHsInterfaceFilterFlags_bInterfaceProtocol;
+    filter.bInterfaceClass = infclass;
+    filter.bInterfaceSubClass = infsubclass;
+    filter.bInterfaceProtocol = infprotocol;
+    Result rc = usbHsQueryAvailableInterfaces(&filter, interfaces, interfaces_size, total_entries);
+    if (R_SUCCEEDED(rc) && *total_entries != 0)
+        return 0;
+    else
+        return 1;
+}
+
 Result mainLoop()
 {
     WriteToLog("\n\nNew sysmodule session started");
     Result rc = 0;
     bool useAbstractedPad = hosversionBetween(5, 7);
 
-    VendorEvent events[2];
+    Event xinputEvent;
+    Event dinputEvent;
     std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
     UTimer filecheckTimer;
@@ -32,27 +47,30 @@ Result mainLoop()
 
     {
         UsbHsInterfaceFilter filter;
-        filter.Flags = UsbHsInterfaceFilterFlags_idVendor;
-        filter.idVendor = VENDOR_MICROSOFT;
-        events[0] = {VENDOR_MICROSOFT, Event()};
-        rc = usbHsCreateInterfaceAvailableEvent(&events[0].event, true, 0, &filter);
+        filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass;
+        filter.bInterfaceClass = USB_CLASS_VENDOR_SPEC;
+        rc = usbHsCreateInterfaceAvailableEvent(&xinputEvent, true, 0, &filter);
         if (R_FAILED(rc))
-            WriteToLog("Failed to open event for microsoft");
+            WriteToLog("Failed to open event for XInput");
         else
-            WriteToLog("Successfully created event for microsoft");
+            WriteToLog("Successfully created event for XInput");
 
+        //filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bcdDevice_Min;
+        //filter.bInterfaceClass = USB_CLASS_HID;
+        //filter.bcdDevice_Min = 0;
         filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
         filter.idVendor = VENDOR_SONY;
         filter.idProduct = PRODUCT_DUALSHOCK3;
-        events[1] = {VENDOR_SONY, Event()};
-        rc = usbHsCreateInterfaceAvailableEvent(&events[1].event, true, 1, &filter);
+        rc = usbHsCreateInterfaceAvailableEvent(&dinputEvent, true, 1, &filter);
         if (R_FAILED(rc))
-            WriteToLog("Failed to open event for sony dualshock 3");
+            WriteToLog("Failed to open event for DInput");
         else
-            WriteToLog("Successfully created event for sony dualshock 3");
+            WriteToLog("Successfully created event for DInput");
     }
 
     controllerInterfaces.reserve(8);
+    std::unique_ptr<IUSBDevice> devicePtr;
+    std::unique_ptr<IController> controllerPtr;
 
     while (appletMainLoop())
     {
@@ -60,102 +78,62 @@ Result mainLoop()
 #ifdef __APPLET__
         hidScanInput();
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-        /*
-        if (kDown & KEY_Y)
-        {
-            for (int i = 0; i != 8; ++i)
-            {
-                bool isConnected = hidIsControllerConnected(static_cast<HidControllerID>(i));
-                WriteToLog("Is controller ", i, " connected: ", isConnected);
-                if (isConnected)
-                {
-                    HidControllerType type = hidGetControllerType(static_cast<HidControllerID>(i));
-                    WriteToLog("Controller ", i, " type: ", type);
-                }
-            }
-        }
-
-        if (kDown & KEY_X)
-        {
-            WriteToLog("Sending rumble to all controllers\n");
-            for (auto &&con : controllerInterfaces)
-            {
-                u32 *vibrationHandle = con->GetVibrationHandle();
-                bool flag;
-                Result rc = hidIsVibrationDeviceMounted(vibrationHandle, &flag);
-                if (R_SUCCEEDED(rc))
-                {
-                    WriteToLog("Is vibration device mounted: ", flag);
-                    HidVibrationValue value;
-                    value.amp_high = 0.5f;
-                    value.amp_low = 0.5f;
-                    value.freq_high = 0.0f;
-                    value.freq_low = 0.0f;
-                    rc = hidSendVibrationValue(vibrationHandle, &value);
-                    WriteToLog("SendVirationValue result: ", rc);
-                    rc = hidGetActualVibrationValue(vibrationHandle, &value);
-                    WriteToLog("hidGetActualVibrationValue result: ", rc);
-                    if (R_SUCCEEDED(rc))
-                    {
-                        WriteToLog("Amp high: ", value.amp_high, " Amp low: ", value.amp_low, " Freq high: ", value.freq_high, " Freq low: ", value.freq_low);
-                    }
-                }
-                else
-                    WriteToLog("failed to check for vibration device");
-            }
-        }
-        */
 
         if (kDown & KEY_B)
             break;
 #endif
-        //Iterate over each event and check if it went off, then iterate over each vendor product to see which one fits
-        for (auto &&event : events)
+        rc = eventWait(&xinputEvent, 0);
+        if (R_SUCCEEDED(rc))
         {
-            rc = eventWait(&event.event, 0);
+            WriteToLog("XInput went off");
+            UsbHsInterface interfaces[8];
+            s32 total_entries;
+
+            if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 1)))
+            {
+                WriteToLog("Registering Xbox 360 controller");
+                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                controllerPtr = std::make_unique<Xbox360Controller>(std::move(devicePtr));
+            }
+            else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 71, 208)))
+            {
+                WriteToLog("Registering Xbox One controller");
+                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                controllerPtr = std::make_unique<XboxOneController>(std::move(devicePtr));
+            }
+        }
+        rc = eventWait(&dinputEvent, 0);
+        if (R_SUCCEEDED(rc))
+        {
+            WriteToLog("DInput went off");
+            UsbHsInterface interfaces[4];
+            s32 total_entries;
+
+            if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
+            {
+                WriteToLog("Registering DS3 controller");
+                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                controllerPtr = std::make_unique<Dualshock3Controller>(std::move(devicePtr));
+            }
+        }
+
+        if (controllerPtr)
+        {
+            std::unique_ptr<SwitchVirtualGamepadHandler> switchHandler;
+            if (useAbstractedPad)
+                switchHandler = std::make_unique<SwitchAbstractedPadHandler>(std::move(controllerPtr));
+            else
+                switchHandler = std::make_unique<SwitchHDLHandler>(std::move(controllerPtr));
+
+            rc = switchHandler->Initialize();
             if (R_SUCCEEDED(rc))
             {
-                WriteToLog("Succeeded event ", event.vendor);
-                WriteToLog("Interfaces size: ", controllerInterfaces.size(), "; capacity: ", controllerInterfaces.capacity());
-
-                for (auto &&product : GetVendorProducts(event.vendor))
-                {
-                    if (controllerInterfaces.size() == 8)
-                    {
-                        WriteToLog("Reached controller limit! skipping initialization");
-                        break;
-                    }
-                    UsbHsInterface interfaces[4];
-                    s32 total_entries;
-
-                    UsbHsInterfaceFilter tempFilter;
-                    tempFilter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
-                    tempFilter.idVendor = event.vendor;
-                    tempFilter.idProduct = product;
-                    rc = usbHsQueryAvailableInterfaces(&tempFilter, interfaces, sizeof(interfaces), &total_entries);
-
-                    if (R_FAILED(rc))
-                        continue;
-                    if (total_entries == 0)
-                        continue;
-
-                    std::unique_ptr<SwitchVirtualGamepadHandler> switchHandler;
-                    if (useAbstractedPad)
-                        switchHandler = std::make_unique<SwitchAbstractedPadHandler>(ConstructControllerFromType(GetControllerTypeFromIds(event.vendor, product), std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
-                    else
-                        switchHandler = std::make_unique<SwitchHDLHandler>(ConstructControllerFromType(GetControllerTypeFromIds(event.vendor, product), std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
-
-                    rc = switchHandler->Initialize();
-                    if (R_SUCCEEDED(rc))
-                    {
-                        controllerInterfaces.push_back(std::move(switchHandler));
-                        WriteToLog("Interface created successfully on product ", product);
-                    }
-                    else
-                    {
-                        WriteToLog("Error creating interface for product ", product, " with error ", rc);
-                    }
-                }
+                controllerInterfaces.push_back(std::move(switchHandler));
+                WriteToLog("Interface created successfully");
+            }
+            else
+            {
+                WriteToLog("Error creating interface with error ", rc);
             }
         }
 
@@ -218,11 +196,9 @@ Result mainLoop()
     }
 
     //After we break out of the loop, close all events and exit
-    for (auto &&event : events)
-    {
-        WriteToLog("Destroying event " + event.vendor);
-        usbHsDestroyInterfaceAvailableEvent(&event.event, 0);
-    }
+    WriteToLog("Destroying events");
+    usbHsDestroyInterfaceAvailableEvent(&xinputEvent, 0);
+    usbHsDestroyInterfaceAvailableEvent(&dinputEvent, 1);
 
     //controllerInterfaces.clear();
     return rc;
