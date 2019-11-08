@@ -81,7 +81,8 @@ private:
     XboxOneButtonData m_buttonData;
     bool m_GuidePressed{false};
 
-    uint8_t m_rumbleDataCounter = 0;
+    //Meant to be incremented with each out packet
+    uint8_t m_outPacketSerial = 0;
     /*
 
     int16_t kLeftThumbDeadzone = 2500;  //7849;
