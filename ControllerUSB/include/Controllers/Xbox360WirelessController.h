@@ -20,7 +20,7 @@ private:
 
     Xbox360ButtonData m_buttonData;
 
-    bool m_presence;
+    bool m_presence = false;
 
     std::vector<OutputPacket> m_outputBuffer;
 
@@ -48,7 +48,12 @@ public:
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
     Status SetLED(Xbox360LEDValue value);
 
+    Status OnControllerConnect();
+    Status OnControllerDisconnect();
+
     static void LoadConfig(const ControllerConfig *config);
 
     Status OutputBuffer();
+
+    bool IsControllerActive() override { return m_presence; }
 };

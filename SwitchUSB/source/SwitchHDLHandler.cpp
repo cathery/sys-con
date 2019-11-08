@@ -18,39 +18,11 @@ Result SwitchHDLHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
-    /*
-    hidScanInput();
-    HidControllerID lastOfflineID = CONTROLLER_PLAYER_1;
-    for (int i = 0; i != 8; ++i)
-    {
-        if (!hidIsControllerConnected(static_cast<HidControllerID>(i)))
-        {
-            lastOfflineID = static_cast<HidControllerID>(i);
-            break;
-        }
-    }
-    //WriteToLog("Found last offline ID: ", lastOfflineID);
-    */
-
     rc = InitHdlState();
     if (R_FAILED(rc))
         return rc;
 
-    /*
-    svcSleepThread(1e+7L);
-    hidScanInput();
-
-    //WriteToLog("Is last offline id connected? ", hidIsControllerConnected(lastOfflineID));
-    //WriteToLog("Last offline id type: ", hidGetControllerType(lastOfflineID));
-
-    Result rc2 = hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, lastOfflineID, hidGetControllerType(lastOfflineID));
-    if (R_SUCCEEDED(rc2))
-        InitOutputThread();
-    else
-        WriteToLog("Failed to iniitalize vibration with error ", rc2);
-    */
-
-    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_PAIRING))
+    if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_PAIRING))
     {
         rc = InitOutputThread();
         if (R_FAILED(rc))
@@ -93,7 +65,10 @@ Result SwitchHDLHandler::InitHdlState()
     m_hdlState.joysticks[JOYSTICK_RIGHT].dx = 0x5678;
     m_hdlState.joysticks[JOYSTICK_RIGHT].dy = -0x5678;
 
-    return hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
+    if (GetController()->IsControllerActive())
+        return hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
+
+    return 0;
 }
 Result SwitchHDLHandler::ExitHdlState()
 {
@@ -155,18 +130,28 @@ void SwitchHDLHandler::UpdateInput()
     if (R_FAILED(rc))
         return;
 
-    FillHdlState(GetController()->GetNormalizedButtonData());
-    rc = UpdateHdlState();
-    if (R_FAILED(rc))
-        return;
+    if (!GetController()->IsControllerActive())
+    {
+        hiddbgDetachHdlsVirtualDevice(m_hdlHandle);
+    }
+    else
+    {
+        FillHdlState(GetController()->GetNormalizedButtonData());
+        rc = UpdateHdlState();
+        if (R_FAILED(rc))
+            return;
+    }
 }
 
 void SwitchHDLHandler::UpdateOutput()
 {
-    if (R_SUCCEEDED(m_controllerHandler.GetController()->OutputBuffer()))
+    if (R_SUCCEEDED(GetController()->OutputBuffer()))
+    {
+        svcSleepThread(1e+7L);
         return;
+    }
 
-    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_RUMBLE))
+    if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_RUMBLE))
     {
         Result rc;
         HidVibrationValue value;

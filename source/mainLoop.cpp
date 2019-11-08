@@ -28,15 +28,45 @@ Result QueryInterfaces(UsbHsInterface *interfaces, size_t interfaces_size, s32 *
         return 1;
 }
 
+std::unique_ptr<IUSBDevice> devicePtr;
+std::unique_ptr<IController> controllerPtr;
+bool useAbstractedPad = hosversionBetween(5, 7);
+std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
+
+Result CallInitHandler()
+{
+    if (controllerPtr)
+    {
+        Result rc;
+        std::unique_ptr<SwitchVirtualGamepadHandler> switchHandler;
+        if (useAbstractedPad)
+            switchHandler = std::make_unique<SwitchAbstractedPadHandler>(std::move(controllerPtr));
+        else
+            switchHandler = std::make_unique<SwitchHDLHandler>(std::move(controllerPtr));
+
+        rc = switchHandler->Initialize();
+        if (R_SUCCEEDED(rc))
+        {
+            controllerInterfaces.push_back(std::move(switchHandler));
+            WriteToLog("Interface created successfully");
+            return 0;
+        }
+        else
+        {
+            WriteToLog("Error creating interface with error ", rc);
+            return rc;
+        }
+    }
+    return 1;
+}
+
 Result mainLoop()
 {
     WriteToLog("\n\nNew sysmodule session started");
     Result rc = 0;
-    bool useAbstractedPad = hosversionBetween(5, 7);
 
     Event catchAllEvent;
     Event ds3Event;
-    std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
     UTimer filecheckTimer;
     Waiter filecheckTimerWaiter = waiterForUTimer(&filecheckTimer);
@@ -69,8 +99,6 @@ Result mainLoop()
     }
 
     controllerInterfaces.reserve(8);
-    std::unique_ptr<IUSBDevice> devicePtr;
-    std::unique_ptr<IController> controllerPtr;
 
     while (appletMainLoop())
     {
@@ -97,9 +125,13 @@ Result mainLoop()
             }
             else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 129)))
             {
-                WriteToLog("Registering Xbox 360 Wireless controller");
-                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
-                controllerPtr = std::make_unique<Xbox360WirelessController>(std::move(devicePtr));
+                WriteToLog("Registering Xbox 360 Wireless adapter");
+                for (int i = 0; i != total_entries; ++i)
+                {
+                    devicePtr = std::make_unique<SwitchUSBDevice>(interfaces + i, 1);
+                    controllerPtr = std::make_unique<Xbox360WirelessController>(std::move(devicePtr));
+                    CallInitHandler();
+                }
             }
             else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, 0x58, 0x42, 0x00)))
             {
@@ -128,26 +160,7 @@ Result mainLoop()
                 controllerPtr = std::make_unique<Dualshock3Controller>(std::move(devicePtr));
             }
         }
-
-        if (controllerPtr)
-        {
-            std::unique_ptr<SwitchVirtualGamepadHandler> switchHandler;
-            if (useAbstractedPad)
-                switchHandler = std::make_unique<SwitchAbstractedPadHandler>(std::move(controllerPtr));
-            else
-                switchHandler = std::make_unique<SwitchHDLHandler>(std::move(controllerPtr));
-
-            rc = switchHandler->Initialize();
-            if (R_SUCCEEDED(rc))
-            {
-                controllerInterfaces.push_back(std::move(switchHandler));
-                WriteToLog("Interface created successfully");
-            }
-            else
-            {
-                WriteToLog("Error creating interface with error ", rc);
-            }
-        }
+        CallInitHandler();
 
         //On interface change event, check if any devices were removed, and erase them from memory appropriately
         rc = eventWait(usbHsGetInterfaceStateChangeEvent(), 0);

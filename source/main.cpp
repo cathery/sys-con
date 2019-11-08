@@ -1,6 +1,7 @@
 #include "switch.h"
 #include "log.h"
 #include "mainLoop.h"
+#include "log.h"
 
 //ISSUES:
 // when exiting the applet, only one of the controllers is reset
@@ -9,8 +10,6 @@
 
 //TODO:
 // Shrink unneessary heap memory/stack size used for the sysmodule
-// Allow to connect controllers paired through a bluetooth adapter
-// Allow to connect controllers through usbDs (directly to switch)
 // Make a config application companion to test controller input and edit various preferences (buttons, deadzones)
 
 extern "C"
@@ -38,7 +37,7 @@ extern "C"
 
 #endif
 
-    void __attribute__((weak)) userAppInit(void)
+    void userAppInit(void)
     {
         //Seems like every thread on the switch needs to sleep for a little
         // or it will block the entire console
@@ -65,7 +64,7 @@ extern "C"
 #endif
     }
 
-    void __attribute__((weak)) userAppExit(void)
+    void userAppExit(void)
     {
 #ifndef __APPLET__
         hidExit();
