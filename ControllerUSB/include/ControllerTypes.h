@@ -11,6 +11,7 @@ enum ControllerType
 
 enum VendorIDs
 {
+    VENDOR_LOGITECH = 0x046d,
     VENDOR_MICROSOFT = 0x45e,
     VENDOR_SONY = 0x54c,
 };
@@ -18,6 +19,9 @@ enum VendorIDs
 enum ProductIDs
 {
     PRODUCT_XBOX360 = 0x28e,
+    PRODUCT_F310 = 0xc21d,
+    PRODUCT_F510 = 0xc21e,
+    PRODUCT_F710 = 0xc21f,
     /*
     PRODUCT_XBOX360_WIRELESS = 0x28F,
     PRODUCT_XBOX360_WIRELESS_MODULE = 0x765,

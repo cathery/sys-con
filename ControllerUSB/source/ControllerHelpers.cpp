@@ -2,13 +2,19 @@
 
 std::vector<uint16_t> GetVendors()
 {
-    return {VENDOR_MICROSOFT, VENDOR_SONY};
+    return {VENDOR_LOGITECH, VENDOR_MICROSOFT, VENDOR_SONY};
 }
 
 std::vector<uint16_t> GetVendorProducts(uint16_t vendor_id)
 {
     switch (vendor_id)
     {
+    case VENDOR_LOGITECH:
+        return {
+            PRODUCT_F310,
+            PRODUCT_F510,
+            PRODUCT_F710
+        };
     case VENDOR_MICROSOFT:
         return {
             PRODUCT_XBOX360,
@@ -16,7 +22,7 @@ std::vector<uint16_t> GetVendorProducts(uint16_t vendor_id)
             PRODUCT_XBOXONE2015,
             PRODUCT_XBOXONEELITE,
             PRODUCT_XBOXONES,
-            PRODUCT_XBOXADAPTIVE,
+            PRODUCT_XBOXADAPTIVE
             /*
             PRODUCT_XBOX360_WIRELESS,
             PRODUCT_XBOX360_WIRELESS_MODULE,
@@ -29,7 +35,8 @@ std::vector<uint16_t> GetVendorProducts(uint16_t vendor_id)
         };
     case VENDOR_SONY:
         return {PRODUCT_DUALSHOCK3,
-                PRODUCT_DUALSHOCK4};
+                PRODUCT_DUALSHOCK4
+        };
     }
     return {};
 }
@@ -58,6 +65,14 @@ ControllerType GetControllerTypeFromIds(uint16_t vendor_id, uint16_t product_id)
 {
     switch (vendor_id)
     {
+    case VENDOR_LOGITECH:
+        switch (product_id)
+        {
+        case PRODUCT_F310:
+        case PRODUCT_F510:
+        case PRODUCT_F710:
+            return CONTROLLER_XBOX360;
+        }
     case VENDOR_MICROSOFT:
         switch (product_id)
         {

@@ -20,7 +20,7 @@ Result mainLoop()
     Result rc = 0;
     bool useAbstractedPad = hosversionBetween(5, 7);
 
-    VendorEvent events[2];
+    VendorEvent events[3];
     std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
     UTimer filecheckTimer;
@@ -50,6 +50,16 @@ Result mainLoop()
             WriteToLog("Failed to open event for sony dualshock 3");
         else
             WriteToLog("Successfully created event for sony dualshock 3");
+
+        filter.Flags = UsbHsInterfaceFilterFlags_idVendor;
+        filter.idVendor = VENDOR_LOGITECH;
+        events[2] = {VENDOR_LOGITECH, Event()};
+        rc = usbHsCreateInterfaceAvailableEvent(&events[2].event, true, 2, &filter);
+        if (R_FAILED(rc))
+            WriteToLog("Failed to open event for logitech");
+        else
+            WriteToLog("Successfully created event for logitech");
+
     }
 
     controllerInterfaces.reserve(8);
