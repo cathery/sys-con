@@ -47,6 +47,9 @@ Status Xbox360Controller::OpenInterfaces()
         if (interface->GetDescriptor()->bInterfaceProtocol != 1)
             continue;
 
+        if (interface->GetDescriptor()->bNumEndpoints < 2)
+            continue;
+
         if (!m_inPipe)
         {
             for (int i = 0; i != 15; ++i)

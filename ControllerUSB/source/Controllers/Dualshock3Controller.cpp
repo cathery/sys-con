@@ -43,54 +43,56 @@ Status Dualshock3Controller::OpenInterfaces()
         rc = interface->Open();
         if (S_FAILED(rc))
             return rc;
-        if (interface->GetDescriptor()->bNumEndpoints >= 2)
+
+        if (interface->GetDescriptor()->bNumEndpoints < 2)
+            continue;
+
+        //Send an initial control packet
+        uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
+        rc = SendCommand(interface.get(), Ds3FeatureStartDevice, initBytes, sizeof(initBytes));
+        if (S_FAILED(rc))
+            return 60;
+
+        m_interface = interface.get();
+
+        if (!m_inPipe)
         {
-            //Send an initial control packet
-            uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
-            rc = SendCommand(interface.get(), Ds3FeatureStartDevice, initBytes, sizeof(initBytes));
-            if (S_FAILED(rc))
-                return 60;
-
-            m_interface = interface.get();
-
-            if (!m_inPipe)
+            for (int i = 0; i != 15; ++i)
             {
-                for (int i = 0; i != 15; ++i)
+                IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, i);
+                if (inEndpoint)
                 {
-                    IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, i);
-                    if (inEndpoint)
-                    {
-                        rc = inEndpoint->Open();
-                        if (S_FAILED(rc))
-                            return 61;
+                    rc = inEndpoint->Open();
+                    if (S_FAILED(rc))
+                        return 61;
 
-                        m_inPipe = inEndpoint;
-                        break;
-                    }
+                    m_inPipe = inEndpoint;
+                    break;
                 }
             }
+        }
 
-            if (!m_outPipe)
+        if (!m_outPipe)
+        {
+            for (int i = 0; i != 15; ++i)
             {
-                for (int i = 0; i != 15; ++i)
+                IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, i);
+                if (outEndpoint)
                 {
-                    IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, i);
-                    if (outEndpoint)
-                    {
-                        rc = outEndpoint->Open();
-                        if (S_FAILED(rc))
-                            return 62;
+                    rc = outEndpoint->Open();
+                    if (S_FAILED(rc))
+                        return 62;
 
-                        m_outPipe = outEndpoint;
-                        break;
-                    }
+                    m_outPipe = outEndpoint;
+                    break;
                 }
             }
-
-            if (!m_inPipe || !m_outPipe)
-                return 69;
         }
     }
+
+    if (!m_inPipe || !m_outPipe)
+        return 69;
+
     return rc;
 }
 void Dualshock3Controller::CloseInterfaces()
