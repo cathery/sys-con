@@ -108,7 +108,10 @@ void LoadAllConfigs()
         WriteToLog("Failed to read from xbox one config!");
 
     if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH XBOX360CONFIG)))
+    {
         Xbox360Controller::LoadConfig(&temp_config);
+        Xbox360WirelessController::LoadConfig(&temp_config);
+    }
     else
         WriteToLog("Failed to read from xbox 360 config!");
 

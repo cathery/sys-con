@@ -95,6 +95,12 @@ Result mainLoop()
                 devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
                 controllerPtr = std::make_unique<Xbox360Controller>(std::move(devicePtr));
             }
+            else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 129)))
+            {
+                WriteToLog("Registering Xbox 360 Wireless controller");
+                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                controllerPtr = std::make_unique<Xbox360WirelessController>(std::move(devicePtr));
+            }
             else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 71, 208)))
             {
                 WriteToLog("Registering Xbox One controller");
