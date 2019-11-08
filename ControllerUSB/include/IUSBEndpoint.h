@@ -28,7 +28,7 @@ public:
     virtual void Close() = 0;
 
     //This will read from the inBuffer pointer for the specified size and write it to the endpoint.
-    virtual Status Write(void *inBuffer, size_t bufferSize) = 0;
+    virtual Status Write(const void *inBuffer, size_t bufferSize) = 0;
 
     //This will read from the endpoint and put the data in the outBuffer pointer for the specified size.
     virtual Status Read(void *outBuffer, size_t bufferSize) = 0;

@@ -22,7 +22,7 @@ public:
     virtual void Close();
 
     //buffer should point to the data array, and only the specified size will be read.
-    virtual Result Write(void *inBuffer, size_t bufferSize);
+    virtual Result Write(const void *inBuffer, size_t bufferSize);
 
     //The data received will be put in the outBuffer array for the length of the specified size.
     virtual Result Read(void *outBuffer, size_t bufferSize);

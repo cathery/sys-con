@@ -28,7 +28,7 @@ void SwitchUSBEndpoint::Close()
     usbHsEpClose(&m_epSession);
 }
 
-Result SwitchUSBEndpoint::Write(void *inBuffer, size_t bufferSize)
+Result SwitchUSBEndpoint::Write(const void *inBuffer, size_t bufferSize)
 {
     Result rc = -1;
     if (m_buffer != nullptr)
@@ -38,7 +38,7 @@ Result SwitchUSBEndpoint::Write(void *inBuffer, size_t bufferSize)
 
         for (size_t byte = 0; byte != bufferSize; ++byte)
         {
-            static_cast<uint8_t *>(m_buffer)[byte] = static_cast<uint8_t *>(inBuffer)[byte];
+            static_cast<uint8_t *>(m_buffer)[byte] = static_cast<const uint8_t *>(inBuffer)[byte];
         }
 
         rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
