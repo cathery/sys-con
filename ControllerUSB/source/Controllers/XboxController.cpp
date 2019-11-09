@@ -194,3 +194,8 @@ void XboxController::LoadConfig(const ControllerConfig *config)
 {
     _xboxControllerConfig = *config;
 }
+
+ControllerConfig *XboxController::GetConfig()
+{
+    return &_xboxControllerConfig;
+}

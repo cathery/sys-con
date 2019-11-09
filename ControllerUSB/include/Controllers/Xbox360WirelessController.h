@@ -52,6 +52,7 @@ public:
     Status OnControllerDisconnect();
 
     static void LoadConfig(const ControllerConfig *config);
+    virtual ControllerConfig *GetConfig();
 
     Status OutputBuffer();
 

@@ -248,6 +248,11 @@ void Xbox360WirelessController::LoadConfig(const ControllerConfig *config)
     _xbox360WControllerConfig = *config;
 }
 
+ControllerConfig *Xbox360WirelessController::GetConfig()
+{
+    return &_xbox360WControllerConfig;
+}
+
 Status Xbox360WirelessController::OnControllerConnect()
 {
     m_outputBuffer.push_back(OutputPacket{reconnectPacket, sizeof(reconnectPacket)});

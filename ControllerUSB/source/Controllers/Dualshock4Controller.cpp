@@ -197,3 +197,8 @@ void Dualshock4Controller::LoadConfig(const ControllerConfig *config)
 {
     _dualshock4ControllerConfig = *config;
 }
+
+ControllerConfig *Dualshock4Controller::GetConfig()
+{
+    return &_dualshock4ControllerConfig;
+}

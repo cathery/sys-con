@@ -25,14 +25,16 @@ public:
     //Since Exit is used to clean up resources, no status report should be needed
     virtual void Exit() = 0;
 
-    virtual Status GetInput() = 0;
+    virtual Status GetInput() { return 1; }
 
-    virtual NormalizedButtonData GetNormalizedButtonData() = 0;
+    virtual NormalizedButtonData GetNormalizedButtonData() { return NormalizedButtonData(); }
 
     inline IUSBDevice *GetDevice() { return m_device.get(); }
     virtual ControllerType GetType() = 0;
-    virtual Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude) = 0;
+    virtual Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude) { return 1; }
     virtual bool IsControllerActive() { return true; }
 
     Status OutputBuffer() { return 1; };
+
+    virtual ControllerConfig *GetConfig() { return nullptr; }
 };

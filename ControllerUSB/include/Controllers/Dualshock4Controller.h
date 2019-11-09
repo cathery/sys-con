@@ -76,4 +76,5 @@ public:
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
     static void LoadConfig(const ControllerConfig *config);
+    virtual ControllerConfig *GetConfig();
 };

@@ -157,4 +157,5 @@ public:
     Status SetLED(Dualshock3LEDValue value);
 
     static void LoadConfig(const ControllerConfig *config);
+    virtual ControllerConfig *GetConfig();
 };

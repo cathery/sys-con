@@ -115,4 +115,5 @@ public:
     Status SetLED(Xbox360LEDValue value);
 
     static void LoadConfig(const ControllerConfig *config);
+    virtual ControllerConfig *GetConfig();
 };

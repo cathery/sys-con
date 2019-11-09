@@ -230,3 +230,8 @@ void Dualshock3Controller::LoadConfig(const ControllerConfig *config)
 {
     _dualshock3ControllerConfig = *config;
 }
+
+ControllerConfig *Dualshock3Controller::GetConfig()
+{
+    return &_dualshock3ControllerConfig;
+}
