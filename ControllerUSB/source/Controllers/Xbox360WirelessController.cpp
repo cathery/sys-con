@@ -26,13 +26,12 @@ Status Xbox360WirelessController::Initialize()
     rc = OpenInterfaces();
     if (S_FAILED(rc))
         return rc;
-    /*
-    rc = m_outPipe->Write(reconnectPacket, sizeof(reconnectPacket));
+
+    rc = WriteToEndpoint(reconnectPacket, sizeof(reconnectPacket));
     if (S_FAILED(rc))
         return rc;
 
     SetLED(XBOX360LED_TOPLEFT);
-    */
     return rc;
 }
 void Xbox360WirelessController::Exit()
@@ -104,7 +103,7 @@ Status Xbox360WirelessController::OpenInterfaces()
 void Xbox360WirelessController::CloseInterfaces()
 {
     if (m_presence)
-        m_outPipe->Write(poweroffPacket, sizeof(poweroffPacket));
+        WriteToEndpoint(poweroffPacket, sizeof(poweroffPacket));
 
     //m_device->Reset();
     m_device->Close();
@@ -234,13 +233,13 @@ NormalizedButtonData Xbox360WirelessController::GetNormalizedButtonData()
 Status Xbox360WirelessController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     uint8_t rumbleData[]{0x00, 0x01, 0x0F, 0xC0, 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00, 0x00, 0x00};
-    return m_outPipe->Write(rumbleData, sizeof(rumbleData));
+    return WriteToEndpoint(rumbleData, sizeof(rumbleData));
 }
 
 Status Xbox360WirelessController::SetLED(Xbox360LEDValue value)
 {
     uint8_t customLEDPacket[]{0x00, 0x00, 0x08, static_cast<uint8_t>(value | 0x40), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    return m_outPipe->Write(customLEDPacket, sizeof(customLEDPacket));
+    return WriteToEndpoint(customLEDPacket, sizeof(customLEDPacket));
 }
 
 void Xbox360WirelessController::LoadConfig(const ControllerConfig *config)
@@ -267,6 +266,11 @@ Status Xbox360WirelessController::OnControllerDisconnect()
     return 0;
 }
 
+Status Xbox360WirelessController::WriteToEndpoint(const uint8_t *buffer, size_t size)
+{
+    return m_outPipe->Write(buffer, size);
+}
+
 Status Xbox360WirelessController::OutputBuffer()
 {
     if (m_outputBuffer.empty())
@@ -274,7 +278,7 @@ Status Xbox360WirelessController::OutputBuffer()
 
     Status rc;
     auto it = m_outputBuffer.begin();
-    rc = m_outPipe->Write(it->packet, it->length);
+    rc = WriteToEndpoint(it->packet, it->length);
     m_outputBuffer.erase(it);
 
     return rc;

@@ -54,7 +54,9 @@ public:
     static void LoadConfig(const ControllerConfig *config);
     virtual ControllerConfig *GetConfig();
 
-    Status OutputBuffer();
+    Status WriteToEndpoint(const uint8_t *buffer, size_t size);
+
+    virtual Status OutputBuffer();
 
     bool IsControllerActive() override { return m_presence; }
 };
