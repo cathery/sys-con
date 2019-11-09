@@ -8,6 +8,8 @@
 #include "SwitchAbstractedPadHandler.h"
 #include "configFile.h"
 
+#define APP_VERSION "0.4.0"
+
 struct VendorEvent
 {
     uint16_t vendor;
@@ -62,7 +64,7 @@ Result CallInitHandler()
 
 Result mainLoop()
 {
-    WriteToLog("\n\nNew sysmodule session started");
+    WriteToLog("\n\nNew sysmodule session started on version " APP_VERSION);
     Result rc = 0;
 
     Event catchAllEvent;
