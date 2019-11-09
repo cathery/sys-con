@@ -118,6 +118,7 @@ Result mainLoop()
                 WriteToLog("But the controllers table reached its max size!");
             else
             {
+
                 UsbHsInterface interfaces[8];
                 s32 total_entries;
 
@@ -150,85 +151,86 @@ Result mainLoop()
                     controllerPtr = std::make_unique<XboxOneController>(std::move(devicePtr));
                 }
             }
-            rc = eventWait(&ds3Event, 0);
-            if (R_SUCCEEDED(rc))
-            {
-                WriteToLog("Dualshock 3 event went off");
-                UsbHsInterface interfaces[4];
-                s32 total_entries;
+        }
+        rc = eventWait(&ds3Event, 0);
+        if (R_SUCCEEDED(rc))
+        {
+            WriteToLog("Dualshock 3 event went off");
+            UsbHsInterface interfaces[4];
+            s32 total_entries;
 
-                if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
-                {
-                    WriteToLog("Registering DS3 controller");
-                    devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
-                    controllerPtr = std::make_unique<Dualshock3Controller>(std::move(devicePtr));
-                }
+            if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
+            {
+                WriteToLog("Registering DS3 controller");
+                devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                controllerPtr = std::make_unique<Dualshock3Controller>(std::move(devicePtr));
             }
-            CallInitHandler();
+        }
+        CallInitHandler();
 
-            //On interface change event, check if any devices were removed, and erase them from memory appropriately
-            rc = eventWait(usbHsGetInterfaceStateChangeEvent(), 0);
+        //On interface change event, check if any devices were removed, and erase them from memory appropriately
+        rc = eventWait(usbHsGetInterfaceStateChangeEvent(), 0);
+        if (R_SUCCEEDED(rc))
+        {
+            WriteToLog("Interface state was changed");
+            eventClear(usbHsGetInterfaceStateChangeEvent());
+
+            UsbHsInterface interfaces[4];
+            s32 total_entries;
+
+            rc = usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries);
             if (R_SUCCEEDED(rc))
             {
-                WriteToLog("Interface state was changed");
-                eventClear(usbHsGetInterfaceStateChangeEvent());
-
-                UsbHsInterface interfaces[4];
-                s32 total_entries;
-
-                rc = usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries);
-                if (R_SUCCEEDED(rc))
+                for (auto it = controllerInterfaces.begin(); it != controllerInterfaces.end(); ++it)
                 {
-                    for (auto it = controllerInterfaces.begin(); it != controllerInterfaces.end(); ++it)
-                    {
-                        bool found_flag = false;
+                    bool found_flag = false;
 
-                        for (auto &&ptr : (*it)->GetController()->GetDevice()->GetInterfaces())
+                    for (auto &&ptr : (*it)->GetController()->GetDevice()->GetInterfaces())
+                    {
+                        //We check if a device was removed by comparing the controller's interfaces and the currently acquired interfaces
+                        //If we didn't find a single matching interface ID, we consider a controller removed
+                        for (int i = 0; i != total_entries; ++i)
                         {
-                            //We check if a device was removed by comparing the controller's interfaces and the currently acquired interfaces
-                            //If we didn't find a single matching interface ID, we consider a controller removed
-                            for (int i = 0; i != total_entries; ++i)
+                            if (interfaces[i].inf.ID == static_cast<SwitchUSBInterface *>(ptr.get())->GetID())
                             {
-                                if (interfaces[i].inf.ID == static_cast<SwitchUSBInterface *>(ptr.get())->GetID())
-                                {
-                                    found_flag = true;
-                                    break;
-                                }
+                                found_flag = true;
+                                break;
                             }
                         }
+                    }
 
-                        if (!found_flag)
-                        {
-                            WriteToLog("Erasing controller! ", (*it)->GetController()->GetType());
-                            controllerInterfaces.erase(it--);
-                            WriteToLog("Controller erased!");
-                        }
+                    if (!found_flag)
+                    {
+                        WriteToLog("Erasing controller! ", (*it)->GetController()->GetType());
+                        controllerInterfaces.erase(it--);
+                        WriteToLog("Controller erased!");
                     }
                 }
             }
-
-            rc = waitSingle(filecheckTimerWaiter, 0);
-            if (R_SUCCEEDED(rc))
-            {
-                if (CheckForFileChanges())
-                {
-                    WriteToLog("File check succeeded! Loading configs...");
-                    LoadAllConfigs();
-                }
-            }
-
-#ifdef __APPLET__
-            consoleUpdate(nullptr);
-#else
-            svcSleepThread(1e+7L);
-#endif
         }
 
-        //After we break out of the loop, close all events and exit
-        WriteToLog("Destroying events");
-        usbHsDestroyInterfaceAvailableEvent(&ds3Event, 0);
-        usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 1);
+        rc = waitSingle(filecheckTimerWaiter, 0);
+        if (R_SUCCEEDED(rc))
+        {
+            if (CheckForFileChanges())
+            {
+                WriteToLog("File check succeeded! Loading configs...");
+                LoadAllConfigs();
+            }
+        }
 
-        //controllerInterfaces.clear();
-        return rc;
+#ifdef __APPLET__
+        consoleUpdate(nullptr);
+#else
+        svcSleepThread(1e+7L);
+#endif
     }
+
+    //After we break out of the loop, close all events and exit
+    WriteToLog("Destroying events");
+    usbHsDestroyInterfaceAvailableEvent(&ds3Event, 0);
+    usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 1);
+
+    //controllerInterfaces.clear();
+    return rc;
+}
