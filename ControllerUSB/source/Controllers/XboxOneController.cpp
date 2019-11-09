@@ -4,6 +4,8 @@
 
 static ControllerConfig _xboxoneControllerConfig{};
 
+#define TRIGGER_MAXVALUE 1023
+
 //Following input packets were referenced from https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c
 
 static const uint8_t xboxone_fw2015_init[] = {
@@ -202,11 +204,11 @@ Status XboxOneController::SendInitBytes()
 
 float XboxOneController::NormalizeTrigger(uint16_t value)
 {
-    uint16_t deadzone = (1023 * _xboxoneControllerConfig.triggerDeadzonePercent) / 100;
+    uint16_t deadzone = (TRIGGER_MAXVALUE * _xboxoneControllerConfig.triggerDeadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
     return value < deadzone
                ? 0
-               : static_cast<float>(value - deadzone) / (1023 - deadzone);
+               : static_cast<float>(value - deadzone) / (TRIGGER_MAXVALUE - deadzone);
 }
 
 void XboxOneController::NormalizeAxis(int16_t x,
