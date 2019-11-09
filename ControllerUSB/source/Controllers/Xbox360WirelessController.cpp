@@ -4,7 +4,8 @@
 static ControllerConfig _xbox360WControllerConfig{};
 static const uint8_t reconnectPacket[]{0x08, 0x00, 0x0F, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t poweroffPacket[]{0x00, 0x00, 0x08, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t ledPacket[]{0x00, 0x00, 0x08, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t initDriverPacket[]{0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t ledPacketOn[]{0x00, 0x00, 0x08, 0x40 | XBOX360LED_TOPLEFT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 Xbox360WirelessController::Xbox360WirelessController(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
@@ -251,7 +252,8 @@ void Xbox360WirelessController::LoadConfig(const ControllerConfig *config)
 Status Xbox360WirelessController::OnControllerConnect()
 {
     m_outputBuffer.push_back(OutputPacket{reconnectPacket, sizeof(reconnectPacket)});
-    m_outputBuffer.push_back(OutputPacket{ledPacket, sizeof(ledPacket)});
+    m_outputBuffer.push_back(OutputPacket{initDriverPacket, sizeof(initDriverPacket)});
+    m_outputBuffer.push_back(OutputPacket{ledPacketOn, sizeof(ledPacketOn)});
     return 0;
 }
 
