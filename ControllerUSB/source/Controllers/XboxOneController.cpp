@@ -41,12 +41,8 @@ static VendorProductPacket init_packets[]{
     {0x0000, 0x0000, xboxone_fw2015_init, sizeof(xboxone_fw2015_init)},
     {0x0e6f, 0x0000, xboxone_pdp_init1, sizeof(xboxone_pdp_init1)},
     {0x0e6f, 0x0000, xboxone_pdp_init2, sizeof(xboxone_pdp_init2)},
-    {0x24c6, 0x541a, xboxone_rumblebegin_init, sizeof(xboxone_rumblebegin_init)},
-    {0x24c6, 0x542a, xboxone_rumblebegin_init, sizeof(xboxone_rumblebegin_init)},
-    {0x24c6, 0x543a, xboxone_rumblebegin_init, sizeof(xboxone_rumblebegin_init)},
-    {0x24c6, 0x541a, xboxone_rumbleend_init, sizeof(xboxone_rumbleend_init)},
-    {0x24c6, 0x542a, xboxone_rumbleend_init, sizeof(xboxone_rumbleend_init)},
-    {0x24c6, 0x543a, xboxone_rumbleend_init, sizeof(xboxone_rumbleend_init)},
+    {0x24c6, 0x0000, xboxone_rumblebegin_init, sizeof(xboxone_rumblebegin_init)},
+    {0x24c6, 0x0000, xboxone_rumbleend_init, sizeof(xboxone_rumbleend_init)},
 };
 
 XboxOneController::XboxOneController(std::unique_ptr<IUSBDevice> &&interface)
