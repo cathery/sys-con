@@ -19,20 +19,8 @@ Result SwitchAbstractedPadHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
-    /*
-
-    hidScanInput();
-    HidControllerID lastOfflineID = CONTROLLER_PLAYER_1;
-    for (int i = 0; i != 8; ++i)
-    {
-        if (!hidIsControllerConnected(static_cast<HidControllerID>(i)))
-        {
-            lastOfflineID = static_cast<HidControllerID>(i);
-            break;
-        }
-    }
-    //WriteToLog("Found last offline ID: ", lastOfflineID);
-    */
+    if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
+        return rc;
 
     rc = InitAbstractedPadState();
     if (R_FAILED(rc))
@@ -68,10 +56,14 @@ Result SwitchAbstractedPadHandler::Initialize()
 
 void SwitchAbstractedPadHandler::Exit()
 {
-    ExitAbstractedPadState();
     m_controllerHandler.Exit();
+
+    if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
+        return;
+
     ExitInputThread();
     ExitOutputThread();
+    ExitAbstractedPadState();
 }
 
 //Used to give out unique ids to abstracted pads

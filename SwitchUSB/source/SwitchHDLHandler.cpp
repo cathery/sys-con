@@ -18,6 +18,9 @@ Result SwitchHDLHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
+    if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
+        return rc;
+
     rc = InitHdlState();
     if (R_FAILED(rc))
         return rc;
@@ -39,6 +42,10 @@ Result SwitchHDLHandler::Initialize()
 void SwitchHDLHandler::Exit()
 {
     m_controllerHandler.Exit();
+
+    if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
+        return;
+
     ExitInputThread();
     ExitOutputThread();
     ExitHdlState();

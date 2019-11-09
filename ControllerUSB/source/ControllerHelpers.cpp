@@ -22,6 +22,10 @@ bool DoesControllerSupport(ControllerType type, ControllerSupport supportType)
         default:
             return false;
         }
+    case CONTROLLER_XBOXONEW:
+        if (supportType == SUPPORTS_NOTHING)
+            return true;
+        return false;
     case CONTROLLER_DUALSHOCK3:
         switch (supportType)
         {

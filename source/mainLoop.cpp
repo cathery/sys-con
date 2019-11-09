@@ -152,6 +152,12 @@ Result mainLoop()
                     devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
                     controllerPtr = std::make_unique<XboxOneController>(std::move(devicePtr));
                 }
+                else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 255, 255)))
+                {
+                    WriteToLog("Registering Xbox One adapter");
+                    devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
+                    controllerPtr = std::make_unique<XboxOneAdapter>(std::move(devicePtr));
+                }
             }
         }
         rc = eventWait(&ds3Event, 0);
