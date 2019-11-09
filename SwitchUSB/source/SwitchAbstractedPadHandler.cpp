@@ -118,16 +118,38 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
     m_state.state.buttons |= (data.buttons[10] ? KEY_MINUS : 0);
     m_state.state.buttons |= (data.buttons[11] ? KEY_PLUS : 0);
 
-    m_state.state.buttons |= (data.buttons[12] ? KEY_DUP : 0);
-    m_state.state.buttons |= (data.buttons[13] ? KEY_DRIGHT : 0);
-    m_state.state.buttons |= (data.buttons[14] ? KEY_DDOWN : 0);
-    m_state.state.buttons |= (data.buttons[15] ? KEY_DLEFT : 0);
+    ControllerConfig *config = GetController()->GetConfig();
+
+    if (config && config->swapDPADandLSTICK)
+    {
+        m_state.state.buttons |= ((data.sticks[0].axis_y > 0.5f) ? KEY_DUP : 0);
+        m_state.state.buttons |= ((data.sticks[0].axis_x > 0.5f) ? KEY_DRIGHT : 0);
+        m_state.state.buttons |= ((data.sticks[0].axis_y < -0.5f) ? KEY_DDOWN : 0);
+        m_state.state.buttons |= ((data.sticks[0].axis_x < -0.5f) ? KEY_DLEFT : 0);
+
+        float daxis_x{}, daxis_y{};
+
+        daxis_y += data.buttons[12] ? 1.0f : 0.0f;  //DUP
+        daxis_x += data.buttons[13] ? 1.0f : 0.0f;  //DRIGHT
+        daxis_y += data.buttons[14] ? -1.0f : 0.0f; //DDOWN
+        daxis_x += data.buttons[15] ? -1.0f : 0.0f; //DLEFT
+
+        m_controllerHandler.ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
+    }
+    else
+    {
+        m_state.state.buttons |= (data.buttons[12] ? KEY_DUP : 0);
+        m_state.state.buttons |= (data.buttons[13] ? KEY_DRIGHT : 0);
+        m_state.state.buttons |= (data.buttons[14] ? KEY_DDOWN : 0);
+        m_state.state.buttons |= (data.buttons[15] ? KEY_DLEFT : 0);
+
+        m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
+    }
+
+    m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_state.state.joysticks[JOYSTICK_RIGHT].dx, &m_state.state.joysticks[JOYSTICK_RIGHT].dy);
 
     m_state.state.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
     m_state.state.buttons |= (data.buttons[17] ? KEY_HOME : 0);
-
-    m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
-    m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_state.state.joysticks[JOYSTICK_RIGHT].dx, &m_state.state.joysticks[JOYSTICK_RIGHT].dy);
 }
 
 Result SwitchAbstractedPadHandler::UpdateAbstractedState()

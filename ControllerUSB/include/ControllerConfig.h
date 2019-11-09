@@ -40,4 +40,5 @@ struct ControllerConfig
     ControllerButton buttons[NUM_CONTROLLERBUTTONS];
     float triggers[2];
     NormalizedStick sticks[2];
+    bool swapDPADandLSTICK;
 };

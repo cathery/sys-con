@@ -87,6 +87,11 @@ static int _ParseConfigLine(void *dummy, const char *section, const char *name, 
         temp_config.triggerDeadzonePercent = atoi(value);
         return 1;
     }
+    else if (strcmp(name, "swap_dpad_and_lstick") == 0)
+    {
+        temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
+        return 1;
+    }
 
     return 0;
 }
