@@ -34,7 +34,7 @@ public:
     virtual Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude) { return 1; }
     virtual bool IsControllerActive() { return true; }
 
-    Status OutputBuffer() { return 1; };
+    virtual Status OutputBuffer() { return 1; };
 
     virtual ControllerConfig *GetConfig() { return nullptr; }
 };
