@@ -83,14 +83,6 @@ private:
 
     //Meant to be incremented with each out packet
     uint8_t m_outPacketSerial = 0;
-    /*
-
-    int16_t kLeftThumbDeadzone = 2500;  //7849;
-    int16_t kRightThumbDeadzone = 3500; //8689;
-    uint16_t kTriggerMax = 0;           //1023;
-    uint16_t kTriggerDeadzone = 0;      //120;
-    
-    */
 
 public:
     XboxOneController(std::unique_ptr<IUSBDevice> &&interface);

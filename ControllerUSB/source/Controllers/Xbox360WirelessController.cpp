@@ -177,8 +177,7 @@ void Xbox360WirelessController::NormalizeAxis(int16_t x,
         // magnitude value of 0.0 to 1.0
         //ratio = (currentValue / maxValue) / realValue
         float ratio = (magnitude / (32767 - real_deadzone)) / real_magnitude;
-        // Y is negated because xbox controllers have an opposite sign from
-        // the 'standard controller' recommendations.
+
         *x_out = x_val * ratio;
         *y_out = y_val * ratio;
     }

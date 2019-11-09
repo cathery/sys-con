@@ -26,20 +26,6 @@ Result SwitchAbstractedPadHandler::Initialize()
     if (R_FAILED(rc))
         return rc;
 
-    /*
-    svcSleepThread(1e+7L);
-    hidScanInput();
-
-    //WriteToLog("Is last offline id connected? ", hidIsControllerConnected(lastOfflineID));
-    //WriteToLog("Last offline id type: ", hidGetControllerType(lastOfflineID));
-
-    Result rc2 = hidInitializeVibrationDevices(&m_vibrationDeviceHandle, 1, lastOfflineID, hidGetControllerType(lastOfflineID));
-    if (R_SUCCEEDED(rc2))
-        InitOutputThread();
-    else
-        WriteToLog("Failed to iniitalize vibration device with error ", rc2);
-    */
-
     if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_PAIRING))
     {
         rc = InitOutputThread();

@@ -87,13 +87,6 @@ private:
     IUSBEndpoint *m_outPipe = nullptr;
 
     Xbox360ButtonData m_buttonData;
-    /*
-
-    int16_t kLeftThumbDeadzone = 8000;  //7849;
-    int16_t kRightThumbDeadzone = 8000; //8689;
-    uint16_t kTriggerMax = 0;           //1023;
-    uint16_t kTriggerDeadzone = 0;      //120;
-    */
 
 public:
     Xbox360Controller(std::unique_ptr<IUSBDevice> &&interface);
