@@ -49,9 +49,12 @@ extern "C"
         if (R_FAILED(rc))
             fatalThrow(rc);
 
-        rc = hiddbgAttachHdlsWorkBuffer();
-        if (R_FAILED(rc))
-            fatalThrow(rc);
+        if (hosversionAtLeast(7, 0, 0))
+        {
+            rc = hiddbgAttachHdlsWorkBuffer();
+            if (R_FAILED(rc))
+                fatalThrow(rc);
+        }
 
         rc = usbHsInitialize();
         if (R_FAILED(rc))
