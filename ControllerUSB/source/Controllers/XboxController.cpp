@@ -102,9 +102,20 @@ Status XboxController::GetInput()
     Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
 
     if (S_SUCCEEDED(rc))
+    {
         m_buttonData = *reinterpret_cast<XboxButtonData *>(input_bytes);
+    }
 
     return rc;
+}
+
+float XboxController::NormalizeTrigger(uint8_t value)
+{
+    uint8_t deadzone = (UINT8_MAX * _xboxControllerConfig.triggerDeadzonePercent) / 100;
+    //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
+    return value < deadzone
+               ? 0
+               : static_cast<float>(value - deadzone) / (UINT8_MAX - deadzone);
 }
 
 void XboxController::NormalizeAxis(int16_t x,
@@ -147,8 +158,8 @@ NormalizedButtonData XboxController::GetNormalizedButtonData()
 {
     NormalizedButtonData normalData;
 
-    normalData.triggers[0] = m_buttonData.trigger_left;
-    normalData.triggers[1] = m_buttonData.trigger_right;
+    normalData.triggers[0] = NormalizeTrigger(m_buttonData.trigger_left);
+    normalData.triggers[1] = NormalizeTrigger(m_buttonData.trigger_right);
 
     NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _xboxControllerConfig.leftStickDeadzonePercent,
                   &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
@@ -156,24 +167,24 @@ NormalizedButtonData XboxController::GetNormalizedButtonData()
                   &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
 
     bool buttons[NUM_CONTROLLERBUTTONS]{
-        m_buttonData.y,
-        m_buttonData.b,
-        m_buttonData.a,
-        m_buttonData.x,
+        m_buttonData.y != 0,
+        m_buttonData.b != 0,
+        m_buttonData.a != 0,
+        m_buttonData.x != 0,
         m_buttonData.stick_left_click,
         m_buttonData.stick_right_click,
         false,
         false,
-        m_buttonData.trigger_left,
-        m_buttonData.trigger_right,
+        m_buttonData.trigger_left != 0,
+        m_buttonData.trigger_right != 0,
         m_buttonData.back,
         m_buttonData.start,
         m_buttonData.dpad_up,
         m_buttonData.dpad_right,
         m_buttonData.dpad_down,
         m_buttonData.dpad_left,
-        m_buttonData.white_button,
-        m_buttonData.black_buttton,
+        m_buttonData.white_button != 0,
+        m_buttonData.black_buttton != 0,
     };
 
     for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)

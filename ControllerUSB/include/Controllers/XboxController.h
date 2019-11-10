@@ -22,16 +22,17 @@ struct XboxButtonData
 
     uint8_t reserved;
 
-    bool a;
-    bool b;
-    bool x;
-    bool y;
+    //These are analog
+    uint8_t a;
+    uint8_t b;
+    uint8_t x;
+    uint8_t y;
 
-    bool black_buttton;
-    bool white_button;
+    uint8_t black_buttton;
+    uint8_t white_button;
 
-    bool trigger_left;
-    bool trigger_right;
+    uint8_t trigger_left;
+    uint8_t trigger_right;
 
     int16_t stick_left_x;
     int16_t stick_left_y;
