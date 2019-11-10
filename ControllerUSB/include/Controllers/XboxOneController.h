@@ -81,9 +81,6 @@ private:
     XboxOneButtonData m_buttonData;
     bool m_GuidePressed{false};
 
-    //Meant to be incremented with each out packet
-    uint8_t m_outPacketSerial = 0;
-
 public:
     XboxOneController(std::unique_ptr<IUSBDevice> &&interface);
     virtual ~XboxOneController();

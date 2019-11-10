@@ -7,7 +7,18 @@ static ControllerConfig _xboxoneControllerConfig{};
 #define TRIGGER_MAXVALUE 1023
 
 //Following input packets were referenced from https://github.com/torvalds/linux/blob/master/drivers/input/joystick/xpad.c
+// and https://github.com/360Controller/360Controller/blob/master/360Controller/_60Controller.cpp
 
+//Enables LED on the PowerA controller but disables input?
+static const uint8_t xboxone_powerA_ledOn[] = {
+    0x04, 0x20, 0x01, 0x00};
+
+//does something maybe
+static const uint8_t xboxone_test_init1[] = {
+    0x01, 0x20, 0x01, 0x09, 0x00, 0x04, 0x20, 0x3a,
+    0x00, 0x00, 0x00, 0x98, 0x00};
+
+//required for all xbox one controllers
 static const uint8_t xboxone_fw2015_init[] = {
     0x05, 0x20, 0x00, 0x01, 0x00};
 
@@ -40,6 +51,9 @@ struct VendorProductPacket
 static VendorProductPacket init_packets[]{
     {0x0e6f, 0x0165, xboxone_hori_init, sizeof(xboxone_hori_init)},
     {0x0f0d, 0x0067, xboxone_hori_init, sizeof(xboxone_hori_init)},
+
+    {0x0000, 0x0000, xboxone_test_init1, sizeof(xboxone_test_init1)},
+
     {0x0000, 0x0000, xboxone_fw2015_init, sizeof(xboxone_fw2015_init)},
     {0x0e6f, 0x0000, xboxone_pdp_init1, sizeof(xboxone_pdp_init1)},
     {0x0e6f, 0x0000, xboxone_pdp_init2, sizeof(xboxone_pdp_init2)},
@@ -144,7 +158,7 @@ void XboxOneController::CloseInterfaces()
 
 Status XboxOneController::GetInput()
 {
-    uint8_t input_bytes[18];
+    uint8_t input_bytes[64];
 
     Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
     if (S_FAILED(rc))
@@ -185,19 +199,11 @@ Status XboxOneController::SendInitBytes()
         if (init_packets[i].ProductID != 0 && init_packets[i].ProductID != product)
             continue;
 
-        uint8_t init_packet[16];
-        for (int byte = 0; byte != init_packets[i].Length; ++byte)
-        {
-            init_packet[byte] = init_packets[i].Packet[byte];
-        }
-
-        init_packet[2] = m_outPacketSerial++;
-
-        rc = m_outPipe->Write(init_packet, init_packets[i].Length);
+        rc = m_outPipe->Write(init_packets[i].Packet, init_packets[i].Length);
         if (S_FAILED(rc))
             break;
         else
-            WriteToLog("Send a specific init packet for controller v", vendor, " p", product, " with outPacket ", +init_packet[2]);
+            WriteToLog("Send a specific init packet ", i, " for controller v", vendor, " p", product);
     }
     return rc;
 }
@@ -304,8 +310,7 @@ Status XboxOneController::WriteAckGuideReport(uint8_t sequence)
 Status XboxOneController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     uint8_t rumble_data[]{
-        0x09, 0x00,
-        m_outPacketSerial++,
+        0x09, 0x00, 0x00,
         0x09, 0x00, 0x0f, 0x00, 0x00,
         strong_magnitude,
         weak_magnitude,
