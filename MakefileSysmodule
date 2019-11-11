@@ -39,7 +39,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	sys-con
 BUILD		:=	buildSysmodule
-SOURCES		:=	source SwitchUSB/source ControllerUSB/source ControllerUSB/source/Controllers inih
+SOURCES		:=	source SwitchUSB/source ControllerUSB/source ControllerUSB/source/Controllers ControllerUSB/source/Controllers/XboxOneAdapter inih
 DATA		:=	data
 INCLUDES	:=	include SwitchUSB/include ControllerUSB/include inih
 #ROMFS	:=	romfs
