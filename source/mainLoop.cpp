@@ -8,7 +8,7 @@
 #include "SwitchAbstractedPadHandler.h"
 #include "configFile.h"
 
-#define APP_VERSION "0.4.0"
+#define APP_VERSION "0.4.2"
 
 struct VendorEvent
 {
