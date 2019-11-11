@@ -36,7 +36,8 @@ enum ProductIDs
     PRODUCT_XBOXADAPTIVE = 0xb0a,
 
     PRODUCT_DUALSHOCK3 = 0x268,
-    PRODUCT_DUALSHOCK4 = 0x5c4,
+    PRODUCT_DUALSHOCK4_1X = 0x5c4,
+    PRODUCT_DUALSHOCK4_2X = 0x9cc,
 };
 
 enum ControllerSupport

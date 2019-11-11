@@ -3,6 +3,10 @@
 
 static ControllerConfig _dualshock4ControllerConfig{};
 
+const uint8_t kRumbleMagnitudeMax = 0xff;
+const float kAxisMax = 255.0f;
+const float kDpadMax = 7.0f;
+
 Dualshock4Controller::Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
 {
@@ -11,6 +15,26 @@ Dualshock4Controller::Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interfa
 Dualshock4Controller::~Dualshock4Controller()
 {
     Exit();
+}
+/*
+uint32_t ComputeDualshock4Checksum(const uint8_t *report_data, uint16_t length)
+{
+    constexpr uint8_t bt_header = 0xa2;
+    uint32_t crc = crc32(0xffffffff, &bt_header, 1);
+    return unaligned_crc32(crc, report_data, length);
+}
+*/
+
+Status Dualshock4Controller::SendInitBytes()
+{
+    uint8_t init_bytes[32] = {
+        //for bluetooth connection
+        //0x11, 0xC4, 0x00, 0x07, 0x00, 0x00,
+        0x05, 0x07, 0x00, 0x00,
+        0xFF, 0xFF,
+        0x00, 0x00, 0x40,
+        0x00, 0x00};
+    return m_outPipe->Write(init_bytes, sizeof(init_bytes));
 }
 
 Status Dualshock4Controller::Initialize()
@@ -45,27 +69,44 @@ Status Dualshock4Controller::OpenInterfaces()
         rc = interface->Open();
         if (S_FAILED(rc))
             return rc;
-        //TODO: check for numEndpoints before trying to open them!
-        if (interface->GetDescriptor()->bNumEndpoints >= 2)
+
+        if (interface->GetDescriptor()->bInterfaceProtocol != 0)
+            continue;
+
+        if (interface->GetDescriptor()->bNumEndpoints < 2)
+            continue;
+
+        if (!m_inPipe)
         {
-            IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, 1);
-            if (inEndpoint->GetDescriptor()->bLength != 0)
+            for (int i = 0; i != 15; ++i)
             {
-                rc = inEndpoint->Open();
-                if (S_FAILED(rc))
-                    return 5555;
+                IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, i);
+                if (inEndpoint)
+                {
+                    rc = inEndpoint->Open();
+                    if (S_FAILED(rc))
+                        return 61;
 
-                m_inPipe = inEndpoint;
+                    m_inPipe = inEndpoint;
+                    break;
+                }
             }
+        }
 
-            IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, 1);
-            if (outEndpoint->GetDescriptor()->bLength != 0)
+        if (!m_outPipe)
+        {
+            for (int i = 0; i != 15; ++i)
             {
-                rc = outEndpoint->Open();
-                if (S_FAILED(rc))
-                    return 6666;
+                IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, i);
+                if (outEndpoint)
+                {
+                    rc = outEndpoint->Open();
+                    if (S_FAILED(rc))
+                        return 62;
 
-                m_outPipe = outEndpoint;
+                    m_outPipe = outEndpoint;
+                    break;
+                }
             }
         }
     }
@@ -83,46 +124,24 @@ void Dualshock4Controller::CloseInterfaces()
 
 Status Dualshock4Controller::GetInput()
 {
-    return 9;
-    /*
     uint8_t input_bytes[64];
-
     Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
     if (S_FAILED(rc))
         return rc;
 
+    for (int i = 0; i != 64; ++i)
+    {
+        m_inputData[i] = input_bytes[i];
+    }
+    m_UpdateCalled = true;
+
     uint8_t type = input_bytes[0];
 
-    if (type == XBONEINPUT_BUTTON) //Button data
+    if (type == 0x11) //Button data
     {
         m_buttonData = *reinterpret_cast<Dualshock4ButtonData *>(input_bytes);
     }
-    else if (type == XBONEINPUT_GUIDEBUTTON) //Guide button status
-    {
-        m_buttonData.sync = input_bytes[4];
 
-        //Xbox one S needs to be sent an ack report for guide buttons
-        //TODO: needs testing
-        if (input_bytes[1] == 0x30)
-        {
-            rc = WriteAckGuideReport(input_bytes[2]);
-            if (S_FAILED(rc))
-                return rc;
-        }
-        //TODO: add ack check and send ack report!
-    }
-    
-    return rc;
-    */
-}
-
-Status Dualshock4Controller::SendInitBytes()
-{
-    uint8_t init_bytes[]{
-        0x05,
-        0x20, 0x00, 0x01, 0x00};
-
-    Status rc = m_outPipe->Write(init_bytes, sizeof(init_bytes));
     return rc;
 }
 
@@ -174,6 +193,41 @@ void Dualshock4Controller::NormalizeAxis(int16_t x,
 NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
 {
     NormalizedButtonData normalData;
+
+    normalData.triggers[0] = NormalizeTrigger(m_buttonData.l2_pressure);
+    normalData.triggers[1] = NormalizeTrigger(m_buttonData.r2_pressure);
+
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock4ControllerConfig.leftStickDeadzonePercent,
+                  &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock4ControllerConfig.rightStickDeadzonePercent,
+                  &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
+
+    bool buttons[NUM_CONTROLLERBUTTONS] = {
+        m_buttonData.triangle,
+        m_buttonData.circle,
+        m_buttonData.cross,
+        m_buttonData.square,
+        m_buttonData.l3,
+        m_buttonData.r3,
+        m_buttonData.l1,
+        m_buttonData.r1,
+        m_buttonData.l2,
+        m_buttonData.r2,
+        m_buttonData.share,
+        m_buttonData.options,
+        m_buttonData.dpad & DS4_UP,
+        m_buttonData.dpad & DS4_RIGHT,
+        m_buttonData.dpad & DS4_DOWN,
+        m_buttonData.dpad & DS4_LEFT,
+        m_buttonData.touchpad_press,
+        m_buttonData.psbutton,
+    };
+
+    for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
+    {
+        ControllerButton button = _dualshock4ControllerConfig.buttons[i];
+        normalData.buttons[(button != NOT_SET ? button : i)] = buttons[i];
+    }
 
     return normalData;
 }

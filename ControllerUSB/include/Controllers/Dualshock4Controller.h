@@ -7,40 +7,68 @@
 
 struct Dualshock4ButtonData
 {
-    uint8_t type;
-    uint8_t length;
+    uint8_t padding0[2];
 
-    bool dpad_up : 1;
-    bool dpad_down : 1;
-    bool dpad_left : 1;
-    bool dpad_right : 1;
+    uint8_t stick_left_x;
+    uint8_t stick_left_y;
+    uint8_t stick_right_x;
+    uint8_t stick_right_y;
+    uint8_t dpad : 4;
+    bool square : 1;
+    bool cross : 1;
+    bool circle : 1;
+    bool triangle : 1;
+    bool l1 : 1;
+    bool r1 : 1;
+    bool l2 : 1;
+    bool r2 : 1;
+    bool share : 1;
+    bool options : 1;
+    bool l3 : 1;
+    bool r3 : 1;
+    bool psbutton : 1;
+    bool touchpad_press : 1;
+    uint8_t sequence_number : 6;
+    uint8_t l2_pressure;
+    uint8_t r2_pressure;
+    uint16_t timestamp;
+    uint8_t sensor_temperature;
+    uint16_t gyro_pitch;
+    uint16_t gyro_yaw;
+    uint16_t gyro_roll;
+    uint16_t accelerometer_x;
+    uint16_t accelerometer_y;
+    uint16_t accelerometer_z;
+    uint8_t padding1[5];
+    uint8_t battery_info : 5;
+    uint8_t padding2 : 2;
+    bool extension_detection : 1;
 
-    bool start : 1;
-    bool back : 1;
-    bool stick_left_click : 1;
-    bool stick_right_click : 1;
+    uint8_t padding3[2];
 
-    bool bumper_left : 1;
-    bool bumper_right : 1;
-    bool guide : 1;
-    bool dummy1 : 1; // Always 0.
+    uint8_t touches_count;
+    uint8_t touch_data_timestamp;
+    uint8_t touch0_id : 7;
+    bool touch0_is_invalid : 1;
+    uint8_t touch0_data[3];
+    uint8_t touch1_id : 7;
+    bool touch1_is_invalid : 1;
+    uint8_t touch1_data[3];
 
-    bool a : 1;
-    bool b : 1;
-    bool x : 1;
-    bool y : 1;
+    uint8_t padding4[2];
+    uint32_t crc32;
+};
 
-    uint8_t trigger_left;
-    uint8_t trigger_right;
-
-    int16_t stick_left_x;
-    int16_t stick_left_y;
-    int16_t stick_right_x;
-    int16_t stick_right_y;
-
-    // Always 0.
-    uint32_t dummy2;
-    uint16_t dummy3;
+enum Dualshock4Dpad
+{
+    DS4_UP = 0x000,
+    DS4_UPRIGHT = 0x001,
+    DS4_RIGHT = 0x010,
+    DS4_DOWNRIGHT = 0x011,
+    DS4_DOWN = 0x100,
+    DS4_DOWNLEFT = 0x101,
+    DS4_LEFT = 0x110,
+    DS4_UPLEFT = 0x111,
 };
 
 class Dualshock4Controller : public IController

@@ -17,6 +17,9 @@ protected:
     std::unique_ptr<IUSBDevice> m_device;
 
 public:
+    uint8_t m_inputData[100];
+    bool m_UpdateCalled;
+
     IController(std::unique_ptr<IUSBDevice> &&interface) : m_device(std::move(interface)) {}
     virtual ~IController() = default;
 
