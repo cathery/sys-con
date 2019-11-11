@@ -6,12 +6,10 @@
 SwitchUSBInterface::SwitchUSBInterface(UsbHsInterface &interface)
     : m_interface(interface)
 {
-    m_controlTransferBuffer = memalign(0x1000, 64);
 }
 
 SwitchUSBInterface::~SwitchUSBInterface()
 {
-    free(m_controlTransferBuffer);
     Close();
 }
 
@@ -68,26 +66,28 @@ void SwitchUSBInterface::Close()
 
 Result SwitchUSBInterface::ControlTransfer(u8 bmRequestType, u8 bmRequest, u16 wValue, u16 wIndex, u16 wLength, void *buffer)
 {
-    if (m_controlTransferBuffer == nullptr)
+    void *temp_buffer = memalign(0x1000, wLength);
+    if (temp_buffer == nullptr)
         return -1;
 
     u32 transferredSize;
 
     for (u16 byte = 0; byte != wLength; ++byte)
     {
-        static_cast<uint8_t *>(m_controlTransferBuffer)[byte] = static_cast<uint8_t *>(buffer)[byte];
+        static_cast<uint8_t *>(temp_buffer)[byte] = static_cast<uint8_t *>(buffer)[byte];
     }
 
-    Result rc = usbHsIfCtrlXfer(&m_session, bmRequestType, bmRequest, wValue, wIndex, wLength, m_controlTransferBuffer, &transferredSize);
+    Result rc = usbHsIfCtrlXfer(&m_session, bmRequestType, bmRequest, wValue, wIndex, wLength, temp_buffer, &transferredSize);
 
     if (R_SUCCEEDED(rc))
     {
         memset(buffer, 0, wLength);
         for (u32 byte = 0; byte != transferredSize; ++byte)
         {
-            static_cast<uint8_t *>(buffer)[byte] = static_cast<uint8_t *>(m_controlTransferBuffer)[byte];
+            static_cast<uint8_t *>(buffer)[byte] = static_cast<uint8_t *>(temp_buffer)[byte];
         }
     }
+    free(temp_buffer);
     return rc;
 }
 

@@ -14,8 +14,6 @@ private:
     std::array<std::unique_ptr<IUSBEndpoint>, 15> m_inEndpoints;
     std::array<std::unique_ptr<IUSBEndpoint>, 15> m_outEndpoints;
 
-    void *m_controlTransferBuffer;
-
 public:
     //Pass the specified interface to allow for opening the session
     SwitchUSBInterface(UsbHsInterface &interface);

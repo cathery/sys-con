@@ -10,8 +10,6 @@ private:
     UsbHsClientIfSession *m_ifSession;
     usb_endpoint_descriptor *m_descriptor;
 
-    void *m_buffer;
-
 public:
     //Pass the necessary information to be able to open the endpoint
     SwitchUSBEndpoint(UsbHsClientIfSession &if_session, usb_endpoint_descriptor &desc);

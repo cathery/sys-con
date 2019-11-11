@@ -6,12 +6,10 @@ SwitchUSBEndpoint::SwitchUSBEndpoint(UsbHsClientIfSession &if_session, usb_endpo
     : m_ifSession(&if_session),
       m_descriptor(&desc)
 {
-    m_buffer = memalign(0x1000, 64);
 }
 
 SwitchUSBEndpoint::~SwitchUSBEndpoint()
 {
-    free(m_buffer);
     Close();
 }
 
@@ -30,44 +28,47 @@ void SwitchUSBEndpoint::Close()
 
 Result SwitchUSBEndpoint::Write(const void *inBuffer, size_t bufferSize)
 {
-    Result rc = -1;
-    if (m_buffer != nullptr)
+    void *temp_buffer = memalign(0x1000, bufferSize);
+    if (temp_buffer == nullptr)
+        return -1;
+
+    u32 transferredSize = 0;
+
+    for (size_t byte = 0; byte != bufferSize; ++byte)
     {
-        u32 transferredSize = 0;
-        memset(m_buffer, 0, bufferSize);
-
-        for (size_t byte = 0; byte != bufferSize; ++byte)
-        {
-            static_cast<uint8_t *>(m_buffer)[byte] = static_cast<const uint8_t *>(inBuffer)[byte];
-        }
-
-        rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
-
-        if (R_SUCCEEDED(rc))
-        {
-            svcSleepThread(m_descriptor->bInterval * 1e+6L);
-        }
+        static_cast<uint8_t *>(temp_buffer)[byte] = static_cast<const uint8_t *>(inBuffer)[byte];
     }
+
+    Result rc = usbHsEpPostBuffer(&m_epSession, temp_buffer, bufferSize, &transferredSize);
+
+    if (R_SUCCEEDED(rc))
+    {
+        svcSleepThread(m_descriptor->bInterval * 1e+6L);
+    }
+
+    free(temp_buffer);
     return rc;
 }
 
 Result SwitchUSBEndpoint::Read(void *outBuffer, size_t bufferSize)
 {
-    if (m_buffer == nullptr)
+    void *temp_buffer = memalign(0x1000, bufferSize);
+    if (temp_buffer == nullptr)
         return -1;
 
     u32 transferredSize;
-    memset(m_buffer, 0, bufferSize);
 
-    Result rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
+    Result rc = usbHsEpPostBuffer(&m_epSession, temp_buffer, bufferSize, &transferredSize);
 
     if (R_SUCCEEDED(rc))
     {
         for (u32 byte = 0; byte != transferredSize; ++byte)
         {
-            static_cast<uint8_t *>(outBuffer)[byte] = static_cast<uint8_t *>(m_buffer)[byte];
+            static_cast<uint8_t *>(outBuffer)[byte] = static_cast<uint8_t *>(temp_buffer)[byte];
         }
     }
+    free(temp_buffer);
+
     return rc;
 }
 
