@@ -59,6 +59,35 @@ struct Dualshock4ButtonData
     uint32_t crc32;
 };
 
+struct Dualshock4USBButtonData
+{
+    uint8_t type;
+    uint8_t stick_left_x;
+    uint8_t stick_left_y;
+    uint8_t stick_right_x;
+    uint8_t stick_right_y;
+
+    uint8_t dpad : 4;
+    bool square : 1;
+    bool cross : 1;
+    bool circle : 1;
+    bool triangle : 1;
+
+    bool l1 : 1;
+    bool r1 : 1;
+    bool l2 : 1;
+    bool r2 : 1;
+    bool share : 1;
+    bool options : 1;
+    bool l3 : 1;
+    bool r3 : 1;
+
+    uint8_t timestamp;
+
+    uint8_t l2_pressure;
+    uint8_t r2_pressure;
+};
+
 enum Dualshock4Dpad
 {
     DS4_UP = 0x000,
@@ -76,6 +105,7 @@ class Dualshock4Controller : public IController
 private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
+    IUSBInterface *m_interface = nullptr;
 
     Dualshock4ButtonData m_buttonData;
 

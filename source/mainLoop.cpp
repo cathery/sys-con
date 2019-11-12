@@ -156,7 +156,7 @@ Result mainLoop()
         {
             if (handler->GetController()->m_UpdateCalled)
             {
-                for (int i = 0; i != 64; ++i)
+                for (int i = 0; i != 100; ++i)
                     printf("0x%02X ", handler->GetController()->m_inputData[i]);
                 printf("\n");
                 handler->GetController()->m_UpdateCalled = false;
