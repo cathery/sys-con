@@ -4,10 +4,6 @@
 
 static ControllerConfig _dualshock4ControllerConfig{};
 
-const uint8_t kRumbleMagnitudeMax = 0xff;
-const float kAxisMax = 255.0f;
-const float kDpadMax = 7.0f;
-
 Dualshock4Controller::Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
 {
@@ -133,64 +129,56 @@ void Dualshock4Controller::CloseInterfaces()
 
 Status Dualshock4Controller::GetInput()
 {
-    uint8_t input_bytes[65];
+    uint8_t input_bytes[64];
     Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
     if (S_FAILED(rc))
     {
         m_inputData[0] = static_cast<uint8_t>(rc);
         return rc;
     }
-
-    for (int i = 0; i != 65; ++i)
-    {
-        m_inputData[i] = input_bytes[i];
-    }
-    m_UpdateCalled = true;
-
     uint8_t type = input_bytes[0];
 
     if (type == 0x01)
     {
-        m_buttonData = *reinterpret_cast<Dualshock4ButtonData *>(input_bytes);
+        m_buttonData = *reinterpret_cast<Dualshock4USBButtonData *>(input_bytes);
     }
 
     return rc;
 }
 
-float Dualshock4Controller::NormalizeTrigger(uint16_t value)
+float Dualshock4Controller::NormalizeTrigger(uint8_t value)
 {
-    uint16_t deadzone = (UINT16_MAX * _dualshock4ControllerConfig.triggerDeadzonePercent) / 100;
+    uint16_t deadzone = (UINT8_MAX * _dualshock4ControllerConfig.triggerDeadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
     return value < deadzone
                ? 0
-               : static_cast<float>(value - deadzone) / (UINT16_MAX - deadzone);
+               : static_cast<float>(value - deadzone) / (UINT8_MAX - deadzone);
 }
 
-void Dualshock4Controller::NormalizeAxis(int16_t x,
-                                         int16_t y,
+void Dualshock4Controller::NormalizeAxis(uint8_t x,
+                                         uint8_t y,
                                          uint8_t deadzonePercent,
                                          float *x_out,
                                          float *y_out)
 {
-    float x_val = x;
-    float y_val = y;
+    float x_val = x - 127.0f;
+    float y_val = 127.0f - y;
     // Determine how far the stick is pushed.
     //This will never exceed 32767 because if the stick is
     //horizontally maxed in one direction, vertically it must be neutral(0) and vice versa
     float real_magnitude = std::sqrt(x_val * x_val + y_val * y_val);
-    float real_deadzone = (32767 * deadzonePercent) / 100;
+    float real_deadzone = (127 * deadzonePercent) / 100;
     // Check if the controller is outside a circular dead zone.
     if (real_magnitude > real_deadzone)
     {
         // Clip the magnitude at its expected maximum value.
-        float magnitude = std::min(32767.0f, real_magnitude);
+        float magnitude = std::min(127.0f, real_magnitude);
         // Adjust magnitude relative to the end of the dead zone.
         magnitude -= real_deadzone;
         // Normalize the magnitude with respect to its expected range giving a
         // magnitude value of 0.0 to 1.0
         //ratio = (currentValue / maxValue) / realValue
-        float ratio = (magnitude / (32767 - real_deadzone)) / real_magnitude;
-
+        float ratio = (magnitude / (127 - real_deadzone)) / real_magnitude;
         *x_out = x_val * ratio;
         *y_out = y_val * ratio;
     }
@@ -227,12 +215,12 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
         m_buttonData.r2,
         m_buttonData.share,
         m_buttonData.options,
-        m_buttonData.dpad & DS4_UP,
-        m_buttonData.dpad & DS4_RIGHT,
-        m_buttonData.dpad & DS4_DOWN,
-        m_buttonData.dpad & DS4_LEFT,
-        m_buttonData.touchpad_press,
-        m_buttonData.psbutton,
+        (m_buttonData.dpad == DS4_UP) || (m_buttonData.dpad == DS4_UPRIGHT) || (m_buttonData.dpad == DS4_UPLEFT),
+        (m_buttonData.dpad == DS4_RIGHT) || (m_buttonData.dpad == DS4_UPRIGHT) || (m_buttonData.dpad == DS4_DOWNRIGHT),
+        (m_buttonData.dpad == DS4_DOWN) || (m_buttonData.dpad == DS4_DOWNRIGHT) || (m_buttonData.dpad == DS4_DOWNLEFT),
+        (m_buttonData.dpad == DS4_LEFT) || (m_buttonData.dpad == DS4_UPLEFT) || (m_buttonData.dpad == DS4_DOWNLEFT),
+        false, //m_buttonData.touchpad_press,
+        false, //m_buttonData.psbutton,
     };
 
     for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)

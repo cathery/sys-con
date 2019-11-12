@@ -90,14 +90,14 @@ struct Dualshock4USBButtonData
 
 enum Dualshock4Dpad
 {
-    DS4_UP = 0x000,
-    DS4_UPRIGHT = 0x001,
-    DS4_RIGHT = 0x010,
-    DS4_DOWNRIGHT = 0x011,
-    DS4_DOWN = 0x100,
-    DS4_DOWNLEFT = 0x101,
-    DS4_LEFT = 0x110,
-    DS4_UPLEFT = 0x111,
+    DS4_UP,
+    DS4_UPRIGHT,
+    DS4_RIGHT,
+    DS4_DOWNRIGHT,
+    DS4_DOWN,
+    DS4_DOWNLEFT,
+    DS4_LEFT,
+    DS4_UPLEFT,
 };
 
 class Dualshock4Controller : public IController
@@ -107,7 +107,7 @@ private:
     IUSBEndpoint *m_outPipe = nullptr;
     IUSBInterface *m_interface = nullptr;
 
-    Dualshock4ButtonData m_buttonData;
+    Dualshock4USBButtonData m_buttonData;
 
 public:
     Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface);
@@ -125,10 +125,10 @@ public:
 
     virtual ControllerType GetType() { return CONTROLLER_DUALSHOCK4; }
 
-    inline const Dualshock4ButtonData &GetButtonData() { return m_buttonData; };
+    inline const Dualshock4USBButtonData &GetButtonData() { return m_buttonData; };
 
-    float NormalizeTrigger(uint16_t value);
-    void NormalizeAxis(int16_t x, int16_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
+    float NormalizeTrigger(uint8_t value);
+    void NormalizeAxis(uint8_t x, uint8_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
 
     Status SendInitBytes();
     Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
