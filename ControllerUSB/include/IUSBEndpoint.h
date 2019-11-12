@@ -23,8 +23,8 @@ public:
 
     virtual ~IUSBEndpoint() = default;
 
-    //Open and close the endpoint.
-    virtual Status Open() = 0;
+    //Open and close the endpoint. if maxPacketSize is not set, it uses wMaxPacketSize from the descriptor.
+    virtual Status Open(int maxPacketSize = 0) = 0;
     virtual void Close() = 0;
 
     //This will read from the inBuffer pointer for the specified size and write it to the endpoint.

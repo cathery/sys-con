@@ -13,9 +13,9 @@ SwitchUSBEndpoint::~SwitchUSBEndpoint()
     Close();
 }
 
-Result SwitchUSBEndpoint::Open()
+Result SwitchUSBEndpoint::Open(int maxPacketSize)
 {
-    Result rc = usbHsIfOpenUsbEp(m_ifSession, &m_epSession, 1, m_descriptor->wMaxPacketSize, m_descriptor);
+    Result rc = usbHsIfOpenUsbEp(m_ifSession, &m_epSession, 1, (maxPacketSize != 0 ? maxPacketSize : m_descriptor->wMaxPacketSize), m_descriptor);
     if (R_FAILED(rc))
         return 73011;
     return rc;

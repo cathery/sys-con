@@ -16,7 +16,7 @@ public:
     ~SwitchUSBEndpoint();
 
     //Open and close the endpoint
-    virtual Result Open();
+    virtual Result Open(int maxPacketSize = 0);
     virtual void Close();
 
     //buffer should point to the data array, and only the specified size will be read.
