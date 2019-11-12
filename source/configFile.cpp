@@ -14,6 +14,7 @@
 #define XBOXCONFIG "config_xboxorig.ini"
 #define XBOX360CONFIG "config_xbox360.ini"
 #define XBOXONECONFIG "config_xboxone.ini"
+#define XBOXONEADAPTERCONFIG "config_xboxoneadapter.ini"
 #define DUALSHOCK3CONFIG "config_dualshock3.ini"
 #define DUALSHOCK4CONFIG "config_dualshock4.ini"
 
@@ -51,6 +52,7 @@ static ControllerButton _StringToKey(const char *text)
 }
 
 static ControllerConfig temp_config;
+static char firmwarePath[100];
 
 static int _ParseConfigLine(void *dummy, const char *section, const char *name, const char *value)
 {
@@ -92,6 +94,11 @@ static int _ParseConfigLine(void *dummy, const char *section, const char *name, 
         temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
         return 1;
     }
+    else if (strcmp(name, "firmware_path") == 0)
+    {
+        strcpy(firmwarePath, value);
+        return 1;
+    }
 
     return 0;
 }
@@ -120,6 +127,11 @@ void LoadAllConfigs()
     else
         WriteToLog("Failed to read from xbox one config!");
 
+    if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH XBOXONEADAPTERCONFIG)))
+        XboxOneAdapter::LoadConfig(&temp_config, firmwarePath);
+    else
+        WriteToLog("Failed to read from xbox one adapter config!");
+
     if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH XBOX360CONFIG)))
     {
         Xbox360Controller::LoadConfig(&temp_config);
@@ -147,6 +159,7 @@ bool CheckForFileChanges()
     static time_t xboxConfigLastModified;
     static time_t xbox360ConfigLastModified;
     static time_t xboxOneConfigLastModified;
+    static time_t xboxOneAdapterConfigLastModified;
     static time_t dualshock3ConfigLastModified;
     static time_t dualshock4ConfigLastModified;
     struct stat result;
@@ -190,6 +203,12 @@ bool CheckForFileChanges()
         if (dualshock4ConfigLastModified != result.st_mtime)
         {
             dualshock4ConfigLastModified = result.st_mtime;
+            filesChanged = true;
+        }
+    if (stat(CONFIG_PATH XBOXONEADAPTERCONFIG, &result) == 0)
+        if (xboxOneAdapterConfigLastModified != result.st_mtime)
+        {
+            xboxOneAdapterConfigLastModified = result.st_mtime;
             filesChanged = true;
         }
     return filesChanged;
