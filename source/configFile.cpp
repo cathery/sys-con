@@ -112,9 +112,9 @@ static int _ParseConfigLine(void *dummy, const char *section, const char *name, 
         temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
         return 1;
     }
-    else if (strcmp(name, "swap_dpad_and_lstick") == 0)
+    else if (strcmp(name, "firmware_path") == 0)
     {
-        temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
+        strcpy(firmwarePath, value);
         return 1;
     }
     else if (strncmp(name, "color_", 6) == 0)
