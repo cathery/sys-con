@@ -156,7 +156,7 @@ Result mainLoop()
         {
             if (handler->GetController()->m_UpdateCalled)
             {
-                for (int i = 0; i != 100; ++i)
+                for (int i = 0; i != 64; ++i)
                     printf("0x%02X ", handler->GetController()->m_inputData[i]);
                 printf("\n");
                 handler->GetController()->m_UpdateCalled = false;
@@ -218,7 +218,7 @@ Result mainLoop()
             UsbHsInterface interfaces[4];
             s32 total_entries;
 
-            if (R_SUCCEEDED(QueryVendorProduct(interfaces, sizeof(interfaces), &total_entries, VENDOR_SONY, PRODUCT_DUALSHOCK3)))
+            if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
             {
                 WriteToLog("Registering DS3 controller");
                 devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
@@ -305,6 +305,6 @@ Result mainLoop()
     usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 1);
     usbHsDestroyInterfaceAvailableEvent(&ds4Event, 2);
 
-    //controllerInterfaces.clear();
+    controllerInterfaces.clear();
     return rc;
 }

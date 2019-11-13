@@ -1,5 +1,4 @@
 #pragma once
-
 #include "IController.h"
 
 //References used:
@@ -82,7 +81,9 @@ struct Dualshock4USBButtonData
     bool l3 : 1;
     bool r3 : 1;
 
-    uint8_t timestamp;
+    bool psbutton : 1;
+    bool touchpad_press : 1;
+    uint8_t timestamp : 6;
 
     uint8_t l2_pressure;
     uint8_t r2_pressure;
@@ -105,7 +106,6 @@ class Dualshock4Controller : public IController
 private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
-    IUSBInterface *m_interface = nullptr;
 
     Dualshock4USBButtonData m_buttonData;
 
@@ -124,8 +124,6 @@ public:
     virtual NormalizedButtonData GetNormalizedButtonData() override;
 
     virtual ControllerType GetType() override { return CONTROLLER_DUALSHOCK4; }
-
-    inline const Dualshock4USBButtonData &GetButtonData() { return m_buttonData; };
 
     float NormalizeTrigger(uint8_t value);
     void NormalizeAxis(uint8_t x, uint8_t y, uint8_t deadzonePercent, float *x_out, float *y_out);

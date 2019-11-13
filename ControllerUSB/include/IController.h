@@ -17,10 +17,13 @@ protected:
     std::unique_ptr<IUSBDevice> m_device;
 
 public:
-    uint8_t m_inputData[100];
+#ifdef __APPLET__
+    uint8_t m_inputData[64];
     bool m_UpdateCalled = false;
-
-    IController(std::unique_ptr<IUSBDevice> &&interface) : m_device(std::move(interface)) {}
+#endif
+    IController(std::unique_ptr<IUSBDevice> &&interface) : m_device(std::move(interface))
+    {
+    }
     virtual ~IController() = default;
 
     virtual Result Initialize() = 0;

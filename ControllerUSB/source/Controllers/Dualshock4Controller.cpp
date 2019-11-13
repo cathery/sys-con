@@ -1,6 +1,5 @@
 #include "Controllers/Dualshock4Controller.h"
 #include <cmath>
-#include "../../source/log.h"
 
 static ControllerConfig _dualshock4ControllerConfig{};
 
@@ -13,18 +12,9 @@ Dualshock4Controller::~Dualshock4Controller()
 {
     Exit();
 }
-/*
-uint32_t ComputeDualshock4Checksum(const uint8_t *report_data, uint16_t length)
-{
-    constexpr uint8_t bt_header = 0xa2;
-    uint32_t crc = crc32(0xffffffff, &bt_header, 1);
-    return unaligned_crc32(crc, report_data, length);
-}
-*/
 
 Result Dualshock4Controller::SendInitBytes()
 {
-
     constexpr uint8_t init_bytes[32] = {
         0x05, 0x07, 0x00, 0x00,
         0x7f, 0x7f,
@@ -45,12 +35,6 @@ Result Dualshock4Controller::Initialize()
     rc = SendInitBytes();
     if (R_FAILED(rc))
         return rc;
-
-    WriteToLog("Max IN packet size: ", m_inPipe->GetDescriptor()->wMaxPacketSize);
-    WriteToLog("Max OUT packet size: ", m_outPipe->GetDescriptor()->wMaxPacketSize);
-
-    return GetInput();
-
     return rc;
 }
 void Dualshock4Controller::Exit()
@@ -65,7 +49,7 @@ Result Dualshock4Controller::OpenInterfaces()
     if (R_FAILED(rc))
         return rc;
 
-    //This will open each interface and try to acquire Dualshock 4 controller's in and out endpoints, if it hasn't already
+    //Open each interface, send it a setup packet and get the endpoints if it succeeds
     std::vector<std::unique_ptr<IUSBInterface>> &interfaces = m_device->GetInterfaces();
     for (auto &&interface : interfaces)
     {
@@ -73,13 +57,8 @@ Result Dualshock4Controller::OpenInterfaces()
         if (R_FAILED(rc))
             return rc;
 
-        if (interface->GetDescriptor()->bInterfaceProtocol != 0)
-            continue;
-
         if (interface->GetDescriptor()->bNumEndpoints < 2)
             continue;
-
-        m_interface = interface.get();
 
         if (!m_inPipe)
         {
@@ -88,7 +67,7 @@ Result Dualshock4Controller::OpenInterfaces()
                 IUSBEndpoint *inEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_IN, i);
                 if (inEndpoint)
                 {
-                    rc = inEndpoint->Open(100);
+                    rc = inEndpoint->Open();
                     if (R_FAILED(rc))
                         return 61;
 
@@ -105,7 +84,7 @@ Result Dualshock4Controller::OpenInterfaces()
                 IUSBEndpoint *outEndpoint = interface->GetEndpoint(IUSBEndpoint::USB_ENDPOINT_OUT, i);
                 if (outEndpoint)
                 {
-                    rc = outEndpoint->Open(100);
+                    rc = outEndpoint->Open();
                     if (R_FAILED(rc))
                         return 62;
 
@@ -129,26 +108,29 @@ void Dualshock4Controller::CloseInterfaces()
 
 Result Dualshock4Controller::GetInput()
 {
+
     uint8_t input_bytes[64];
+
     Result rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
     if (R_FAILED(rc))
-    {
-        m_inputData[0] = static_cast<uint8_t>(rc);
         return rc;
-    }
-    uint8_t type = input_bytes[0];
 
-    if (type == 0x01)
+#ifdef __APPLET__
+    for (int i = 0; i != 64; ++i)
+        m_inputData[i] = input_bytes[i];
+    m_UpdateCalled = true;
+#endif
+
+    if (input_bytes[0] == 0x01)
     {
         m_buttonData = *reinterpret_cast<Dualshock4USBButtonData *>(input_bytes);
     }
-
     return rc;
 }
 
 float Dualshock4Controller::NormalizeTrigger(uint8_t value)
 {
-    uint16_t deadzone = (UINT8_MAX * _dualshock4ControllerConfig.triggerDeadzonePercent) / 100;
+    uint8_t deadzone = (UINT8_MAX * _dualshock4ControllerConfig.triggerDeadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
     return value < deadzone
                ? 0
@@ -219,8 +201,8 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
         (m_buttonData.dpad == DS4_RIGHT) || (m_buttonData.dpad == DS4_UPRIGHT) || (m_buttonData.dpad == DS4_DOWNRIGHT),
         (m_buttonData.dpad == DS4_DOWN) || (m_buttonData.dpad == DS4_DOWNRIGHT) || (m_buttonData.dpad == DS4_DOWNLEFT),
         (m_buttonData.dpad == DS4_LEFT) || (m_buttonData.dpad == DS4_UPLEFT) || (m_buttonData.dpad == DS4_DOWNLEFT),
-        false, //m_buttonData.touchpad_press,
-        false, //m_buttonData.psbutton,
+        m_buttonData.touchpad_press,
+        m_buttonData.psbutton,
     };
 
     for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
@@ -234,17 +216,8 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
 
 Result Dualshock4Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
+    //Not implemented yet
     return 9;
-    /*
-    uint8_t rumble_data[]{
-        0x09, 0x00,
-        m_rumbleDataCounter++,
-        0x09, 0x00, 0x0f, 0x00, 0x00,
-        strong_magnitude,
-        weak_magnitude,
-        0xff, 0x00, 0x00};
-    return m_outPipe->Write(rumble_data, sizeof(rumble_data));
-    */
 }
 
 void Dualshock4Controller::LoadConfig(const ControllerConfig *config)
