@@ -111,19 +111,19 @@ private:
 
 public:
     Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface);
-    virtual ~Dualshock4Controller();
+    virtual ~Dualshock4Controller() override;
 
-    virtual Result Initialize();
-    virtual void Exit();
+    virtual Result Initialize() override;
+    virtual void Exit() override;
 
     Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Result GetInput();
+    virtual Result GetInput() override;
 
-    virtual NormalizedButtonData GetNormalizedButtonData();
+    virtual NormalizedButtonData GetNormalizedButtonData() override;
 
-    virtual ControllerType GetType() { return CONTROLLER_DUALSHOCK4; }
+    virtual ControllerType GetType() override { return CONTROLLER_DUALSHOCK4; }
 
     inline const Dualshock4USBButtonData &GetButtonData() { return m_buttonData; };
 
@@ -134,5 +134,5 @@ public:
     Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
     static void LoadConfig(const ControllerConfig *config);
-    virtual ControllerConfig *GetConfig();
+    virtual ControllerConfig *GetConfig() override;
 };

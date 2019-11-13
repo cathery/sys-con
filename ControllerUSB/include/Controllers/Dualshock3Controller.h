@@ -130,19 +130,19 @@ private:
 
 public:
     Dualshock3Controller(std::unique_ptr<IUSBDevice> &&interface);
-    virtual ~Dualshock3Controller();
+    virtual ~Dualshock3Controller() override;
 
-    virtual Result Initialize();
-    virtual void Exit();
+    virtual Result Initialize() override;
+    virtual void Exit() override;
 
     Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Result GetInput();
+    virtual Result GetInput() override;
 
-    virtual NormalizedButtonData GetNormalizedButtonData();
+    virtual NormalizedButtonData GetNormalizedButtonData() override;
 
-    virtual ControllerType GetType() { return CONTROLLER_DUALSHOCK3; }
+    virtual ControllerType GetType() override { return CONTROLLER_DUALSHOCK3; }
 
     inline const Dualshock3ButtonData &GetButtonData() { return m_buttonData; };
 
@@ -157,5 +157,5 @@ public:
     Result SetLED(Dualshock3LEDValue value);
 
     static void LoadConfig(const ControllerConfig *config);
-    virtual ControllerConfig *GetConfig();
+    virtual ControllerConfig *GetConfig() override;
 };

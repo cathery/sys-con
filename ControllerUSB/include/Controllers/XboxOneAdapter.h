@@ -29,20 +29,20 @@ private:
 
 public:
     XboxOneAdapter(std::unique_ptr<IUSBDevice> &&interface);
-    virtual ~XboxOneAdapter();
+    virtual ~XboxOneAdapter() override;
 
-    virtual Result Initialize();
-    virtual void Exit();
+    virtual Result Initialize() override;
+    virtual void Exit() override;
 
     Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual ControllerType GetType() { return CONTROLLER_XBOXONEW; }
+    virtual ControllerType GetType() override { return CONTROLLER_XBOXONEW; }
 
     Result LoadFirmwarePart(uint32_t offset, uint8_t *start, uint8_t *end);
     Result SendInitBytes();
     Result ControlWrite(IUSBInterface *interface, uint16_t address, uint32_t value, VendorRequest request = MT_VEND_MULTI_WRITE);
 
     static void LoadConfig(const ControllerConfig *config, const char *path);
-    virtual ControllerConfig *GetConfig();
+    virtual ControllerConfig *GetConfig() override;
 };

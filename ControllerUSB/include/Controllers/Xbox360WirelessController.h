@@ -26,19 +26,19 @@ private:
 
 public:
     Xbox360WirelessController(std::unique_ptr<IUSBDevice> &&interface);
-    virtual ~Xbox360WirelessController();
+    virtual ~Xbox360WirelessController() override;
 
-    virtual Result Initialize();
-    virtual void Exit();
+    virtual Result Initialize() override;
+    virtual void Exit() override;
 
     Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Result GetInput();
+    virtual Result GetInput() override;
 
-    virtual NormalizedButtonData GetNormalizedButtonData();
+    virtual NormalizedButtonData GetNormalizedButtonData() override;
 
-    virtual ControllerType GetType() { return CONTROLLER_XBOX360W; }
+    virtual ControllerType GetType() override { return CONTROLLER_XBOX360W; }
 
     inline const Xbox360ButtonData &GetButtonData() { return m_buttonData; };
 
@@ -52,11 +52,11 @@ public:
     Result OnControllerDisconnect();
 
     static void LoadConfig(const ControllerConfig *config);
-    virtual ControllerConfig *GetConfig();
+    virtual ControllerConfig *GetConfig() override;
 
     Result WriteToEndpoint(const uint8_t *buffer, size_t size);
 
-    virtual Result OutputBuffer();
+    virtual Result OutputBuffer() override;
 
     bool IsControllerActive() override { return m_presence; }
 };

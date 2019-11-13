@@ -19,16 +19,16 @@ public:
     ~SwitchUSBInterface();
 
     // Open and close the interface
-    virtual Result Open();
-    virtual void Close();
+    virtual Result Open() override;
+    virtual void Close() override;
 
-    virtual Result ControlTransfer(u8 bmRequestType, u8 bmRequest, u16 wValue, u16 wIndex, u16 wLength, void *buffer);
+    virtual Result ControlTransfer(u8 bmRequestType, u8 bmRequest, u16 wValue, u16 wIndex, u16 wLength, void *buffer) override;
 
     // There are a total of 15 endpoints on a switch interface for each direction, get them by passing the desired parameters
-    virtual IUSBEndpoint *GetEndpoint(IUSBEndpoint::Direction direction, uint8_t index);
+    virtual IUSBEndpoint *GetEndpoint(IUSBEndpoint::Direction direction, uint8_t index) override;
 
     // Reset the device
-    virtual Result Reset();
+    virtual Result Reset() override;
 
     //Get the unique session ID for this interface
     inline s32 GetID() { return m_session.ID; }
@@ -37,5 +37,5 @@ public:
     //Get the raw session
     inline UsbHsClientIfSession &GetSession() { return m_session; }
 
-    virtual InterfaceDescriptor *GetDescriptor() { return reinterpret_cast<InterfaceDescriptor *>(&m_interface.inf.interface_desc); }
+    virtual InterfaceDescriptor *GetDescriptor() override { return reinterpret_cast<InterfaceDescriptor *>(&m_interface.inf.interface_desc); }
 };

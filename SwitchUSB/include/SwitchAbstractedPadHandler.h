@@ -18,13 +18,13 @@ public:
     ~SwitchAbstractedPadHandler();
 
     //Initialize controller handler, AbstractedPadState
-    Result Initialize() override;
-    void Exit() override;
+    virtual Result Initialize() override;
+    virtual void Exit() override;
 
     //This will be called periodically by the input threads
-    void UpdateInput() override;
+    virtual void UpdateInput() override;
     //This will be called periodically by the output threads
-    void UpdateOutput() override;
+    virtual void UpdateOutput() override;
 
     //Separately init and close the HDL state
     Result InitAbstractedPadState();

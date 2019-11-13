@@ -83,19 +83,19 @@ private:
 
 public:
     XboxOneController(std::unique_ptr<IUSBDevice> &&interface);
-    virtual ~XboxOneController();
+    virtual ~XboxOneController() override;
 
-    virtual Result Initialize();
-    virtual void Exit();
+    virtual Result Initialize() override;
+    virtual void Exit() override;
 
     Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Result GetInput();
+    virtual Result GetInput() override;
 
-    virtual NormalizedButtonData GetNormalizedButtonData();
+    virtual NormalizedButtonData GetNormalizedButtonData() override;
 
-    virtual ControllerType GetType() { return CONTROLLER_XBOXONE; }
+    virtual ControllerType GetType() override { return CONTROLLER_XBOXONE; }
 
     inline const XboxOneButtonData &GetButtonData() { return m_buttonData; };
 
@@ -107,5 +107,5 @@ public:
     Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
     static void LoadConfig(const ControllerConfig *config);
-    virtual ControllerConfig *GetConfig();
+    virtual ControllerConfig *GetConfig() override;
 };

@@ -16,20 +16,20 @@ public:
     ~SwitchUSBEndpoint();
 
     //Open and close the endpoint
-    virtual Result Open(int maxPacketSize = 0);
-    virtual void Close();
+    virtual Result Open(int maxPacketSize = 0) override;
+    virtual void Close() override;
 
     //buffer should point to the data array, and only the specified size will be read.
-    virtual Result Write(const void *inBuffer, size_t bufferSize);
+    virtual Result Write(const void *inBuffer, size_t bufferSize) override;
 
     //The data received will be put in the outBuffer array for the length of the specified size.
-    virtual Result Read(void *outBuffer, size_t bufferSize);
+    virtual Result Read(void *outBuffer, size_t bufferSize) override;
 
     //Gets the direction of this endpoint (IN or OUT)
-    virtual IUSBEndpoint::Direction GetDirection();
+    virtual IUSBEndpoint::Direction GetDirection() override;
 
     //get the endpoint descriptor
-    virtual IUSBEndpoint::EndpointDescriptor *GetDescriptor();
+    virtual IUSBEndpoint::EndpointDescriptor *GetDescriptor() override;
 
     // Get the current EpSession (after it was opened)
     inline UsbHsClientEpSession &GetSession() { return m_epSession; }
