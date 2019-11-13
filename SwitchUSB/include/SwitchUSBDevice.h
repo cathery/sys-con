@@ -1,6 +1,6 @@
 #pragma once
-#include "IUSBDevice.h"
 #include "switch.h"
+#include "IUSBDevice.h"
 #include "SwitchUSBInterface.h"
 #include <vector>
 

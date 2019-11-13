@@ -22,7 +22,7 @@ uint32_t ComputeDualshock4Checksum(const uint8_t *report_data, uint16_t length)
 }
 */
 
-Status Dualshock4Controller::SendInitBytes()
+Result Dualshock4Controller::SendInitBytes()
 {
 
     constexpr uint8_t init_bytes[32] = {
@@ -34,16 +34,16 @@ Status Dualshock4Controller::SendInitBytes()
     return m_outPipe->Write(init_bytes, sizeof(init_bytes));
 }
 
-Status Dualshock4Controller::Initialize()
+Result Dualshock4Controller::Initialize()
 {
-    Status rc;
+    Result rc;
 
     rc = OpenInterfaces();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     rc = SendInitBytes();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     WriteToLog("Max IN packet size: ", m_inPipe->GetDescriptor()->wMaxPacketSize);
@@ -58,11 +58,11 @@ void Dualshock4Controller::Exit()
     CloseInterfaces();
 }
 
-Status Dualshock4Controller::OpenInterfaces()
+Result Dualshock4Controller::OpenInterfaces()
 {
-    Status rc;
+    Result rc;
     rc = m_device->Open();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     //This will open each interface and try to acquire Dualshock 4 controller's in and out endpoints, if it hasn't already
@@ -70,7 +70,7 @@ Status Dualshock4Controller::OpenInterfaces()
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         if (interface->GetDescriptor()->bInterfaceProtocol != 0)
@@ -89,7 +89,7 @@ Status Dualshock4Controller::OpenInterfaces()
                 if (inEndpoint)
                 {
                     rc = inEndpoint->Open(100);
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 61;
 
                     m_inPipe = inEndpoint;
@@ -106,7 +106,7 @@ Status Dualshock4Controller::OpenInterfaces()
                 if (outEndpoint)
                 {
                     rc = outEndpoint->Open(100);
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 62;
 
                     m_outPipe = outEndpoint;
@@ -127,11 +127,11 @@ void Dualshock4Controller::CloseInterfaces()
     m_device->Close();
 }
 
-Status Dualshock4Controller::GetInput()
+Result Dualshock4Controller::GetInput()
 {
     uint8_t input_bytes[64];
-    Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
-    if (S_FAILED(rc))
+    Result rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
+    if (R_FAILED(rc))
     {
         m_inputData[0] = static_cast<uint8_t>(rc);
         return rc;
@@ -232,7 +232,7 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
     return normalData;
 }
 
-Status Dualshock4Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
+Result Dualshock4Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     return 9;
     /*

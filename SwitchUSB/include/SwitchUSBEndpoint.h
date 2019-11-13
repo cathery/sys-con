@@ -1,6 +1,6 @@
 #pragma once
-#include "IUSBEndpoint.h"
 #include "switch.h"
+#include "IUSBEndpoint.h"
 #include <memory>
 
 class SwitchUSBEndpoint : public IUSBEndpoint

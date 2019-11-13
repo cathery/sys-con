@@ -28,13 +28,13 @@ public:
     Xbox360WirelessController(std::unique_ptr<IUSBDevice> &&interface);
     virtual ~Xbox360WirelessController();
 
-    virtual Status Initialize();
+    virtual Result Initialize();
     virtual void Exit();
 
-    Status OpenInterfaces();
+    Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Status GetInput();
+    virtual Result GetInput();
 
     virtual NormalizedButtonData GetNormalizedButtonData();
 
@@ -45,18 +45,18 @@ public:
     float NormalizeTrigger(uint8_t value);
     void NormalizeAxis(int16_t x, int16_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
 
-    Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
-    Status SetLED(Xbox360LEDValue value);
+    Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+    Result SetLED(Xbox360LEDValue value);
 
-    Status OnControllerConnect();
-    Status OnControllerDisconnect();
+    Result OnControllerConnect();
+    Result OnControllerDisconnect();
 
     static void LoadConfig(const ControllerConfig *config);
     virtual ControllerConfig *GetConfig();
 
-    Status WriteToEndpoint(const uint8_t *buffer, size_t size);
+    Result WriteToEndpoint(const uint8_t *buffer, size_t size);
 
-    virtual Status OutputBuffer();
+    virtual Result OutputBuffer();
 
     bool IsControllerActive() override { return m_presence; }
 };

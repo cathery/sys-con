@@ -85,13 +85,13 @@ public:
     XboxOneController(std::unique_ptr<IUSBDevice> &&interface);
     virtual ~XboxOneController();
 
-    virtual Status Initialize();
+    virtual Result Initialize();
     virtual void Exit();
 
-    Status OpenInterfaces();
+    Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Status GetInput();
+    virtual Result GetInput();
 
     virtual NormalizedButtonData GetNormalizedButtonData();
 
@@ -102,9 +102,9 @@ public:
     float NormalizeTrigger(uint16_t value);
     void NormalizeAxis(int16_t x, int16_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
 
-    Status SendInitBytes();
-    Status WriteAckGuideReport(uint8_t sequence);
-    Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+    Result SendInitBytes();
+    Result WriteAckGuideReport(uint8_t sequence);
+    Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
     static void LoadConfig(const ControllerConfig *config);
     virtual ControllerConfig *GetConfig();

@@ -13,12 +13,12 @@ Xbox360Controller::~Xbox360Controller()
     Exit();
 }
 
-Status Xbox360Controller::Initialize()
+Result Xbox360Controller::Initialize()
 {
-    Status rc;
+    Result rc;
 
     rc = OpenInterfaces();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     SetLED(XBOX360LED_TOPLEFT);
@@ -29,11 +29,11 @@ void Xbox360Controller::Exit()
     CloseInterfaces();
 }
 
-Status Xbox360Controller::OpenInterfaces()
+Result Xbox360Controller::OpenInterfaces()
 {
-    Status rc;
+    Result rc;
     rc = m_device->Open();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     //This will open each interface and try to acquire Xbox One controller's in and out endpoints, if it hasn't already
@@ -41,7 +41,7 @@ Status Xbox360Controller::OpenInterfaces()
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         if (interface->GetDescriptor()->bInterfaceProtocol != 1)
@@ -58,7 +58,7 @@ Status Xbox360Controller::OpenInterfaces()
                 if (inEndpoint)
                 {
                     rc = inEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 55555;
 
                     m_inPipe = inEndpoint;
@@ -75,7 +75,7 @@ Status Xbox360Controller::OpenInterfaces()
                 if (outEndpoint)
                 {
                     rc = outEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 66666;
 
                     m_outPipe = outEndpoint;
@@ -96,11 +96,11 @@ void Xbox360Controller::CloseInterfaces()
     m_device->Close();
 }
 
-Status Xbox360Controller::GetInput()
+Result Xbox360Controller::GetInput()
 {
     uint8_t input_bytes[64];
 
-    Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
+    Result rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
 
     uint8_t type = input_bytes[0];
 
@@ -112,13 +112,13 @@ Status Xbox360Controller::GetInput()
     return rc;
 }
 
-Status Xbox360Controller::SendInitBytes()
+Result Xbox360Controller::SendInitBytes()
 {
     uint8_t init_bytes[]{
         0x05,
         0x20, 0x00, 0x01, 0x00};
 
-    Status rc = m_outPipe->Write(init_bytes, sizeof(init_bytes));
+    Result rc = m_outPipe->Write(init_bytes, sizeof(init_bytes));
     return rc;
 }
 
@@ -209,13 +209,13 @@ NormalizedButtonData Xbox360Controller::GetNormalizedButtonData()
     return normalData;
 }
 
-Status Xbox360Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
+Result Xbox360Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     uint8_t rumbleData[]{0x00, sizeof(Xbox360RumbleData), 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00};
     return m_outPipe->Write(rumbleData, sizeof(rumbleData));
 }
 
-Status Xbox360Controller::SetLED(Xbox360LEDValue value)
+Result Xbox360Controller::SetLED(Xbox360LEDValue value)
 {
     uint8_t ledPacket[]{0x01, 0x03, static_cast<uint8_t>(value)};
     return m_outPipe->Write(ledPacket, sizeof(ledPacket));

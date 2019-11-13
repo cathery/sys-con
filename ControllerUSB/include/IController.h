@@ -23,21 +23,21 @@ public:
     IController(std::unique_ptr<IUSBDevice> &&interface) : m_device(std::move(interface)) {}
     virtual ~IController() = default;
 
-    virtual Status Initialize() = 0;
+    virtual Result Initialize() = 0;
 
-    //Since Exit is used to clean up resources, no status report should be needed
+    //Since Exit is used to clean up resources, no Result report should be needed
     virtual void Exit() = 0;
 
-    virtual Status GetInput() { return 1; }
+    virtual Result GetInput() { return 1; }
 
     virtual NormalizedButtonData GetNormalizedButtonData() { return NormalizedButtonData(); }
 
     inline IUSBDevice *GetDevice() { return m_device.get(); }
     virtual ControllerType GetType() = 0;
-    virtual Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude) { return 1; }
+    virtual Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude) { return 1; }
     virtual bool IsControllerActive() { return true; }
 
-    virtual Status OutputBuffer() { return 1; };
+    virtual Result OutputBuffer() { return 1; };
 
     virtual ControllerConfig *GetConfig() { return nullptr; }
 };

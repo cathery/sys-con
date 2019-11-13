@@ -13,12 +13,12 @@ Dualshock3Controller::~Dualshock3Controller()
     Exit();
 }
 
-Status Dualshock3Controller::Initialize()
+Result Dualshock3Controller::Initialize()
 {
-    Status rc;
+    Result rc;
 
     rc = OpenInterfaces();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     SetLED(DS3LED_1);
@@ -29,11 +29,11 @@ void Dualshock3Controller::Exit()
     CloseInterfaces();
 }
 
-Status Dualshock3Controller::OpenInterfaces()
+Result Dualshock3Controller::OpenInterfaces()
 {
-    Status rc;
+    Result rc;
     rc = m_device->Open();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     //Open each interface, send it a setup packet and get the endpoints if it succeeds
@@ -41,7 +41,7 @@ Status Dualshock3Controller::OpenInterfaces()
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         if (interface->GetDescriptor()->bNumEndpoints < 2)
@@ -50,7 +50,7 @@ Status Dualshock3Controller::OpenInterfaces()
         //Send an initial control packet
         uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
         rc = SendCommand(interface.get(), Ds3FeatureStartDevice, initBytes, sizeof(initBytes));
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return 60;
 
         m_interface = interface.get();
@@ -63,7 +63,7 @@ Status Dualshock3Controller::OpenInterfaces()
                 if (inEndpoint)
                 {
                     rc = inEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 61;
 
                     m_inPipe = inEndpoint;
@@ -80,7 +80,7 @@ Status Dualshock3Controller::OpenInterfaces()
                 if (outEndpoint)
                 {
                     rc = outEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 62;
 
                     m_outPipe = outEndpoint;
@@ -101,13 +101,13 @@ void Dualshock3Controller::CloseInterfaces()
     m_device->Close();
 }
 
-Status Dualshock3Controller::GetInput()
+Result Dualshock3Controller::GetInput()
 {
 
     uint8_t input_bytes[49];
 
-    Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
-    if (S_FAILED(rc))
+    Result rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
+    if (R_FAILED(rc))
         return rc;
 
     if (input_bytes[0] == Ds3InputPacket_Button)
@@ -203,18 +203,18 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
     return normalData;
 }
 
-Status Dualshock3Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
+Result Dualshock3Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     //Not implemented yet
     return 9;
 }
 
-Status Dualshock3Controller::SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, void *buffer, uint16_t size)
+Result Dualshock3Controller::SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, void *buffer, uint16_t size)
 {
     return interface->ControlTransfer(0x21, 0x09, static_cast<uint16_t>(feature), 0, size, buffer);
 }
 
-Status Dualshock3Controller::SetLED(Dualshock3LEDValue value)
+Result Dualshock3Controller::SetLED(Dualshock3LEDValue value)
 {
     uint8_t ledPacket[]{
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

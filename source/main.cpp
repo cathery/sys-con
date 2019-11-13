@@ -1,7 +1,6 @@
 #include "switch.h"
 #include "log.h"
 #include "mainLoop.h"
-#include "log.h"
 
 //ISSUES:
 // when exiting the applet, only one of the controllers is reset

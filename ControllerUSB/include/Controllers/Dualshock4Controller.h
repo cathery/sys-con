@@ -113,13 +113,13 @@ public:
     Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface);
     virtual ~Dualshock4Controller();
 
-    virtual Status Initialize();
+    virtual Result Initialize();
     virtual void Exit();
 
-    Status OpenInterfaces();
+    Result OpenInterfaces();
     void CloseInterfaces();
 
-    virtual Status GetInput();
+    virtual Result GetInput();
 
     virtual NormalizedButtonData GetNormalizedButtonData();
 
@@ -130,8 +130,8 @@ public:
     float NormalizeTrigger(uint8_t value);
     void NormalizeAxis(uint8_t x, uint8_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
 
-    Status SendInitBytes();
-    Status SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
+    Result SendInitBytes();
+    Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
     static void LoadConfig(const ControllerConfig *config);
     virtual ControllerConfig *GetConfig();

@@ -17,18 +17,18 @@ Xbox360WirelessController::~Xbox360WirelessController()
     Exit();
 }
 
-Status Xbox360WirelessController::Initialize()
+Result Xbox360WirelessController::Initialize()
 {
-    Status rc;
+    Result rc;
     m_outputBuffer.clear();
     m_outputBuffer.reserve(4);
 
     rc = OpenInterfaces();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     rc = WriteToEndpoint(reconnectPacket, sizeof(reconnectPacket));
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     SetLED(XBOX360LED_TOPLEFT);
@@ -39,11 +39,11 @@ void Xbox360WirelessController::Exit()
     CloseInterfaces();
 }
 
-Status Xbox360WirelessController::OpenInterfaces()
+Result Xbox360WirelessController::OpenInterfaces()
 {
-    Status rc;
+    Result rc;
     rc = m_device->Open();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     //This will open each interface and try to acquire Xbox 360 controller's in and out endpoints, if it hasn't already
@@ -51,7 +51,7 @@ Status Xbox360WirelessController::OpenInterfaces()
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         if (interface->GetDescriptor()->bInterfaceProtocol != 129)
@@ -68,7 +68,7 @@ Status Xbox360WirelessController::OpenInterfaces()
                 if (inEndpoint)
                 {
                     rc = inEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 55555;
 
                     m_inPipe = inEndpoint;
@@ -85,7 +85,7 @@ Status Xbox360WirelessController::OpenInterfaces()
                 if (outEndpoint)
                 {
                     rc = outEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 66666;
 
                     m_outPipe = outEndpoint;
@@ -109,11 +109,11 @@ void Xbox360WirelessController::CloseInterfaces()
     m_device->Close();
 }
 
-Status Xbox360WirelessController::GetInput()
+Result Xbox360WirelessController::GetInput()
 {
     uint8_t input_bytes[64];
 
-    Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
+    Result rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
 
     uint8_t type = input_bytes[0];
 
@@ -230,13 +230,13 @@ NormalizedButtonData Xbox360WirelessController::GetNormalizedButtonData()
     return normalData;
 }
 
-Status Xbox360WirelessController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
+Result Xbox360WirelessController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     uint8_t rumbleData[]{0x00, 0x01, 0x0F, 0xC0, 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00, 0x00, 0x00};
     return WriteToEndpoint(rumbleData, sizeof(rumbleData));
 }
 
-Status Xbox360WirelessController::SetLED(Xbox360LEDValue value)
+Result Xbox360WirelessController::SetLED(Xbox360LEDValue value)
 {
     uint8_t customLEDPacket[]{0x00, 0x00, 0x08, static_cast<uint8_t>(value | 0x40), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     return WriteToEndpoint(customLEDPacket, sizeof(customLEDPacket));
@@ -252,7 +252,7 @@ ControllerConfig *Xbox360WirelessController::GetConfig()
     return &_xbox360WControllerConfig;
 }
 
-Status Xbox360WirelessController::OnControllerConnect()
+Result Xbox360WirelessController::OnControllerConnect()
 {
     m_outputBuffer.push_back(OutputPacket{reconnectPacket, sizeof(reconnectPacket)});
     m_outputBuffer.push_back(OutputPacket{initDriverPacket, sizeof(initDriverPacket)});
@@ -260,23 +260,23 @@ Status Xbox360WirelessController::OnControllerConnect()
     return 0;
 }
 
-Status Xbox360WirelessController::OnControllerDisconnect()
+Result Xbox360WirelessController::OnControllerDisconnect()
 {
     m_outputBuffer.push_back(OutputPacket{poweroffPacket, sizeof(poweroffPacket)});
     return 0;
 }
 
-Status Xbox360WirelessController::WriteToEndpoint(const uint8_t *buffer, size_t size)
+Result Xbox360WirelessController::WriteToEndpoint(const uint8_t *buffer, size_t size)
 {
     return m_outPipe->Write(buffer, size);
 }
 
-Status Xbox360WirelessController::OutputBuffer()
+Result Xbox360WirelessController::OutputBuffer()
 {
     if (m_outputBuffer.empty())
         return 1;
 
-    Status rc;
+    Result rc;
     auto it = m_outputBuffer.begin();
     rc = WriteToEndpoint(it->packet, it->length);
     m_outputBuffer.erase(it);

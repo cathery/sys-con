@@ -13,12 +13,12 @@ XboxController::~XboxController()
     Exit();
 }
 
-Status XboxController::Initialize()
+Result XboxController::Initialize()
 {
-    Status rc;
+    Result rc;
 
     rc = OpenInterfaces();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     return rc;
@@ -28,11 +28,11 @@ void XboxController::Exit()
     CloseInterfaces();
 }
 
-Status XboxController::OpenInterfaces()
+Result XboxController::OpenInterfaces()
 {
-    Status rc;
+    Result rc;
     rc = m_device->Open();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     //This will open each interface and try to acquire Xbox controller's in and out endpoints, if it hasn't already
@@ -40,7 +40,7 @@ Status XboxController::OpenInterfaces()
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         if (interface->GetDescriptor()->bInterfaceProtocol != 0)
@@ -57,7 +57,7 @@ Status XboxController::OpenInterfaces()
                 if (inEndpoint)
                 {
                     rc = inEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 55555;
 
                     m_inPipe = inEndpoint;
@@ -74,7 +74,7 @@ Status XboxController::OpenInterfaces()
                 if (outEndpoint)
                 {
                     rc = outEndpoint->Open();
-                    if (S_FAILED(rc))
+                    if (R_FAILED(rc))
                         return 66666;
 
                     m_outPipe = outEndpoint;
@@ -95,13 +95,13 @@ void XboxController::CloseInterfaces()
     m_device->Close();
 }
 
-Status XboxController::GetInput()
+Result XboxController::GetInput()
 {
     uint8_t input_bytes[64];
 
-    Status rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
+    Result rc = m_inPipe->Read(input_bytes, sizeof(input_bytes));
 
-    if (S_SUCCEEDED(rc))
+    if (R_SUCCEEDED(rc))
     {
         m_buttonData = *reinterpret_cast<XboxButtonData *>(input_bytes);
     }
@@ -196,7 +196,7 @@ NormalizedButtonData XboxController::GetNormalizedButtonData()
     return normalData;
 }
 
-Status XboxController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
+Result XboxController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude)
 {
     uint8_t rumbleData[]{0x00, 0x06, 0x00, strong_magnitude, weak_magnitude, 0x00, 0x00, 0x00};
     return m_outPipe->Write(rumbleData, sizeof(rumbleData));

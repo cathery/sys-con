@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdio>
-#include "Status.h"
+#include "Result.h"
 #include "IUSBInterface.h"
 #include <memory>
 #include <vector>
@@ -17,7 +17,7 @@ public:
   virtual ~IUSBDevice() = default;
 
   //Open and close the device.
-  virtual Status Open() = 0;
+  virtual Result Open() = 0;
   virtual void Close() = 0;
 
   //Reset the device.

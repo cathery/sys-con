@@ -2,7 +2,6 @@
 #include "Controllers.h"
 #include "ControllerConfig.h"
 
-#include "switch/result.h"
 #include <cstring>
 #include <sys/stat.h>
 #include <array>

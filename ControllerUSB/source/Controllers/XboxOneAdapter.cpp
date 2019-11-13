@@ -18,16 +18,16 @@ XboxOneAdapter::~XboxOneAdapter()
     Exit();
 }
 
-Status XboxOneAdapter::Initialize()
+Result XboxOneAdapter::Initialize()
 {
-    Status rc;
+    Result rc;
 
     rc = OpenInterfaces();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     rc = SendInitBytes();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
     return rc;
 }
@@ -36,18 +36,18 @@ void XboxOneAdapter::Exit()
     CloseInterfaces();
 }
 
-Status XboxOneAdapter::OpenInterfaces()
+Result XboxOneAdapter::OpenInterfaces()
 {
-    Status rc;
+    Result rc;
     rc = m_device->Open();
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     std::vector<std::unique_ptr<IUSBInterface>> &interfaces = m_device->GetInterfaces();
     for (auto &&interface : interfaces)
     {
         rc = interface->Open();
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         if (interface->GetDescriptor()->bInterfaceProtocol != 255)
@@ -64,7 +64,7 @@ Status XboxOneAdapter::OpenInterfaces()
             if (inEndpoint)
             {
                 rc = inEndpoint->Open();
-                if (S_FAILED(rc))
+                if (R_FAILED(rc))
                     return 3333;
 
                 m_inPipePacket = inEndpoint;
@@ -77,7 +77,7 @@ Status XboxOneAdapter::OpenInterfaces()
             if (inEndpoint)
             {
                 rc = inEndpoint->Open();
-                if (S_FAILED(rc))
+                if (R_FAILED(rc))
                     return 4444;
 
                 m_inPipe = inEndpoint;
@@ -90,7 +90,7 @@ Status XboxOneAdapter::OpenInterfaces()
             if (outEndpoint)
             {
                 rc = outEndpoint->Open();
-                if (S_FAILED(rc))
+                if (R_FAILED(rc))
                     return 5555;
 
                 m_outPipe = outEndpoint;
@@ -110,9 +110,9 @@ void XboxOneAdapter::CloseInterfaces()
     m_device->Close();
 }
 
-Status XboxOneAdapter::SendInitBytes()
+Result XboxOneAdapter::SendInitBytes()
 {
-    Status rc;
+    Result rc;
     DmaConfig config = {};
 
     config.rxBulkEnabled = 1;
@@ -156,12 +156,12 @@ Status XboxOneAdapter::SendInitBytes()
     WriteToLog("Writing 1st part");
 
     rc = LoadFirmwarePart(MT_MCU_ILM_OFFSET, ilmStart, dlmStart);
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     WriteToLog("Writing 2nd part");
     rc = LoadFirmwarePart(MT_MCU_DLM_OFFSET, dlmStart, dlmEnd);
-    if (S_FAILED(rc))
+    if (R_FAILED(rc))
         return rc;
 
     WriteToLog("Wrote");
@@ -169,10 +169,10 @@ Status XboxOneAdapter::SendInitBytes()
     return 0;
 }
 
-Status XboxOneAdapter::LoadFirmwarePart(uint32_t offset, uint8_t *start, uint8_t *end)
+Result XboxOneAdapter::LoadFirmwarePart(uint32_t offset, uint8_t *start, uint8_t *end)
 {
     // Send firmware in chunks
-    Status rc = -1;
+    Result rc = -1;
     for (uint8_t *chunk = start; chunk < end; chunk += MT_FW_CHUNK_SIZE)
     {
         uint32_t address = (uint32_t)(offset + chunk - start);
@@ -180,11 +180,11 @@ Status XboxOneAdapter::LoadFirmwarePart(uint32_t offset, uint8_t *start, uint8_t
         uint16_t length = remaining > MT_FW_CHUNK_SIZE ? MT_FW_CHUNK_SIZE : remaining;
 
         rc = ControlWrite(m_interface, MT_FCE_DMA_ADDR, address, MT_VEND_WRITE_CFG);
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         rc = ControlWrite(m_interface, MT_FCE_DMA_LEN, length << 16, MT_VEND_WRITE_CFG);
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
 
         uint8_t data[length + 8]{0x00, 0x38, 0x00, 0x10};
@@ -195,15 +195,15 @@ Status XboxOneAdapter::LoadFirmwarePart(uint32_t offset, uint8_t *start, uint8_t
         }
 
         rc = m_outPipe->Write(data, sizeof(data));
-        if (S_FAILED(rc))
+        if (R_FAILED(rc))
             return rc;
     }
     return rc;
 }
 
-Status XboxOneAdapter::ControlWrite(IUSBInterface *interface, uint16_t address, uint32_t value, VendorRequest request)
+Result XboxOneAdapter::ControlWrite(IUSBInterface *interface, uint16_t address, uint32_t value, VendorRequest request)
 {
-    Status rc;
+    Result rc;
     if (request == MT_VEND_DEV_MODE)
     {
         rc = interface->ControlTransfer(0x40, request, address, 0, 0, nullptr);
