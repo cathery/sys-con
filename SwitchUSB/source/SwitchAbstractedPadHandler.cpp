@@ -82,8 +82,9 @@ Result SwitchAbstractedPadHandler::InitAbstractedPadState()
     m_state.npadInterfaceType = NpadInterfaceType_USB;
     m_state.flags = 0xff;
     m_state.state.batteryCharge = 4;
-    m_state.singleColorBody = RGBA8_MAXALPHA(107, 107, 107);
-    m_state.singleColorButtons = RGBA8_MAXALPHA(0, 0, 0);
+    ControllerConfig *config = GetController()->GetConfig();
+    m_state.singleColorBody = config->bodyColor.rgbaValue;
+    m_state.singleColorButtons = config->buttonsColor.rgbaValue;
 
     rc = hiddbgSetAutoPilotVirtualPadState(m_abstractedPadID, &m_state);
     if (R_FAILED(rc))

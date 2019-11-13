@@ -50,6 +50,25 @@ static ControllerButton _StringToKey(const char *text)
     return NOT_SET;
 }
 
+static RGBAColor _DecodeColorValue(const char *value)
+{
+    RGBAColor color{255};
+    uint8_t counter = 0;
+    int charIndex = 0;
+    while (value[charIndex] != '\0')
+    {
+        if (charIndex == 0)
+            color.values[counter++] = atoi(value + charIndex++);
+        if (value[charIndex++] == ',')
+        {
+            color.values[counter++] = atoi(value + charIndex);
+            if (counter == 4)
+                break;
+        }
+    }
+    return color;
+}
+
 static ControllerConfig temp_config;
 static char firmwarePath[100];
 
@@ -93,10 +112,33 @@ static int _ParseConfigLine(void *dummy, const char *section, const char *name, 
         temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
         return 1;
     }
-    else if (strcmp(name, "firmware_path") == 0)
+    else if (strcmp(name, "swap_dpad_and_lstick") == 0)
     {
-        strcpy(firmwarePath, value);
+        temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
         return 1;
+    }
+    else if (strncmp(name, "color_", 6) == 0)
+    {
+        if (strcmp(name + 6, "body") == 0)
+        {
+            temp_config.bodyColor = _DecodeColorValue(value);
+            return 1;
+        }
+        else if (strcmp(name + 6, "buttons") == 0)
+        {
+            temp_config.buttonsColor = _DecodeColorValue(value);
+            return 1;
+        }
+        else if (strcmp(name + 6, "leftGrip") == 0)
+        {
+            temp_config.leftGripColor = _DecodeColorValue(value);
+            return 1;
+        }
+        else if (strcmp(name + 6, "rightGrip") == 0)
+        {
+            temp_config.rightGripColor = _DecodeColorValue(value);
+            return 1;
+        }
     }
 
     return 0;

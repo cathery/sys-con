@@ -61,10 +61,11 @@ Result SwitchHDLHandler::InitHdlState()
     m_deviceInfo.deviceType = HidDeviceType_FullKey15;
     m_deviceInfo.npadInterfaceType = NpadInterfaceType_USB;
     // Set the controller colors. The grip colors are for Pro-Controller on [9.0.0+].
-    m_deviceInfo.singleColorBody = RGBA8_MAXALPHA(107, 107, 107);
-    m_deviceInfo.singleColorButtons = RGBA8_MAXALPHA(0, 0, 0);
-    m_deviceInfo.colorLeftGrip = RGBA8_MAXALPHA(70, 70, 70);
-    m_deviceInfo.colorRightGrip = RGBA8_MAXALPHA(70, 70, 70);
+    ControllerConfig *config = GetController()->GetConfig();
+    m_deviceInfo.singleColorBody = config->bodyColor.rgbaValue;
+    m_deviceInfo.singleColorButtons = config->buttonsColor.rgbaValue;
+    m_deviceInfo.colorLeftGrip = config->leftGripColor.rgbaValue;
+    m_deviceInfo.colorRightGrip = config->rightGripColor.rgbaValue;
 
     m_hdlState.batteryCharge = 4; // Set battery charge to full.
     m_hdlState.joysticks[JOYSTICK_LEFT].dx = 0x1234;
