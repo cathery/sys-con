@@ -87,6 +87,43 @@ struct Dualshock4USBButtonData
 
     uint8_t l2_pressure;
     uint8_t r2_pressure;
+
+    uint8_t counter[2];
+
+    uint8_t battery_level;
+
+    uint8_t unk;
+
+    uint16_t gyroX;
+    uint16_t gyroY;
+    uint16_t gyroZ;
+
+    uint16_t accelX;
+    uint16_t accelY;
+    uint16_t accelZ;
+
+    uint32_t unk2;
+
+    uint8_t headset_bitmask;
+
+    uint16_t unk3;
+
+    uint8_t touchpad_eventData : 4;
+    uint8_t unk4 : 4;
+
+    uint8_t touchpad_counter;
+    uint8_t touchpad_finger1_counter : 7;
+    bool touchpad_finger1_unpressed : 1;
+    uint16_t touchpad_finger1_X;
+    uint8_t touchpad_finger1_Y;
+
+    uint8_t touchpad_finger2_counter : 7;
+    bool touchpad_finger2_unpressed : 1;
+    uint16_t touchpad_finger2_X;
+    uint8_t touchpad_finger2_Y;
+
+    uint8_t touchpad_finger1_prev[4];
+    uint8_t touchpad_finger2_prev[4];
 };
 
 enum Dualshock4Dpad
