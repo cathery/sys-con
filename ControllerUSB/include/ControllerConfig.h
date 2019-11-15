@@ -21,6 +21,7 @@ enum ControllerButton
     DPAD_LEFT,
     SYNC,
     GUIDE,
+    TOUCHPAD,
     NUM_CONTROLLERBUTTONS,
 };
 

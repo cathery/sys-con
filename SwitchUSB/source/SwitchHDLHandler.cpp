@@ -151,6 +151,7 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
 
     m_hdlState.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
     m_hdlState.buttons |= (data.buttons[17] ? KEY_HOME : 0);
+    m_hdlState.buttons |= (data.buttons[18] ? KEY_TOUCH : 0);
 }
 
 void SwitchHDLHandler::UpdateInput()

@@ -17,8 +17,8 @@ Result Dualshock4Controller::SendInitBytes()
 {
     constexpr uint8_t init_bytes[32] = {
         0x05, 0x07, 0x00, 0x00,
-        0x7f, 0x7f,
-        0x00, 0x00, 0x40,
+        0x00, 0x00,       //initial strong and weak rumble
+        0x00, 0x00, 0x40, //LED color
         0x00, 0x00};
 
     return m_outPipe->Write(init_bytes, sizeof(init_bytes));
@@ -56,6 +56,12 @@ Result Dualshock4Controller::OpenInterfaces()
         rc = interface->Open();
         if (R_FAILED(rc))
             return rc;
+
+        if (interface->GetDescriptor()->bInterfaceClass != 3)
+            continue;
+
+        if (interface->GetDescriptor()->bInterfaceProtocol != 0)
+            continue;
 
         if (interface->GetDescriptor()->bNumEndpoints < 2)
             continue;
@@ -203,6 +209,7 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
         (m_buttonData.dpad == DS4_LEFT) || (m_buttonData.dpad == DS4_UPLEFT) || (m_buttonData.dpad == DS4_DOWNLEFT),
         m_buttonData.touchpad_press,
         m_buttonData.psbutton,
+        m_buttonData.touchpad_finger1_unpressed == false,
     };
 
     for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)

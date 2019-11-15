@@ -1,4 +1,5 @@
 #include <switch.h>
+#include "mainLoop.h"
 #include <variant>
 #include "log.h"
 
@@ -8,7 +9,7 @@
 #include "SwitchAbstractedPadHandler.h"
 #include "configFile.h"
 
-#define APP_VERSION "0.4.3"
+#define APP_VERSION "0.5.0"
 
 struct VendorEvent
 {
@@ -47,6 +48,27 @@ std::unique_ptr<IUSBDevice> devicePtr;
 std::unique_ptr<IController> controllerPtr;
 bool useAbstractedPad = hosversionBetween(5, 7);
 std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
+
+static GlobalConfig _globalConfig{};
+
+void LoadGlobalConfig(const GlobalConfig *config)
+{
+    _globalConfig = *config;
+}
+
+Result CreateDualshock4AvailableEvent(Event &event)
+{
+    UsbHsInterfaceFilter filter;
+    filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
+    filter.idVendor = VENDOR_SONY;
+    filter.idProduct = _globalConfig.dualshock4_productID;
+    Result rc = usbHsCreateInterfaceAvailableEvent(&event, true, 2, &filter);
+    if (R_FAILED(rc))
+        WriteToLog("Failed to open event for Dualshock 4 0x", std::hex, _globalConfig.dualshock4_productID);
+    else
+        WriteToLog("Successfully created event for Dualshock 4 0x", std::hex, _globalConfig.dualshock4_productID);
+    return rc;
+}
 
 Result CallInitHandler()
 {
@@ -112,7 +134,7 @@ Result mainLoop()
             WriteToLog("Failed to open catch-all event");
         else
             WriteToLog("Successfully created catch-all event");
-
+        /*
         filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
         filter.idVendor = VENDOR_SONY;
         filter.idProduct = PRODUCT_DUALSHOCK4_2X;
@@ -121,16 +143,9 @@ Result mainLoop()
             WriteToLog("Failed to open event for Dualshock 4 2x");
         else
             WriteToLog("Successfully created event for Dualshock 4 2x");
-        /*
-        filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
-        filter.idVendor = VENDOR_SONY;
-        filter.idProduct = PRODUCT_DUALSHOCK4_1X;
-        rc = usbHsCreateInterfaceAvailableEvent(&ds4Event, true, 2, &filter);
-        if (R_FAILED(rc))
-            WriteToLog("Failed to open event for Dualshock 4 1x");
-        else
-            WriteToLog("Successfully created event for Dualshock 4 1x");
         */
+
+        CreateDualshock4AvailableEvent(ds4Event);
     }
 
     controllerInterfaces.reserve(10);
@@ -203,12 +218,14 @@ Result mainLoop()
                     devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
                     controllerPtr = std::make_unique<XboxOneController>(std::move(devicePtr));
                 }
+                /*
                 else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 255, 255)))
                 {
                     WriteToLog("Registering Xbox One adapter");
                     devicePtr = std::make_unique<SwitchUSBDevice>(interfaces, total_entries);
                     controllerPtr = std::make_unique<XboxOneAdapter>(std::move(devicePtr));
                 }
+                */
             }
         }
         rc = eventWait(&ds3Event, 0);
@@ -289,6 +306,8 @@ Result mainLoop()
             {
                 WriteToLog("File check succeeded! Loading configs...");
                 LoadAllConfigs();
+                usbHsDestroyInterfaceAvailableEvent(&ds4Event, 2);
+                CreateDualshock4AvailableEvent(ds4Event);
             }
         }
 

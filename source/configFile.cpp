@@ -1,3 +1,4 @@
+#include "mainLoop.h"
 #include "configFile.h"
 #include "Controllers.h"
 #include "ControllerConfig.h"
@@ -36,6 +37,7 @@ std::array<const char *, NUM_CONTROLLERBUTTONS> keyNames{
     "DPAD_LEFT",
     "SYNC",
     "GUIDE",
+    "TOUCHPAD",
 };
 
 static ControllerButton _StringToKey(const char *text)
@@ -70,74 +72,86 @@ static RGBAColor _DecodeColorValue(const char *value)
 }
 
 static ControllerConfig temp_config;
+static GlobalConfig global_config;
 static char firmwarePath[100];
 
 static int _ParseConfigLine(void *dummy, const char *section, const char *name, const char *value)
 {
-    if (strncmp(name, "key_", 4) == 0)
+    if (strcmp(section, "global") == 0)
     {
-        ControllerButton button = _StringToKey(name + 4);
-        ControllerButton buttonValue = _StringToKey(value);
-        temp_config.buttons[button] = buttonValue;
-        temp_config.buttons[buttonValue] = button;
-        return 1;
-    }
-    else if (strcmp(name, "left_stick_deadzone") == 0)
-    {
-        temp_config.leftStickDeadzonePercent = atoi(value);
-        return 1;
-    }
-    else if (strcmp(name, "right_stick_deadzone") == 0)
-    {
-        temp_config.rightStickDeadzonePercent = atoi(value);
-        return 1;
-    }
-    else if (strcmp(name, "left_stick_rotation") == 0)
-    {
-        temp_config.leftStickRotationDegrees = atoi(value);
-        return 1;
-    }
-    else if (strcmp(name, "right_stick_rotation") == 0)
-    {
-        temp_config.rightStickRotationDegrees = atoi(value);
-        return 1;
-    }
-    else if (strcmp(name, "trigger_deadzone") == 0)
-    {
-        temp_config.triggerDeadzonePercent = atoi(value);
-        return 1;
-    }
-    else if (strcmp(name, "swap_dpad_and_lstick") == 0)
-    {
-        temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
-        return 1;
-    }
-    else if (strcmp(name, "firmware_path") == 0)
-    {
-        strcpy(firmwarePath, value);
-        return 1;
-    }
-    else if (strncmp(name, "color_", 6) == 0)
-    {
-        if (strcmp(name + 6, "body") == 0)
+        if (strcmp(name, "use_dualshock_2nd_generation") == 0)
         {
-            temp_config.bodyColor = _DecodeColorValue(value);
+            global_config.dualshock4_productID = (strcmp(value, "true") ? PRODUCT_DUALSHOCK4_1X : PRODUCT_DUALSHOCK4_2X);
             return 1;
         }
-        else if (strcmp(name + 6, "buttons") == 0)
+    }
+    else
+    {
+        if (strncmp(name, "key_", 4) == 0)
         {
-            temp_config.buttonsColor = _DecodeColorValue(value);
+            ControllerButton button = _StringToKey(name + 4);
+            ControllerButton buttonValue = _StringToKey(value);
+            temp_config.buttons[button] = buttonValue;
+            temp_config.buttons[buttonValue] = button;
             return 1;
         }
-        else if (strcmp(name + 6, "leftGrip") == 0)
+        else if (strcmp(name, "left_stick_deadzone") == 0)
         {
-            temp_config.leftGripColor = _DecodeColorValue(value);
+            temp_config.leftStickDeadzonePercent = atoi(value);
             return 1;
         }
-        else if (strcmp(name + 6, "rightGrip") == 0)
+        else if (strcmp(name, "right_stick_deadzone") == 0)
         {
-            temp_config.rightGripColor = _DecodeColorValue(value);
+            temp_config.rightStickDeadzonePercent = atoi(value);
             return 1;
+        }
+        else if (strcmp(name, "left_stick_rotation") == 0)
+        {
+            temp_config.leftStickRotationDegrees = atoi(value);
+            return 1;
+        }
+        else if (strcmp(name, "right_stick_rotation") == 0)
+        {
+            temp_config.rightStickRotationDegrees = atoi(value);
+            return 1;
+        }
+        else if (strcmp(name, "trigger_deadzone") == 0)
+        {
+            temp_config.triggerDeadzonePercent = atoi(value);
+            return 1;
+        }
+        else if (strcmp(name, "swap_dpad_and_lstick") == 0)
+        {
+            temp_config.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
+            return 1;
+        }
+        else if (strcmp(name, "firmware_path") == 0)
+        {
+            strcpy(firmwarePath, value);
+            return 1;
+        }
+        else if (strncmp(name, "color_", 6) == 0)
+        {
+            if (strcmp(name + 6, "body") == 0)
+            {
+                temp_config.bodyColor = _DecodeColorValue(value);
+                return 1;
+            }
+            else if (strcmp(name + 6, "buttons") == 0)
+            {
+                temp_config.buttonsColor = _DecodeColorValue(value);
+                return 1;
+            }
+            else if (strcmp(name + 6, "leftGrip") == 0)
+            {
+                temp_config.leftGripColor = _DecodeColorValue(value);
+                return 1;
+            }
+            else if (strcmp(name + 6, "rightGrip") == 0)
+            {
+                temp_config.rightGripColor = _DecodeColorValue(value);
+                return 1;
+            }
         }
     }
 
@@ -156,6 +170,13 @@ static Result _ReadFromConfig(const char *path)
 
 void LoadAllConfigs()
 {
+    if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH GLOBALCONFIG)))
+    {
+        LoadGlobalConfig(&global_config);
+    }
+    else
+        WriteToLog("Failed to read from global config!");
+
     if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH XBOXCONFIG)))
     {
         XboxController::LoadConfig(&temp_config);
