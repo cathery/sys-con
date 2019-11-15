@@ -24,7 +24,7 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 - [x] **~~Xbox 360 Controller Support~~**
 - [x] **~~Xbox One X/S Controller Support~~**
 - [x] **~~Dualshock 3 Support~~**
-- [x] **~~Undocked USB Support~~** Works with a USB-C OTG adapter. If it works docked it should work undocked.
+- [x] **~~Undocked USB Support~~** Works with a USB-C OTG adapter. Some knock-off brands may not support OTG.
 - [x] **~~Xbox 360 Wireless adapter~~**
 - [x] **~~Dualshock 4 Support~~**
 - [ ] **[Xbox One Wireless adapter](https://github.com/cathery/sys-con/issues/36)**
