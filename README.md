@@ -27,7 +27,7 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 - [x] **~~Undocked USB Support~~** Works with a USB-C OTG adapter. If it works docked it should work undocked.
 - [x] **~~Xbox 360 Wireless adapter~~**
 - [x] **~~Dualshock 4 Support~~**
-- [x] **[Xbox One Wireless adapter](https://github.com/cathery/sys-con/issues/36)**
+- [ ] **[Xbox One Wireless adapter](https://github.com/cathery/sys-con/issues/36)**
 - [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
 - [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
 - [ ] **[Motion Controls Support](https://github.com/cathery/sys-con/issues/9)**
