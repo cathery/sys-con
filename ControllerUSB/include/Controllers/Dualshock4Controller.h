@@ -168,6 +168,6 @@ public:
     Result SendInitBytes();
     Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
-    static void LoadConfig(const ControllerConfig *config);
+    static void LoadConfig(const ControllerConfig *config, RGBAColor ledValue);
     virtual ControllerConfig *GetConfig() override;
 };

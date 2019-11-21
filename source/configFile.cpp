@@ -73,6 +73,7 @@ static RGBAColor _DecodeColorValue(const char *value)
 
 static ControllerConfig temp_config;
 static GlobalConfig global_config;
+static RGBAColor temp_color;
 static char firmwarePath[100];
 
 static int _ParseConfigLine(void *dummy, const char *section, const char *name, const char *value)
@@ -152,6 +153,11 @@ static int _ParseConfigLine(void *dummy, const char *section, const char *name, 
                 temp_config.rightGripColor = _DecodeColorValue(value);
                 return 1;
             }
+            else if (strcmp(name + 6, "led") == 0)
+            {
+                temp_color = _DecodeColorValue(value);
+                return 1;
+            }
         }
     }
 
@@ -208,7 +214,7 @@ void LoadAllConfigs()
         WriteToLog("Failed to read from dualshock 3 config!");
 
     if (R_SUCCEEDED(_ReadFromConfig(CONFIG_PATH DUALSHOCK4CONFIG)))
-        Dualshock4Controller::LoadConfig(&temp_config);
+        Dualshock4Controller::LoadConfig(&temp_config, temp_color);
     else
         WriteToLog("Failed to read from dualshock 4 config!");
 }

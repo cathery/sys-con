@@ -2,6 +2,7 @@
 #include <cmath>
 
 static ControllerConfig _dualshock4ControllerConfig{};
+static RGBAColor _ledValue{0x00, 0x00, 0x40};
 
 Dualshock4Controller::Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface)
     : IController(std::move(interface))
@@ -15,10 +16,10 @@ Dualshock4Controller::~Dualshock4Controller()
 
 Result Dualshock4Controller::SendInitBytes()
 {
-    constexpr uint8_t init_bytes[32] = {
+    const uint8_t init_bytes[32] = {
         0x05, 0x07, 0x00, 0x00,
-        0x00, 0x00,       //initial strong and weak rumble
-        0x00, 0x00, 0x40, //LED color
+        0x00, 0x00,                            //initial strong and weak rumble
+        _ledValue.r, _ledValue.g, _ledValue.b, //LED color
         0x00, 0x00};
 
     return m_outPipe->Write(init_bytes, sizeof(init_bytes));
@@ -227,9 +228,10 @@ Result Dualshock4Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_ma
     return 9;
 }
 
-void Dualshock4Controller::LoadConfig(const ControllerConfig *config)
+void Dualshock4Controller::LoadConfig(const ControllerConfig *config, RGBAColor ledValue)
 {
     _dualshock4ControllerConfig = *config;
+    _ledValue = ledValue;
 }
 
 ControllerConfig *Dualshock4Controller::GetConfig()
