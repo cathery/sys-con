@@ -18,7 +18,7 @@
 #define DUALSHOCK3CONFIG "config_dualshock3.ini"
 #define DUALSHOCK4CONFIG "config_dualshock4.ini"
 
-std::array<const char *, NUM_CONTROLLERBUTTONS> keyNames{
+constexpr std::array<const char *, NUM_CONTROLLERBUTTONS> keyNames{
     "FACE_UP",
     "FACE_RIGHT",
     "FACE_DOWN",

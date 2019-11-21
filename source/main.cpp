@@ -2,10 +2,13 @@
 #include "log.h"
 #include "mainLoop.h"
 
+//CHANGELOG
+// Fixed an issue where unplugging one controller would unplug others
+
 //ISSUES:
-// when exiting the applet, only one of the controllers is reset
-// Rumble is currently missing on all controllers
-// Kosmos Toolbox doesn't allow this sysmodule to be turned on after turning it off, probably due to heap memory not being freed up
+// Kosmos Toolbox doesn't free up the memory associated with the sysmodule due to hiddbgAttachHdlsWorkBuffer() memory not being freed up
+// After plugging and unplugging a controller for a while, sysmodule stops working
+// DS3 controller seems to send random inputs
 
 //TODO:
 // Shrink unneessary heap memory/stack size used for the sysmodule
@@ -14,7 +17,7 @@
 extern "C"
 {
 // Adjust size as needed.
-#define INNER_HEAP_SIZE 0x40000
+#define INNER_HEAP_SIZE 0x40'000
 #ifndef __APPLET__
 
     u32 __nx_applet_type = AppletType_None;
@@ -74,6 +77,15 @@ extern "C"
         usbHsExit();
         hiddbgReleaseHdlsWorkBuffer();
         hiddbgExit();
+    }
+
+    alignas(16) u8 __nx_exception_stack[0x1000];
+    u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
+    __attribute__((weak)) u32 __nx_exception_ignoredebug = 1;
+
+    void __libnx_exception_handler(ThreadExceptionDump *ctx)
+    {
+        WriteToLog("Sysmodule crashed with error 0x", std::hex, ctx->error_desc);
     }
 }
 
