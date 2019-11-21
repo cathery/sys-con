@@ -45,7 +45,7 @@ void outputThreadLoop(void *handler)
 Result SwitchVirtualGamepadHandler::InitInputThread()
 {
     m_keepInputThreadRunning = true;
-    Result rc = threadCreate(&m_inputThread, inputThreadLoop, this, NULL, 0x400, 0x3B, -2);
+    Result rc = threadCreate(&m_inputThread, &inputThreadLoop, this, NULL, 0x400, 0x3B, -2);
     if (R_FAILED(rc))
         return rc;
     return threadStart(&m_inputThread);
@@ -61,7 +61,7 @@ void SwitchVirtualGamepadHandler::ExitInputThread()
 Result SwitchVirtualGamepadHandler::InitOutputThread()
 {
     m_keepOutputThreadRunning = true;
-    Result rc = threadCreate(&m_outputThread, outputThreadLoop, this, NULL, 0x400, 0x3B, -2);
+    Result rc = threadCreate(&m_outputThread, &outputThreadLoop, this, NULL, 0x400, 0x3B, -2);
     if (R_FAILED(rc))
         return rc;
     return threadStart(&m_outputThread);
