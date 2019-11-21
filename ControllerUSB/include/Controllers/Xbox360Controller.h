@@ -86,7 +86,7 @@ private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
 
-    Xbox360ButtonData m_buttonData;
+    Xbox360ButtonData m_buttonData{};
 
 public:
     Xbox360Controller(std::unique_ptr<IUSBDevice> &&interface);

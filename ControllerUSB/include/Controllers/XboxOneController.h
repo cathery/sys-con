@@ -78,7 +78,7 @@ private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
 
-    XboxOneButtonData m_buttonData;
+    XboxOneButtonData m_buttonData{};
     bool m_GuidePressed{false};
 
 public:

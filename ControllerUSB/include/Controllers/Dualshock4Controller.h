@@ -144,7 +144,7 @@ private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
 
-    Dualshock4USBButtonData m_buttonData;
+    Dualshock4USBButtonData m_buttonData{};
 
 public:
     Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interface);

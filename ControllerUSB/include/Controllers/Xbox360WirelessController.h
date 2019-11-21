@@ -18,7 +18,7 @@ private:
     IUSBEndpoint *m_inPipe = nullptr;
     IUSBEndpoint *m_outPipe = nullptr;
 
-    Xbox360ButtonData m_buttonData;
+    Xbox360ButtonData m_buttonData{};
 
     bool m_presence = false;
 

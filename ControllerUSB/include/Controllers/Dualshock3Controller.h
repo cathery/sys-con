@@ -126,7 +126,7 @@ private:
     IUSBEndpoint *m_outPipe = nullptr;
     IUSBInterface *m_interface = nullptr;
 
-    Dualshock3ButtonData m_buttonData;
+    Dualshock3ButtonData m_buttonData{};
 
 public:
     Dualshock3Controller(std::unique_ptr<IUSBDevice> &&interface);
