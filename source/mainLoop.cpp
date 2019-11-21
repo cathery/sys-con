@@ -11,6 +11,10 @@
 
 #define APP_VERSION "0.5.1"
 
+#define DS3EVENT_INDEX 0
+#define DS4EVENT_INDEX 1
+#define ALLEVENT_INDEX 2
+
 static const bool useAbstractedPad = hosversionBetween(5, 7);
 std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
 
@@ -53,7 +57,7 @@ Result CreateDualshck3AvailableEvent(Event &out)
     filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
     filter.idVendor = VENDOR_SONY;
     filter.idProduct = PRODUCT_DUALSHOCK3;
-    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, 0, &filter);
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS3EVENT_INDEX, &filter);
     if (R_FAILED(rc))
         WriteToLog("Failed to open event for Dualshock 3");
     else
@@ -67,7 +71,7 @@ Result CreateDualshock4AvailableEvent(Event &out)
     filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
     filter.idVendor = VENDOR_SONY;
     filter.idProduct = _globalConfig.dualshock4_productID;
-    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, 1, &filter);
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS4EVENT_INDEX, &filter);
     if (R_FAILED(rc))
         WriteToLog("Failed to open event for Dualshock 4 0x", std::hex, _globalConfig.dualshock4_productID);
     else
@@ -80,7 +84,7 @@ Result CreateAllAvailableEvent(Event &out)
     UsbHsInterfaceFilter filter;
     filter.Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min;
     filter.bcdDevice_Min = 0;
-    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, 2, &filter);
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, ALLEVENT_INDEX, &filter);
     if (R_FAILED(rc))
         WriteToLog("Failed to open catch-all event");
     else
@@ -290,7 +294,7 @@ Result mainLoop()
             {
                 WriteToLog("File check succeeded! Loading configs...");
                 LoadAllConfigs();
-                usbHsDestroyInterfaceAvailableEvent(&ds4Event, 2);
+                usbHsDestroyInterfaceAvailableEvent(&ds4Event, DS4EVENT_INDEX);
                 CreateDualshock4AvailableEvent(ds4Event);
             }
         }
@@ -304,9 +308,9 @@ Result mainLoop()
 
     //After we break out of the loop, close all events and exit
     WriteToLog("Destroying events");
-    usbHsDestroyInterfaceAvailableEvent(&ds3Event, 0);
-    usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, 1);
-    usbHsDestroyInterfaceAvailableEvent(&ds4Event, 2);
+    usbHsDestroyInterfaceAvailableEvent(&ds3Event, DS3EVENT_INDEX);
+    usbHsDestroyInterfaceAvailableEvent(&ds4Event, DS4EVENT_INDEX);
+    usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, ALLEVENT_INDEX);
 
     controllerInterfaces.clear();
     return rc;
