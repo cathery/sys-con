@@ -265,7 +265,7 @@ Result mainLoop()
             WriteToLog("Interface state was changed");
             eventClear(usbHsGetInterfaceStateChangeEvent());
 
-            UsbHsInterface interfaces[4];
+            UsbHsInterface interfaces[16];
             s32 total_entries;
 
             rc = usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries);
