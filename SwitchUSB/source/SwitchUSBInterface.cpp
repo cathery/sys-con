@@ -91,6 +91,24 @@ Result SwitchUSBInterface::ControlTransfer(u8 bmRequestType, u8 bmRequest, u16 w
     return rc;
 }
 
+Result SwitchUSBInterface::ControlTransfer(u8 bmRequestType, u8 bmRequest, u16 wValue, u16 wIndex, u16 wLength, const void *buffer)
+{
+    void *temp_buffer = memalign(0x1000, wLength);
+    if (temp_buffer == nullptr)
+        return -1;
+
+    u32 transferredSize;
+
+    for (u16 byte = 0; byte != wLength; ++byte)
+    {
+        static_cast<uint8_t *>(temp_buffer)[byte] = static_cast<const uint8_t *>(buffer)[byte];
+    }
+
+    Result rc = usbHsIfCtrlXfer(&m_session, bmRequestType, bmRequest, wValue, wIndex, wLength, temp_buffer, &transferredSize);
+    free(temp_buffer);
+    return rc;
+}
+
 IUSBEndpoint *SwitchUSBInterface::GetEndpoint(IUSBEndpoint::Direction direction, uint8_t index)
 {
     if (direction == IUSBEndpoint::USB_ENDPOINT_IN)

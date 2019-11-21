@@ -48,7 +48,7 @@ Result Dualshock3Controller::OpenInterfaces()
             continue;
 
         //Send an initial control packet
-        uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
+        constexpr uint8_t initBytes[] = {0x42, 0x0C, 0x00, 0x00};
         rc = SendCommand(interface.get(), Ds3FeatureStartDevice, initBytes, sizeof(initBytes));
         if (R_FAILED(rc))
             return 60;
@@ -209,14 +209,14 @@ Result Dualshock3Controller::SetRumble(uint8_t strong_magnitude, uint8_t weak_ma
     return 9;
 }
 
-Result Dualshock3Controller::SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, void *buffer, uint16_t size)
+Result Dualshock3Controller::SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, const void *buffer, uint16_t size)
 {
     return interface->ControlTransfer(0x21, 0x09, static_cast<uint16_t>(feature), 0, size, buffer);
 }
 
 Result Dualshock3Controller::SetLED(Dualshock3LEDValue value)
 {
-    uint8_t ledPacket[]{
+    const uint8_t ledPacket[]{
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         static_cast<uint8_t>(value << 1),
         LED_PERMANENT,

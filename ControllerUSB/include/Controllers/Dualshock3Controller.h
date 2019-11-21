@@ -152,7 +152,7 @@ public:
     Result SendInitBytes();
     Result SetRumble(uint8_t strong_magnitude, uint8_t weak_magnitude);
 
-    static Result SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, void *buffer, uint16_t size);
+    static Result SendCommand(IUSBInterface *interface, Dualshock3FeatureValue feature, const void *buffer, uint16_t size);
 
     Result SetLED(Dualshock3LEDValue value);
 

@@ -206,7 +206,7 @@ Result XboxOneAdapter::ControlWrite(IUSBInterface *interface, uint16_t address, 
     Result rc;
     if (request == MT_VEND_DEV_MODE)
     {
-        rc = interface->ControlTransfer(0x40, request, address, 0, 0, nullptr);
+        rc = interface->ControlTransfer(0x40, request, address, 0, 0, static_cast<const void *>(nullptr));
     }
     else
     {
