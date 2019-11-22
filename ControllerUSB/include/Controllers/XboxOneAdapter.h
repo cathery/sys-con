@@ -7,7 +7,7 @@
 //https://github.com/quantus/xbox-one-controller-protocol
 //https://cs.chromium.org/chromium/src/device/gamepad/xbox_controller_mac.mm
 
-enum VendorRequest
+enum VendorRequest : uint8_t
 {
     MT_VEND_DEV_MODE = 0x1,
     MT_VEND_WRITE = 0x2,

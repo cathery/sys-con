@@ -5,7 +5,7 @@
 //References used:
 //https://cs.chromium.org/chromium/src/device/gamepad/dualshock4_controller.cc
 
-enum Dualshock3FeatureValue
+enum Dualshock3FeatureValue : uint16_t
 {
     Ds3FeatureUnknown1 = 0x0201,
     Ds3FeatureUnknown2 = 0x0301,
@@ -17,7 +17,7 @@ enum Dualshock3FeatureValue
     Ds3FeatureUnknown5 = 0x03F8,
 };
 
-enum Dualshock3InputPacketType
+enum Dualshock3InputPacketType : uint8_t
 {
     Ds3InputPacket_Button = 0x01,
 };
@@ -103,7 +103,7 @@ struct Dualshock3ButtonData
 #define PS_MOVE_NAVI_PRODUCT_ID                 0x042F
 */
 
-enum Dualshock3LEDValue
+enum Dualshock3LEDValue : uint8_t
 {
     DS3LED_1 = 0x01,
     DS3LED_2 = 0x02,

@@ -5,7 +5,7 @@
 class IUSBEndpoint
 {
 public:
-    enum Direction
+    enum Direction : uint8_t
     {
         USB_ENDPOINT_IN = 0x80,
         USB_ENDPOINT_OUT = 0x00,

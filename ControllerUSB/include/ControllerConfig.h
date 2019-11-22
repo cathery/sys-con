@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-enum ControllerButton
+enum ControllerButton : int8_t
 {
     NOT_SET = -1,
     FACE_UP,

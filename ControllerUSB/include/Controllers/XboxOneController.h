@@ -64,7 +64,7 @@ struct XboxOneRumbleData
     uint8_t extra;
 };
 
-enum XboxOneInputPacketType
+enum XboxOneInputPacketType : uint8_t
 {
     XBONEINPUT_BUTTON = 0x20,
     XBONEINPUT_HEARTBEAT = 0x03,

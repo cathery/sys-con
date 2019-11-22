@@ -53,14 +53,14 @@ struct Xbox360RumbleData
     uint8_t dummy2[3];
 };
 
-enum Xbox360InputPacketType
+enum Xbox360InputPacketType : uint8_t
 {
     XBOX360INPUT_BUTTON = 0,
     XBOX360INPUT_LED = 1,
     XBOX360INPUT_RUMBLE = 3,
 };
 
-enum Xbox360LEDValue
+enum Xbox360LEDValue : uint8_t
 {
     XBOX360LED_OFF,
     XBOX360LED_ALLBLINK,

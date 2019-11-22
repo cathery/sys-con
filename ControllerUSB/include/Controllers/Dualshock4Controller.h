@@ -126,7 +126,7 @@ struct Dualshock4USBButtonData
     uint8_t touchpad_finger2_prev[4];
 };
 
-enum Dualshock4Dpad
+enum Dualshock4Dpad : uint8_t
 {
     DS4_UP,
     DS4_UPRIGHT,
