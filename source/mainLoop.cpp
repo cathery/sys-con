@@ -200,7 +200,7 @@ Result mainLoop()
     Thread pscThread;
     PSCLoopBuffer loopBuffer{pscModule, pscLoopRunning, shouldSleep};
 
-    threadCreate(&pscThread, pscLoop, &loopBuffer, NULL, 0x2000, 0x3B, -2);
+    threadCreate(&pscThread, pscLoop, &loopBuffer, NULL, 0x300, 0x3B, -2);
 
     rc = threadStart(&pscThread);
     WriteToLog("PSC thread start: 0x", std::hex, rc);
