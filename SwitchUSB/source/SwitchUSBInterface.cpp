@@ -18,7 +18,7 @@ Result SwitchUSBInterface::Open()
     UsbHsClientIfSession temp;
     Result rc = usbHsAcquireUsbIf(&temp, &m_interface);
     if (R_FAILED(rc))
-        return 11037;
+        return rc;
 
     m_session = temp;
 

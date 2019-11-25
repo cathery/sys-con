@@ -253,7 +253,7 @@ Result mainLoop()
                 else
                 {
 
-                    UsbHsInterface interfaces[8];
+                    UsbHsInterface interfaces[16];
                     s32 total_entries;
 
                     if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 1)))
@@ -293,7 +293,7 @@ Result mainLoop()
             if (R_SUCCEEDED(rc))
             {
                 WriteToLog("Dualshock 3 event went off");
-                UsbHsInterface interfaces[4];
+                UsbHsInterface interfaces[8];
                 s32 total_entries;
 
                 if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
@@ -306,7 +306,7 @@ Result mainLoop()
             if (R_SUCCEEDED(rc))
             {
                 WriteToLog("Dualshock 4 event went off");
-                UsbHsInterface interfaces[4];
+                UsbHsInterface interfaces[8];
                 s32 total_entries;
 
                 if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))

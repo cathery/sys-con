@@ -44,6 +44,12 @@ Result Dualshock3Controller::OpenInterfaces()
         if (R_FAILED(rc))
             return rc;
 
+        if (interface->GetDescriptor()->bInterfaceClass != 3)
+            continue;
+
+        if (interface->GetDescriptor()->bInterfaceProtocol != 0)
+            continue;
+
         if (interface->GetDescriptor()->bNumEndpoints < 2)
             continue;
 

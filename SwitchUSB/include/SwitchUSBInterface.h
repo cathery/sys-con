@@ -7,8 +7,8 @@
 class SwitchUSBInterface : public IUSBInterface
 {
 private:
-    UsbHsClientIfSession m_session{};
-    UsbHsInterface m_interface{};
+    UsbHsClientIfSession m_session;
+    UsbHsInterface m_interface;
 
     std::array<std::unique_ptr<IUSBEndpoint>, 15> m_inEndpoints;
     std::array<std::unique_ptr<IUSBEndpoint>, 15> m_outEndpoints;
