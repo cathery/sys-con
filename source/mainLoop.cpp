@@ -375,11 +375,11 @@ Result mainLoop()
     pscPmModuleFinalize(&pscModule);
     pscPmModuleClose(&pscModule);
     eventClose(&pscModule.event);
-    pscThread.Close();
+    pscThread.Exit();
 
     WriteToLog("Destroying events");
     CloseEvents();
-    eventThread.Close();
+    eventThread.Exit();
 
     WriteToLog("Clearing interfaces");
     controllerInterfaces.clear();
