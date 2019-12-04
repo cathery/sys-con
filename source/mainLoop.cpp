@@ -44,7 +44,7 @@ Result CallInitHandler(std::unique_ptr<IController> &controllerPtr)
         }
         else
         {
-            WriteToLog("Error creating interface with error ", rc);
+            WriteToLog("Error creating interface with error 0x%x", rc);
             return rc;
         }
     }
@@ -192,8 +192,7 @@ Result mainLoop()
     const uint16_t dependencies[] = {PscPmModuleId_Usb};
 
     rc = pscmGetPmModule(&pscModule, static_cast<PscPmModuleId>(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true);
-    WriteToLog("Get module result: 0x", std::hex, rc);
-    //Waiter pscModuleWaiter = waiterForEvent(&pscModule.event);
+    WriteToLog("Get module result: 0x%x", rc);
 
     bool pscLoopRunning = true;
     bool shouldSleep = false;
@@ -210,8 +209,7 @@ Result mainLoop()
 
     rc = OpenEvents();
     if (R_FAILED(rc))
-        WriteToLog("Failed to open events: ", rc);
-
+        WriteToLog("Failed to open events: 0x%x", rc);
     controllerInterfaces.reserve(10);
 
     while (appletMainLoop())
@@ -227,7 +225,7 @@ Result mainLoop()
             {
                 u64 kHeld = hidKeysDown(static_cast<HidControllerID>(i));
                 if (kHeld != 0)
-                    WriteToLog("Player ", i + 1, ": ", kHeld);
+                    WriteToLog("Player %i: %lu", i + 1, kHeld);
             }
 
             if (kDown & KEY_B)
@@ -350,7 +348,7 @@ Result mainLoop()
 
                         if (!found_flag)
                         {
-                            WriteToLog("Erasing controller! ", (*it)->GetController()->GetType());
+                            WriteToLog("Erasing controller! %i", (*it)->GetController()->GetType());
                             controllerInterfaces.erase(it--);
                             WriteToLog("Controller erased!");
                         }
@@ -377,7 +375,7 @@ Result mainLoop()
             controllerInterfaces.clear();
         }
 #ifdef __APPLET__
-        consoleUpdate(nullptr);
+        LockedUpdateConsole();
 #else
         svcSleepThread(1e+7L);
 #endif

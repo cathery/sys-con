@@ -90,7 +90,8 @@ extern "C"
 
     void __libnx_exception_handler(ThreadExceptionDump *ctx)
     {
-        WriteToLog("Sysmodule crashed with error 0x", std::hex, ctx->error_desc);
+        WriteToLog("Sysmodule crashed with error 0x%x", ctx->error_desc);
+        LockedUpdateConsole();
     }
 }
 

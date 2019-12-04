@@ -126,7 +126,7 @@ Result XboxOneAdapter::SendInitBytes()
     ControlWrite(m_interface, MT_FCE_PDMA_GLOBAL_CONF, 0x44);
     ControlWrite(m_interface, MT_FCE_SKIP_FS, 0x03);
 
-    WriteToLog("firmware path: ", firmwarePath);
+    WriteToLog("firmware path: %s", firmwarePath);
     if (!firmwarePath || *firmwarePath == '\0')
     {
         WriteToLog("But the string is empty!");
@@ -145,7 +145,7 @@ Result XboxOneAdapter::SendInitBytes()
 
     fs.close();
 
-    WriteToLog("writing ", firmware.size(), " bytes...");
+    WriteToLog("writing %lu bytes...", firmware.size());
 
     FwHeader *header = reinterpret_cast<FwHeader *>(firmware.data());
 

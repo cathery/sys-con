@@ -203,7 +203,7 @@ Result XboxOneController::SendInitBytes()
         if (R_FAILED(rc))
             break;
         else
-            WriteToLog("Send a specific init packet ", i, " for controller v", vendor, " p", product);
+            WriteToLog("Sent a specific init packet %i for controller v%u p%u", i, vendor, product);
     }
     return rc;
 }
