@@ -8,12 +8,19 @@
 #include "SwitchHDLHandler.h"
 #include "SwitchAbstractedPadHandler.h"
 #include "configFile.h"
+#include "SwitchThread.h"
 
 #define APP_VERSION "0.6.0"
 
 #define DS3EVENT_INDEX 0
 #define DS4EVENT_INDEX 1
 #define ALLEVENT_INDEX 2
+
+#ifdef __APPLET__
+#define APPLET_STACKSIZE 0x1'000
+#else
+#define APPLET_STACKSIZE 0x0
+#endif
 
 static const bool useAbstractedPad = hosversionBetween(5, 7);
 std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
@@ -140,44 +147,39 @@ void inline CloseEvents()
 struct PSCLoopBuffer
 {
     PscPmModule &pscModule;
-    bool &pscLoopRunning;
     bool &shouldSleep;
 };
 
 void pscLoop(void *buffer)
 {
-
-    Waiter pscModuleWaiter = waiterForEvent(&static_cast<PSCLoopBuffer *>(buffer)->pscModule.event);
     PscPmState pscState;
     u32 out_flags;
 
-    while (static_cast<PSCLoopBuffer *>(buffer)->pscLoopRunning)
+    Result rc = waitSingle(waiterForEvent(&static_cast<PSCLoopBuffer *>(buffer)->pscModule.event), U64_MAX);
+    if (R_SUCCEEDED(rc))
     {
-        Result rc = waitSingle(pscModuleWaiter, U64_MAX);
+        rc = pscPmModuleGetRequest(&static_cast<PSCLoopBuffer *>(buffer)->pscModule, &pscState, &out_flags);
         if (R_SUCCEEDED(rc))
         {
-            rc = pscPmModuleGetRequest(&static_cast<PSCLoopBuffer *>(buffer)->pscModule, &pscState, &out_flags);
-            if (R_SUCCEEDED(rc))
+            switch (pscState)
             {
-                switch (pscState)
-                {
-                case PscPmState_ReadyAwaken:
-                    OpenEvents();
-                    static_cast<PSCLoopBuffer *>(buffer)->shouldSleep = false;
-                    break;
-                case PscPmState_ReadySleep:
-                case PscPmState_ReadyShutdown:
-                    CloseEvents();
-                    static_cast<PSCLoopBuffer *>(buffer)->shouldSleep = true;
-                    //controllerInterfaces.clear();
-                    break;
-                default:
-                    break;
-                }
-                pscPmModuleAcknowledge(&static_cast<PSCLoopBuffer *>(buffer)->pscModule, pscState);
+            case PscPmState_ReadyAwaken:
+                OpenEvents();
+                static_cast<PSCLoopBuffer *>(buffer)->shouldSleep = false;
+                break;
+            case PscPmState_ReadySleep:
+            case PscPmState_ReadyShutdown:
+                CloseEvents();
+                static_cast<PSCLoopBuffer *>(buffer)->shouldSleep = true;
+                //controllerInterfaces.clear();
+                break;
+            default:
+                break;
             }
+            pscPmModuleAcknowledge(&static_cast<PSCLoopBuffer *>(buffer)->pscModule, pscState);
         }
     }
+}
 
 void CheckForInterfaces()
 {
@@ -224,6 +226,30 @@ void CheckForInterfaces()
     }
 }
 
+void eventLoop(void *buffer)
+{
+    if (R_SUCCEEDED(eventWait(static_cast<Event *>(buffer), U64_MAX)))
+    {
+        CheckForInterfaces();
+        WriteToLog("Catch-all event went off");
+    }
+}
+
+Result errorLoop()
+{
+#ifdef __APPLET__
+    WriteToLog("Press B to exit...");
+    while (appletMainLoop())
+    {
+        hidScanInput();
+
+        if (hidKeysDown(CONTROLLER_P1_AUTO) & KEY_B)
+            break;
+        LockedUpdateConsole();
+    }
+#endif
+    return 0;
+}
 
 Result mainLoop()
 {
@@ -240,24 +266,29 @@ Result mainLoop()
 
     rc = pscmGetPmModule(&pscModule, static_cast<PscPmModuleId>(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true);
     WriteToLog("Get module result: 0x%x", rc);
+    if (R_FAILED(rc))
+        return errorLoop();
 
-    bool pscLoopRunning = true;
     bool shouldSleep = false;
-    Thread pscThread;
-    PSCLoopBuffer loopBuffer{pscModule, pscLoopRunning, shouldSleep};
+    PSCLoopBuffer loopBuffer{pscModule, shouldSleep};
 
-    threadCreate(&pscThread, pscLoop, &loopBuffer, NULL, 0x300, 0x3B, -2);
-
-    rc = threadStart(&pscThread);
-    WriteToLog("PSC thread start: 0x", std::hex, rc);
+    SwitchThread pscThread = SwitchThread(pscLoop, &loopBuffer, 0x300, 0x3B);
+    WriteToLog("Is psc thread running: %i", pscThread.IsRunning());
 
     CheckForFileChanges();
     LoadAllConfigs();
 
     rc = OpenEvents();
     if (R_FAILED(rc))
+    {
         WriteToLog("Failed to open events: 0x%x", rc);
+        return errorLoop();
+    }
     controllerInterfaces.reserve(10);
+
+    constexpr size_t eventThreadStack = 0x1'500 + APPLET_STACKSIZE;
+    SwitchThread eventThread(&eventLoop, &catchAllEvent, eventThreadStack, 0x20);
+    WriteToLog("Is event thread running: %i", eventThread.IsRunning());
 
     while (appletMainLoop())
     {
@@ -340,17 +371,17 @@ Result mainLoop()
 #endif
     }
 
-    //After we break out of the loop, close all events and exit
-    WriteToLog("Destroying events");
-    CloseEvents();
-
+    WriteToLog("Closing PSC module");
     pscPmModuleFinalize(&pscModule);
     pscPmModuleClose(&pscModule);
+    eventClose(&pscModule.event);
+    pscThread.Close();
 
-    pscLoopRunning = false;
-    threadWaitForExit(&pscThread);
-    threadClose(&pscThread);
+    WriteToLog("Destroying events");
+    CloseEvents();
+    eventThread.Close();
 
+    WriteToLog("Clearing interfaces");
     controllerInterfaces.clear();
     return rc;
 }
