@@ -17,10 +17,6 @@ protected:
     std::unique_ptr<IUSBDevice> m_device;
 
 public:
-#ifdef __APPLET__
-    uint8_t m_inputData[64];
-    bool m_UpdateCalled = false;
-#endif
     IController(std::unique_ptr<IUSBDevice> &&interface) : m_device(std::move(interface))
     {
     }

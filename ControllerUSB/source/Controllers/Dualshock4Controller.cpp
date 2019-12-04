@@ -122,12 +122,6 @@ Result Dualshock4Controller::GetInput()
     if (R_FAILED(rc))
         return rc;
 
-#ifdef __APPLET__
-    for (int i = 0; i != 64; ++i)
-        m_inputData[i] = input_bytes[i];
-    m_UpdateCalled = true;
-#endif
-
     if (input_bytes[0] == 0x01)
     {
         m_buttonData = *reinterpret_cast<Dualshock4USBButtonData *>(input_bytes);
