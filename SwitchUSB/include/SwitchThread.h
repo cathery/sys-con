@@ -13,8 +13,9 @@ private:
     static void ThreadLoop(void *argument);
 
 public:
-    SwitchThread() = default;
+    SwitchThread(){};
 
+    //Constructs the class by creating and starting the thread.
     //function - the function you want to be called
     //argument - the argument passed to that function
     //stackSize - the stack size of the created thread
@@ -27,11 +28,19 @@ public:
     //Closes the thread upon exiting
     ~SwitchThread();
 
-    //Starts the thread. This is called automatically upon class creation.
-    Result Start();
+    //Creates the thread.
+    //function - the function you want to be called
+    //argument - the argument passed to that function
+    //stackSize - the stack size of the created thread
+    //prio - thread priority, 0x00 - highest, 0x3F - lowest. Switch uses 0x2C
+    Result Initialize(size_t stackSize, int prio);
 
+    //Starts the thread. The given function will be called with the given argument in a loop until the thread is closed.
+    Result Start(ThreadFunc function, void *argument);
+
+    //Closes the thread.
     //This will block the caller indefinitely until the thread is returned!
-    Result Close();
+    Result Exit();
 
     bool inline IsRunning() { return m_isRunning; }
 };

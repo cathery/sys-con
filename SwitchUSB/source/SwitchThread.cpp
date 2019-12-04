@@ -11,31 +11,38 @@ void SwitchThread::ThreadLoop(void *argument)
 }
 
 SwitchThread::SwitchThread(ThreadFunc function, void *argument, size_t stackSize, int prio)
-    : m_function(function), m_argument(argument)
 {
-    if (R_SUCCEEDED(threadCreate(&m_thread, &SwitchThread::ThreadLoop, this, NULL, stackSize, prio, -2)))
+    if (R_SUCCEEDED(Initialize(stackSize, prio)))
     {
-        Start();
+        Start(function, argument);
     }
+}
+
+Result SwitchThread::Initialize(size_t stackSize, int prio)
+{
+    Result rc = threadCreate(&m_thread, &SwitchThread::ThreadLoop, this, NULL, stackSize, prio, -2);
+    return rc;
 }
 
 SwitchThread::~SwitchThread()
 {
-    Close();
+    Exit();
 }
 
-Result SwitchThread::Start()
+Result SwitchThread::Start(ThreadFunc function, void *argument)
 {
     if (!m_isRunning)
     {
         m_isRunning = true;
+        m_function = function;
+        m_argument = argument;
         return threadStart(&m_thread);
     }
     else
         return 0;
 }
 
-Result SwitchThread::Close()
+Result SwitchThread::Exit()
 {
     if (m_isRunning)
     {
