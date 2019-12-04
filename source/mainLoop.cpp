@@ -9,7 +9,7 @@
 #include "SwitchAbstractedPadHandler.h"
 #include "configFile.h"
 
-#define APP_VERSION "0.5.1"
+#define APP_VERSION "0.6.0"
 
 #define DS3EVENT_INDEX 0
 #define DS4EVENT_INDEX 1
@@ -17,6 +17,10 @@
 
 static const bool useAbstractedPad = hosversionBetween(5, 7);
 std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerInterfaces;
+std::unique_ptr<IController> controllerPtr;
+UsbHsInterface interfaces[16];
+s32 total_entries;
+UsbHsInterfaceFilter g_filter;
 
 static GlobalConfig _globalConfig{};
 
@@ -53,41 +57,41 @@ Result CallInitHandler(std::unique_ptr<IController> &controllerPtr)
 
 Result CreateDualshck3AvailableEvent(Event &out)
 {
-    UsbHsInterfaceFilter filter;
-    filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
-    filter.idVendor = VENDOR_SONY;
-    filter.idProduct = PRODUCT_DUALSHOCK3;
-    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS3EVENT_INDEX, &filter);
+    g_filter = {};
+    g_filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
+    g_filter.idVendor = VENDOR_SONY;
+    g_filter.idProduct = PRODUCT_DUALSHOCK3;
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS3EVENT_INDEX, &g_filter);
     return rc;
 }
 
 Result CreateDualshock4AvailableEvent(Event &out)
 {
-    UsbHsInterfaceFilter filter;
-    filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
-    filter.idVendor = VENDOR_SONY;
-    filter.idProduct = _globalConfig.dualshock4_productID;
-    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS4EVENT_INDEX, &filter);
+    g_filter = {};
+    g_filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
+    g_filter.idVendor = VENDOR_SONY;
+    g_filter.idProduct = _globalConfig.dualshock4_productID;
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS4EVENT_INDEX, &g_filter);
     return rc;
 }
 
 Result CreateAllAvailableEvent(Event &out)
 {
-    UsbHsInterfaceFilter filter;
-    filter.Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min;
-    filter.bcdDevice_Min = 0;
-    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, ALLEVENT_INDEX, &filter);
+    g_filter = {};
+    g_filter.Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min;
+    g_filter.bcdDevice_Min = 0;
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, ALLEVENT_INDEX, &g_filter);
     return rc;
 }
 
 Result QueryInterfaces(UsbHsInterface *interfaces, size_t interfaces_size, s32 *total_entries, u8 infclass, u8 infsubclass, u8 infprotocol)
 {
-    UsbHsInterfaceFilter filter;
-    filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bInterfaceSubClass | UsbHsInterfaceFilterFlags_bInterfaceProtocol;
-    filter.bInterfaceClass = infclass;
-    filter.bInterfaceSubClass = infsubclass;
-    filter.bInterfaceProtocol = infprotocol;
-    Result rc = usbHsQueryAvailableInterfaces(&filter, interfaces, interfaces_size, total_entries);
+    g_filter = {};
+    g_filter.Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bInterfaceSubClass | UsbHsInterfaceFilterFlags_bInterfaceProtocol;
+    g_filter.bInterfaceClass = infclass;
+    g_filter.bInterfaceSubClass = infsubclass;
+    g_filter.bInterfaceProtocol = infprotocol;
+    Result rc = usbHsQueryAvailableInterfaces(&g_filter, interfaces, interfaces_size, total_entries);
     if (R_SUCCEEDED(rc) && *total_entries != 0)
         return 0;
     else
@@ -96,11 +100,11 @@ Result QueryInterfaces(UsbHsInterface *interfaces, size_t interfaces_size, s32 *
 
 Result QueryVendorProduct(UsbHsInterface *interfaces, size_t interfaces_size, s32 *total_entries, uint16_t vendor_id, uint16_t product_id)
 {
-    UsbHsInterfaceFilter filter;
-    filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
-    filter.idVendor = vendor_id;
-    filter.idProduct = product_id;
-    Result rc = usbHsQueryAvailableInterfaces(&filter, interfaces, interfaces_size, total_entries);
+    g_filter = {};
+    g_filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
+    g_filter.idVendor = vendor_id;
+    g_filter.idProduct = product_id;
+    Result rc = usbHsQueryAvailableInterfaces(&g_filter, interfaces, interfaces_size, total_entries);
     if (R_SUCCEEDED(rc) && *total_entries != 0)
         return 0;
     else
@@ -174,14 +178,57 @@ void pscLoop(void *buffer)
             }
         }
     }
-};
+
+void CheckForInterfaces()
+{
+    if (controllerInterfaces.size() >= 10)
+        WriteToLog("But the controllers table reached its max size!");
+    else
+    {
+
+        if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 1)))
+        {
+            controllerPtr = std::make_unique<Xbox360Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
+            WriteToLog("Registered Xbox 360 controller");
+        }
+        else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 129)))
+        {
+            for (int i = 0; i != total_entries; ++i)
+            {
+                controllerPtr = std::make_unique<Xbox360WirelessController>(std::make_unique<SwitchUSBDevice>(interfaces + i, 1));
+                CallInitHandler(controllerPtr);
+            }
+            WriteToLog("Registered Xbox 360 Wireless adapter");
+        }
+        else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, 0x58, 0x42, 0x00)))
+        {
+            controllerPtr = std::make_unique<XboxController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
+            WriteToLog("Registered Xbox controller");
+        }
+        else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 71, 208)))
+        {
+            controllerPtr = std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
+            WriteToLog("Registered Xbox One controller");
+        }
+        else if (R_SUCCEEDED(QueryVendorProduct(interfaces, sizeof(interfaces), &total_entries, VENDOR_SONY, PRODUCT_DUALSHOCK3)))
+        {
+            controllerPtr = std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
+            WriteToLog("Registered DS3 controller");
+        }
+        else if (R_SUCCEEDED(QueryVendorProduct(interfaces, sizeof(interfaces), &total_entries, VENDOR_SONY, _globalConfig.dualshock4_productID)))
+        {
+            controllerPtr = std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
+            WriteToLog("Registered DS4 controller");
+        }
+        CallInitHandler(controllerPtr);
+    }
+}
+
 
 Result mainLoop()
 {
     WriteToLog("\n\nNew sysmodule session started on version " APP_VERSION);
     Result rc = 0;
-
-    std::unique_ptr<IController> controllerPtr;
 
     UTimer filecheckTimer;
     Waiter filecheckTimerWaiter = waiterForUTimer(&filecheckTimer);
@@ -230,101 +277,13 @@ Result mainLoop()
 
             if (kDown & KEY_B)
                 break;
-
-            for (auto &&handler : controllerInterfaces)
-            {
-                if (handler->GetController()->m_UpdateCalled)
-                {
-                    for (int i = 0; i != 64; ++i)
-                        printf("0x%02X ", handler->GetController()->m_inputData[i]);
-                    printf("\n");
-                    handler->GetController()->m_UpdateCalled = false;
-                }
-            }
 #endif
-            rc = eventWait(&catchAllEvent, 0);
-            if (R_SUCCEEDED(rc))
-            {
-                WriteToLog("Catch-all event went off");
-                if (controllerInterfaces.size() >= 10)
-                    WriteToLog("But the controllers table reached its max size!");
-                else
-                {
-
-                    UsbHsInterface interfaces[16];
-                    s32 total_entries;
-
-                    if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 1)))
-                    {
-                        WriteToLog("Registering Xbox 360 controller");
-                        controllerPtr = std::make_unique<Xbox360Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
-                    }
-                    else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 93, 129)))
-                    {
-                        WriteToLog("Registering Xbox 360 Wireless adapter");
-                        for (int i = 0; i != total_entries; ++i)
-                        {
-                            controllerPtr = std::make_unique<Xbox360WirelessController>(std::make_unique<SwitchUSBDevice>(interfaces + i, 1));
-                            CallInitHandler(controllerPtr);
-                        }
-                    }
-                    else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, 0x58, 0x42, 0x00)))
-                    {
-                        WriteToLog("Registering Xbox One controller");
-                        controllerPtr = std::make_unique<XboxController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
-                    }
-                    else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 71, 208)))
-                    {
-                        WriteToLog("Registering Xbox One controller");
-                        controllerPtr = std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
-                    }
-                    /*
-                else if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_VENDOR_SPEC, 255, 255)))
-                {
-                    WriteToLog("Registering Xbox One adapter");
-                    controllerPtr = std::make_unique<XboxOneAdapter>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
-                }
-                */
-                }
-            }
-            rc = eventWait(&ds3Event, 0);
-            if (R_SUCCEEDED(rc))
-            {
-                WriteToLog("Dualshock 3 event went off");
-                UsbHsInterface interfaces[8];
-                s32 total_entries;
-
-                if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
-                {
-                    WriteToLog("Registering DS3 controller");
-                    controllerPtr = std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
-                }
-            }
-            rc = eventWait(&ds4Event, 0);
-            if (R_SUCCEEDED(rc))
-            {
-                WriteToLog("Dualshock 4 event went off");
-                UsbHsInterface interfaces[8];
-                s32 total_entries;
-
-                if (R_SUCCEEDED(QueryInterfaces(interfaces, sizeof(interfaces), &total_entries, USB_CLASS_HID, 0, 0)))
-                {
-                    WriteToLog("Registering DS4 controller");
-                    controllerPtr = std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
-                }
-            }
-            CallInitHandler(controllerPtr);
-
             //On interface change event, check if any devices were removed, and erase them from memory appropriately
             rc = eventWait(usbHsGetInterfaceStateChangeEvent(), 0);
             if (R_SUCCEEDED(rc))
             {
                 WriteToLog("Interface state was changed");
                 eventClear(usbHsGetInterfaceStateChangeEvent());
-
-                UsbHsInterface interfaces[16];
-                s32 total_entries;
-
                 rc = usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries);
                 if (R_SUCCEEDED(rc))
                 {
