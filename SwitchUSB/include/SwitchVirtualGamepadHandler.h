@@ -2,6 +2,7 @@
 #include "switch.h"
 #include "IController.h"
 #include "SwitchControllerHandler.h"
+#include "SwitchThread.h"
 
 //This class is a base class for SwitchHDLHandler and SwitchAbstractedPaadHandler.
 class SwitchVirtualGamepadHandler
@@ -10,21 +11,15 @@ protected:
     u32 m_vibrationDeviceHandle;
     SwitchControllerHandler m_controllerHandler;
 
-    bool m_keepInputThreadRunning;
-    Thread m_inputThread;
+    SwitchThread m_inputThread;
+    SwitchThread m_outputThread;
 
-    bool m_keepOutputThreadRunning;
-    Thread m_outputThread;
+    static void InputThreadLoop(void *argument);
+    static void OutputThreadLoop(void *argument);
 
 public:
     SwitchVirtualGamepadHandler(std::unique_ptr<IController> &&controller);
     virtual ~SwitchVirtualGamepadHandler();
-
-    //Don't allow to move this class in any way because it holds a thread member that reads from the instance's address
-    SwitchVirtualGamepadHandler(SwitchVirtualGamepadHandler &&other) = delete;
-    SwitchVirtualGamepadHandler(SwitchVirtualGamepadHandler &other) = delete;
-    SwitchVirtualGamepadHandler &operator=(SwitchVirtualGamepadHandler &&other) = delete;
-    SwitchVirtualGamepadHandler &operator=(SwitchVirtualGamepadHandler &other) = delete;
 
     //Override this if you want a custom init procedure
     virtual Result Initialize();
@@ -47,8 +42,6 @@ public:
     virtual void UpdateOutput() = 0;
 
     //Get the raw controller handler pointer
-    inline bool *GetInputThreadBool() { return &m_keepInputThreadRunning; }
-    inline bool *GetOutputThreadBool() { return &m_keepOutputThreadRunning; }
     inline SwitchControllerHandler *GetControllerHandler() { return &m_controllerHandler; }
     inline IController *GetController() { return m_controllerHandler.GetController(); }
     inline u32 *GetVibrationHandle() { return &m_vibrationDeviceHandle; }

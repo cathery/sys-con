@@ -18,58 +18,40 @@ void SwitchVirtualGamepadHandler::Exit()
 {
 }
 
-void inputThreadLoop(void *handler)
+void SwitchVirtualGamepadHandler::InputThreadLoop(void *handler)
 {
-    svcSleepThread(1e+7L);
-    SwitchVirtualGamepadHandler *switchHandler = static_cast<SwitchVirtualGamepadHandler *>(handler);
-    bool *keepThreadRunning = switchHandler->GetInputThreadBool();
-
-    while (*keepThreadRunning)
-    {
-        switchHandler->UpdateInput();
-    }
+    static_cast<SwitchVirtualGamepadHandler *>(handler)->UpdateInput();
 }
 
-void outputThreadLoop(void *handler)
+void SwitchVirtualGamepadHandler::OutputThreadLoop(void *handler)
 {
-    svcSleepThread(1e+7L);
-    SwitchVirtualGamepadHandler *switchHandler = static_cast<SwitchVirtualGamepadHandler *>(handler);
-    bool *keepThreadRunning = switchHandler->GetInputThreadBool();
-
-    while (*keepThreadRunning)
-    {
-        switchHandler->UpdateOutput();
-    }
+    static_cast<SwitchVirtualGamepadHandler *>(handler)->UpdateOutput();
 }
 
 Result SwitchVirtualGamepadHandler::InitInputThread()
 {
-    m_keepInputThreadRunning = true;
-    Result rc = threadCreate(&m_inputThread, &inputThreadLoop, this, NULL, 0x400, 0x3B, -2);
-    if (R_FAILED(rc))
-        return rc;
-    return threadStart(&m_inputThread);
+    Result rc = m_inputThread.Initialize(0x400, 0x3B);
+    if (R_SUCCEEDED(rc))
+        rc = m_inputThread.Start(&SwitchVirtualGamepadHandler::InputThreadLoop, this);
+
+    return rc;
 }
 
 void SwitchVirtualGamepadHandler::ExitInputThread()
 {
-    m_keepInputThreadRunning = false;
-    threadWaitForExit(&m_inputThread);
-    threadClose(&m_inputThread);
+    m_inputThread.Exit();
 }
 
 Result SwitchVirtualGamepadHandler::InitOutputThread()
 {
-    m_keepOutputThreadRunning = true;
-    Result rc = threadCreate(&m_outputThread, &outputThreadLoop, this, NULL, 0x400, 0x3B, -2);
-    if (R_FAILED(rc))
-        return rc;
-    return threadStart(&m_outputThread);
+    Result rc = m_outputThread.Initialize(0x400, 0x3B);
+    if (R_SUCCEEDED(rc))
+        rc = m_outputThread.Start(&SwitchVirtualGamepadHandler::OutputThreadLoop, this);
+
+    return rc;
 }
 
 void SwitchVirtualGamepadHandler::ExitOutputThread()
 {
-    m_keepOutputThreadRunning = false;
-    threadWaitForExit(&m_outputThread);
-    threadClose(&m_outputThread);
+    m_outputThread.Exit();
 }
