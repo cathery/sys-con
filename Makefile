@@ -38,7 +38,6 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 TARGET		:=	sys-con
-BUILD		:=	buildApplet
 SOURCES		:=	source SwitchUSB/source ControllerUSB/source ControllerUSB/source/Controllers ControllerUSB/source/Controllers/XboxOneAdapter inih
 DATA		:=	data
 INCLUDES	:=	include SwitchUSB/include ControllerUSB/include inih
@@ -50,9 +49,9 @@ INCLUDES	:=	include SwitchUSB/include ControllerUSB/include inih
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
-			$(ARCH) $(DEFINES)
+			$(ARCH) $(DEFINES) $(BUILD_CFLAGS)
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -D__APPLET__
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=c++17
 
@@ -65,7 +64,7 @@ LIBS	:= -lnx
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(LIBNX)
+LIBDIRS	:= $(PORTLIBS) $(LIBNX)
 
 
 #---------------------------------------------------------------------------------
@@ -113,6 +112,19 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
+ifeq ($(strip $(CONFIG_JSON)),)
+	jsons := $(wildcard *.json)
+	ifneq (,$(findstring $(TARGET).json,$(jsons)))
+		export APP_JSON := $(TOPDIR)/$(TARGET).json
+	else
+		ifneq (,$(findstring config.json,$(jsons)))
+			export APP_JSON := $(TOPDIR)/config.json
+		endif
+	endif
+else
+	export APP_JSON := $(TOPDIR)/$(CONFIG_JSON)
+endif
+
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
 	ifneq (,$(findstring $(TARGET).jpg,$(icons)))
@@ -142,37 +154,50 @@ ifneq ($(ROMFS),)
 	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: $(BUILD) clean all
+.PHONY: all buildApplet buildSysmodule applet sysmodule
 
 #---------------------------------------------------------------------------------
-all: $(BUILD)
+all: sysmodule
 
-$(BUILD):
+buildApplet:
+	@echo building applet ...
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/MakefileApplet
+	@$(MAKE) --no-print-directory \
+	BUILD=$@ -C $@ -f $(CURDIR)/Makefile \
+	DEPSDIR=$(CURDIR)/$@ \
+	BUILD_CFLAGS="-D__APPLET__" \
+	makeNRO
+	
+buildSysmodule:
+	@echo building sysmodule ...
+	@[ -d $@ ] || mkdir -p $@
+	@$(MAKE) --no-print-directory \
+	BUILD=$@ -C $@ -f $(CURDIR)/Makefile \
+	DEPSDIR=$(CURDIR)/$@ \
+	makeNSP
 
-#---------------------------------------------------------------------------------
+applet: buildApplet
+
+sysmodule: buildSysmodule
+
 clean:
-	@echo clean ...
-ifeq ($(strip $(APP_JSON)),)
-	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
-else
-	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
-endif
+	@rm -fr buildSysmodule buildApplet $(TARGET).nro $(TARGET).nacp $(TARGET).elf exefs.nsp $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
 
-
+# Makefile commands
 #---------------------------------------------------------------------------------
 else
-.PHONY:	all
+.PHONY:	makeNRO makeNSP
 
 DEPENDS	:=	$(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-ifeq ($(strip $(APP_JSON)),)
+makeNRO: $(OUTPUT).nro
 
-all	:	$(OUTPUT).nro
+makeNSP: $(OUTPUT).nsp
+
+#TODO: add an option to make exefs.nsp instead of $(OUTPUT).nsp
 
 ifeq ($(strip $(NO_NACP)),)
 $(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
@@ -180,15 +205,11 @@ else
 $(OUTPUT).nro	:	$(OUTPUT).elf
 endif
 
-else
 
-all	:	$(OUTPUT).nsp
 
 $(OUTPUT).nsp	:	$(OUTPUT).nso $(OUTPUT).npdm
 
 $(OUTPUT).nso	:	$(OUTPUT).elf
-
-endif
 
 $(OUTPUT).elf	:	$(OFILES)
 
