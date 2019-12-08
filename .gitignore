@@ -6,7 +6,6 @@ buildSysmodule/*
 *.nsp
 *.npdm
 *.nso
-.vscode
 *.code-workspace
 *.flag
 *.rar
