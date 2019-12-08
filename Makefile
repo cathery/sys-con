@@ -154,7 +154,7 @@ ifneq ($(ROMFS),)
 	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: all buildApplet buildSysmodule applet sysmodule
+.PHONY: all buildApplet buildSysmodule applet sysmodule cleanApplet cleanSysmodule
 
 #---------------------------------------------------------------------------------
 all: sysmodule
@@ -180,8 +180,13 @@ applet: buildApplet
 
 sysmodule: buildSysmodule
 
-clean:
-	@rm -fr buildSysmodule buildApplet $(TARGET).nro $(TARGET).nacp $(TARGET).elf exefs.nsp $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
+cleanApplet:
+	@echo clean applet ...
+	@rm -fr buildApplet $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+
+cleanSysmodule:
+	@echo clean sysmodule ...
+	@rm -fr buildSysmodule exefs.nsp $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
 
 # Makefile commands
 #---------------------------------------------------------------------------------
