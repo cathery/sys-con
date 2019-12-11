@@ -65,19 +65,10 @@ extern "C"
         rc = pscmInitialize();
         if (R_FAILED(rc))
             fatalThrow(rc);
-
-#ifndef __APPLET__
-        rc = hidInitialize();
-        if (R_FAILED(rc))
-            fatalThrow(rc);
-#endif
     }
 
     void userAppExit(void)
     {
-#ifndef __APPLET__
-        hidExit();
-#endif
         pscmExit();
         usbHsExit();
         hiddbgReleaseHdlsWorkBuffer();
