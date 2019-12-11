@@ -41,8 +41,8 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 
 ## Building (For developers)
 
-If you want to build this sysmodule yourself, you need to download the latest build of [libnx](https://github.com/switchbrew/libnx) and build it, then put the library and includes into your devkitpro libnx directory. Make a backup first. 
-After that, you can either type `make sysmodule -j8` to build a sysmodule nsp file, or `make applet -j8` to build an applet nro file. If no option is provided, it builds sysmodule.
+The sysmodule uses the latest release of [libnx](https://github.com/switchbrew/libnx), grabbed from pacman.
+After opening a console inside the project folder, you can type `make sysmodule -j8` to build a sysmodule nsp file, or `make applet -j8` to build an applet nro file. If no option is provided, it picks sysmodule.
 
 ## Support
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
