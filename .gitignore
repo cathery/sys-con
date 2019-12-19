@@ -8,6 +8,6 @@ buildSysmodule/*
 *.nso
 *.code-workspace
 *.flag
-*.rar
+*.zip
 *.xml
 *.png
