@@ -10,9 +10,14 @@ At the current moment, **only USB connection** is supported.
 
 This app is missing a lot of features. For more information, see the [issues page](https://github.com/cathery/sys-con/issues).
 
-### ⚠ I can't support your generic 3rd party HID controller yet. It is a limitation of the firmware and I'm looking to work around it.
+### ⚠ I can't support your generic 3rd party HID controller yet.
+It is a limitation of the firmware and I'm looking to work around it.
 
-### ⚠ If you get the error 2003-0008 (0x1003), you're running too many sysmodules. Disable other memory demanding sysmodules like sys-ftpd or ldn_mitm.
+### ⚠ If you get the error 2003-0008 (0x1003):
+You're running too many sysmodules. Disable other memory demanding sysmodules like sys-ftpd or ldn_mitm.
+
+### ⚠ If you have a second-generation Dualshock 4:
+You need to go to `sdmc:/config/sys-con/config_global.ini` and change the value of `use_dualshock_2nd_generation` from **false** to **true**.
 
 
 
