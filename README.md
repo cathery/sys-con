@@ -46,7 +46,8 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 ## Building (For developers)
 
 The sysmodule uses the latest release of [libnx](https://github.com/switchbrew/libnx), grabbed from pacman.
-After opening a console inside the project folder, you can type `make sysmodule -j8` to build a sysmodule nsp file, or `make applet -j8` to build an applet nro file. If no option is provided, it picks sysmodule.
+
+To build it, go to the project directory and enter the command `make` to build a release of sys-con (will be stored in `out/`), or `make clean` to clean the project of any build files.
 
 ## Support
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
