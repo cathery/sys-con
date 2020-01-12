@@ -38,7 +38,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 TARGET		:=	sys-con
-SOURCES		:=	source ../ControllerSwitch ../ControllerLib ../ControllerLib/Controllers ../ControllerLib/Controllers/XboxOneAdapter ../inih
+SOURCES		:=	source ../ControllerSwitch ../ControllerLib ../ControllerLib/Controllers ../inih
 DATA		:=	data
 INCLUDES	:=	include ../ControllerSwitch ../ControllerLib ../inih
 #ROMFS	:=	romfs

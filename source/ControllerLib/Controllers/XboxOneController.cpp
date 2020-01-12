@@ -1,6 +1,6 @@
 #include "Controllers/XboxOneController.h"
 #include <cmath>
-#include "../../Sysmodule/source/log.h"
+//#include "../../Sysmodule/source/log.h"
 
 static ControllerConfig _xboxoneControllerConfig{};
 
@@ -202,8 +202,6 @@ Result XboxOneController::SendInitBytes()
         rc = m_outPipe->Write(init_packets[i].Packet, init_packets[i].Length);
         if (R_FAILED(rc))
             break;
-        else
-            WriteToLog("Sent a specific init packet %i for controller v%u p%u", i, vendor, product);
     }
     return rc;
 }
