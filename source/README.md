@@ -1,2 +1,2 @@
 ### File structure
-![](https://i.imgur.com/hyYdbqG.png)
+![](map.png)

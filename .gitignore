@@ -1,5 +1,9 @@
-buildApplet/*
-buildSysmodule/*
+*.d
+*.o
+*.lst
+*.map
+main
+out/*
 *.nro
 *.nacp
 *.elf
@@ -9,5 +13,3 @@ buildSysmodule/*
 *.code-workspace
 *.flag
 *.zip
-*.xml
-*.png

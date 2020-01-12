@@ -1,6 +1,6 @@
 #include "Controllers/XboxOneController.h"
 #include <cmath>
-#include "../../source/log.h"
+#include "../../Sysmodule/source/log.h"
 
 static ControllerConfig _xboxoneControllerConfig{};
 

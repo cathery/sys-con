@@ -1,7 +1,7 @@
 #include "Controllers/XboxOneAdapter.h"
 #include "Controllers/XboxOneAdapter/Firmware.h"
 #include <cmath>
-#include "../../source/log.h"
+#include "../../Sysmodule/source/log.h"
 #include <fstream>
 #include "cstring"
 
