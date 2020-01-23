@@ -136,6 +136,15 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
         daxis_y += data.buttons[14] ? -1.0f : 0.0f; //DDOWN
         daxis_x += data.buttons[15] ? -1.0f : 0.0f; //DLEFT
 
+        float real_magnitude = std::sqrt(daxis_x * daxis_x + daxis_y * daxis_y);
+
+        float clipped_magnitude = std::min(1.0f, real_magnitude);
+
+        float ratio = clipped_magnitude / real_magnitude;
+
+        daxis_x *= ratio;
+        daxis_y *= ratio;
+
         m_controllerHandler.ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_hdlState.joysticks[JOYSTICK_LEFT].dx, &m_hdlState.joysticks[JOYSTICK_LEFT].dy);
     }
     else
