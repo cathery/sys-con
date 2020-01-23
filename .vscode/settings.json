@@ -46,7 +46,10 @@
         "random": "cpp",
         "ratio": "cpp",
         "string": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "bit": "cpp",
+        "cinttypes": "cpp",
+        "variant": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true
 }

@@ -1,6 +1,7 @@
 #include "SwitchHDLHandler.h"
 #include "ControllerHelpers.h"
 #include <cmath>
+#include <algorithm>
 
 SwitchHDLHandler::SwitchHDLHandler(std::unique_ptr<IController> &&controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
@@ -148,6 +149,12 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
     }
 
     m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_hdlState.joysticks[JOYSTICK_RIGHT].dx, &m_hdlState.joysticks[JOYSTICK_RIGHT].dy);
+
+    //Actual joystick values never use the full range of the s32 type and exceeding them has caused crashes with multiple games, so we clamp them to s16
+    m_hdlState.joysticks[JOYSTICK_LEFT].dx = std::clamp(m_hdlState.joysticks[JOYSTICK_LEFT].dx, -32768, 32768 -1);
+    m_hdlState.joysticks[JOYSTICK_LEFT].dy = std::clamp(m_hdlState.joysticks[JOYSTICK_LEFT].dy, -32768, 32768 -1);
+    m_hdlState.joysticks[JOYSTICK_RIGHT].dx = std::clamp(m_hdlState.joysticks[JOYSTICK_RIGHT].dx, -32768, 32768 -1);
+    m_hdlState.joysticks[JOYSTICK_RIGHT].dy = std::clamp(m_hdlState.joysticks[JOYSTICK_RIGHT].dy, -32768, 32768 -1);
 
     m_hdlState.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
     m_hdlState.buttons |= (data.buttons[17] ? KEY_HOME : 0);
