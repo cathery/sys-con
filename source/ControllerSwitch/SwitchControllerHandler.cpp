@@ -27,7 +27,8 @@ void SwitchControllerHandler::Exit()
 void SwitchControllerHandler::ConvertAxisToSwitchAxis(float x, float y, float deadzone, s32 *x_out, s32 *y_out)
 {
     float floatRange = 2.0f;
-    float newRange = (JOYSTICK_MAX - JOYSTICK_MIN);
+    //JOYSTICK_MAX is 1 above the s16 max value, causing crashes on various games including Xenoblade Chronicles 2
+    float newRange = ((JOYSTICK_MAX-1) - JOYSTICK_MIN);
 
     *x_out = (((x + 1.0f) * newRange) / floatRange) + JOYSTICK_MIN;
     *y_out = (((y + 1.0f) * newRange) / floatRange) + JOYSTICK_MIN;
