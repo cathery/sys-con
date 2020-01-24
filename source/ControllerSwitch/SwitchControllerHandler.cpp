@@ -4,6 +4,11 @@
 #define JOYSTICK_MAX_FIXED (JOYSTICK_MAX - 1)
 #define JOYSTICK_MIN_FIXED (JOYSTICK_MIN + 1)
 
+static_assert(
+    JOYSTICK_MAX_FIXED <= 32767 && JOYSTICK_MIN_FIXED >= -32767, 
+    "Seems like you're using a libnx build that has fixed the joystick values, please remove these _FIXED defines and use the unmodified joystick values instead"
+);
+
 SwitchControllerHandler::SwitchControllerHandler(std::unique_ptr<IController> &&controller)
     : m_controller(std::move(controller))
 {
