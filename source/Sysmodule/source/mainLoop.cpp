@@ -10,7 +10,7 @@
 #include "configFile.h"
 #include "SwitchThread.h"
 
-#define APP_VERSION "0.6.0"
+#define APP_VERSION "0.5.3"
 
 #define DS3EVENT_INDEX 0
 #define DS4EVENT_INDEX 1
