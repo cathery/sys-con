@@ -1,0 +1,3 @@
+[submodule "source/libstratosphere"]
+	path = source/libstratosphere
+	url = https://github.com/Atmosphere-NX/Atmosphere-libs.git
