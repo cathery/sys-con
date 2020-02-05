@@ -9,11 +9,15 @@
                 "${DEVKITPRO}/libnx/include/",
                 "source/ControllerLib",
                 "source/ControllerSwitch",
-                "source/inih"
+                "source/inih",
+                "source/libstratosphere/libstratosphere/include",
+                "source/libstratosphere/libvapours/include"
             ],
             "defines": [
                 "SWITCH",
-                "__SWITCH__"
+                "__SWITCH__",
+                "ATMOSPHERE_BOARD_NINTENDO_SWITCH",
+                "ATMOSPHERE_IS_STRATOSPHERE"
             ],
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-g++",
             "cStandard": "c11",
