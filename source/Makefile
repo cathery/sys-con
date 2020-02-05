@@ -9,8 +9,8 @@ AppletCompanion:
 	$(MAKE) -C $@ -j$(nproc)
 
 Sysmodule:
-	$(MAKE) -C $@ buildSysmodule -j$(nproc)
+	$(MAKE) -C $@ -j$(nproc)
 
 clean:
 	$(MAKE) -C AppletCompanion clean
-	$(MAKE) -C Sysmodule cleanSysmodule
+	$(MAKE) -C Sysmodule clean
