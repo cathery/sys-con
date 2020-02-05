@@ -1,9 +1,7 @@
 #include "switch.h"
 #include "log.h"
 #include "configFile.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <time.h>
+#include <stratosphere.hpp>
 
 static Mutex g_PrintMutex = 0;
 
@@ -11,23 +9,15 @@ void WriteToLog(const char *fmt, ...)
 {
     mutexLock(&g_PrintMutex);
 
-#ifdef __APPLET__
-    va_list va;
-    va_start(va, fmt);
-    vprintf(fmt, va);
-    printf("\n");
-    va_end(va);
-
-#else
-
-    time_t unixTime = time(NULL);
-    struct tm tStruct;
-    localtime_r(&unixTime, &tStruct);
+    u64 ts;
+    TimeCalendarTime caltime;
+    timeGetCurrentTime(TimeType_LocalSystemClock, &ts);
+    timeToCalendarTimeWithMyRule(ts, &caltime, nullptr);
 
     FILE *fp = fopen(CONFIG_PATH "log.txt", "a");
 
     //Print time
-    fprintf(fp, "%04i-%02i-%02i %02i:%02i:%02i: ", (tStruct.tm_year + 1900), tStruct.tm_mon, tStruct.tm_mday, tStruct.tm_hour, tStruct.tm_min, tStruct.tm_sec);
+    fprintf(fp, "%04i-%02i-%02i %02i:%02i:%02i: ", caltime.year, caltime.month, caltime.day, caltime.hour, caltime.minute, caltime.second);
 
     //Print the actual text
     va_list va;
@@ -37,7 +27,6 @@ void WriteToLog(const char *fmt, ...)
 
     fprintf(fp, "\n");
     fclose(fp);
-#endif
 
     mutexUnlock(&g_PrintMutex);
 }
