@@ -49,7 +49,12 @@
         "thread": "cpp",
         "bit": "cpp",
         "cinttypes": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "condition_variable": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "mutex": "cpp",
+        "shared_mutex": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true
 }
