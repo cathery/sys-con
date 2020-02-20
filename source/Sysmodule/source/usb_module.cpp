@@ -21,10 +21,11 @@ namespace syscon::usb
         void UsbEventThreadFunc(void *arg);
         void UsbInterfaceChangeThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x3F);
-        ams::os::StaticThread<0x1'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x3F);
+        ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x20);
+        ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x20);
 
-        //TODO: Implement UsbInterfaceChangeThreadFunc
+        bool usb_event_thread_isRunning = false;
+        bool usb_interface_change_thread_isRunning = false;
 
         Event g_usbCatchAllEvent;
         Event g_usbDualshock3Event;
@@ -37,67 +38,73 @@ namespace syscon::usb
         void UsbEventThreadFunc(void *arg)
         {
             WriteToLog("Starting USB Event Thread!");
-            while (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, UINT64_MAX)))
+            while (usb_event_thread_isRunning)
             {
-                WriteToLog("Event got caught!");
-                if (handler::IsAtControllerLimit())
-                    continue;
-                WriteToLog("Querying interfaces now");
-                s32 total_entries;
-                if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 93, 1)) != 0)
-                    handler::Insert(std::make_unique<Xbox360Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
+                {
+                    WriteToLog("Event got caught!");
+                    if (handler::IsAtControllerLimit())
+                        continue;
+                    WriteToLog("Querying interfaces now");
+                    s32 total_entries;
+                    if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 93, 1)) != 0)
+                        handler::Insert(std::make_unique<Xbox360Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
 
-                else if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 93, 129)) != 0)
-                    for (int i = 0; i != total_entries; ++i)
-                        handler::Insert(std::make_unique<Xbox360WirelessController>(std::make_unique<SwitchUSBDevice>(interfaces + i, 1)));
+                    else if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 93, 129)) != 0)
+                        for (int i = 0; i != total_entries; ++i)
+                            handler::Insert(std::make_unique<Xbox360WirelessController>(std::make_unique<SwitchUSBDevice>(interfaces + i, 1)));
 
-                else if ((total_entries = QueryInterfaces(0x58, 0x42, 0x00)) != 0)
-                    handler::Insert(std::make_unique<XboxController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
-                
-                else if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 71, 208)) != 0)
-                    handler::Insert(std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                    else if ((total_entries = QueryInterfaces(0x58, 0x42, 0x00)) != 0)
+                        handler::Insert(std::make_unique<XboxController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                    
+                    else if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 71, 208)) != 0)
+                        handler::Insert(std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
 
-                else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3)) != 0)
-                    handler::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                    else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3)) != 0)
+                        handler::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
 
-                else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X)) != 0)
-                    handler::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                    else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X)) != 0)
+                        handler::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                }
             }
         }
 
         void UsbInterfaceChangeThreadFunc(void *arg)
         {
             WriteToLog("Starting USB Interface Change Thread!");
-            while (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
+            while (usb_interface_change_thread_isRunning)
             {
-                s32 total_entries;
-                //WriteToLog("Interface state was changed");
-                eventClear(usbHsGetInterfaceStateChangeEvent());
-                if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
+                if (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
                 {
-                    for (auto it = handler::Get().begin(); it != handler::Get().end(); ++it)
+                    s32 total_entries;
+                    //WriteToLog("Interface state was changed");
+                    eventClear(usbHsGetInterfaceStateChangeEvent());
+                    if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
                     {
-                        bool found_flag = false;
-
-                        for (auto &&ptr : (*it)->GetController()->GetDevice()->GetInterfaces())
+                        for (auto it = handler::Get().begin(); it != handler::Get().end(); ++it)
                         {
-                            //We check if a device was removed by comparing the controller's interfaces and the currently acquired interfaces
-                            //If we didn't find a single matching interface ID, we consider a controller removed
-                            for (int i = 0; i != total_entries; ++i)
+                            bool found_flag = false;
+
+                            for (auto &&ptr : (*it)->GetController()->GetDevice()->GetInterfaces())
                             {
-                                if (interfaces[i].inf.ID == static_cast<SwitchUSBInterface *>(ptr.get())->GetID())
+                                //We check if a device was removed by comparing the controller's interfaces and the currently acquired interfaces
+                                //If we didn't find a single matching interface ID, we consider a controller removed
+                                for (int i = 0; i != total_entries; ++i)
                                 {
-                                    found_flag = true;
-                                    break;
+                                    if (interfaces[i].inf.ID == static_cast<SwitchUSBInterface *>(ptr.get())->GetID())
+                                    {
+                                        found_flag = true;
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (!found_flag)
-                        {
-                            //WriteToLog("Erasing controller! %i", (*it)->GetController()->GetType());
-                            handler::Get().erase(it--);
-                            //WriteToLog("Controller erased!");
+                            if (!found_flag)
+                            {
+                                //WriteToLog("Erasing controller! %i", (*it)->GetController()->GetType());
+                                handler::Get().erase(it--);
+                                //WriteToLog("Controller erased!");
+                            }
                         }
                     }
                 }
@@ -176,8 +183,11 @@ namespace syscon::usb
         R_TRY(CreateDualshock3AvailableEvent());
         R_TRY(CreateDualshock4AvailableEvent());
 
+        usb_event_thread_isRunning = true;
         R_TRY(g_usb_event_thread.Start().GetValue());
-        //R_TRY(g_usb_interface_change_thread.Start().GetValue());
+
+        usb_interface_change_thread_isRunning = true;
+        R_TRY(g_usb_interface_change_thread.Start().GetValue());
 
         return 0;
     }
@@ -187,6 +197,9 @@ namespace syscon::usb
         usbHsDestroyInterfaceAvailableEvent(&g_usbCatchAllEvent, CatchAllEventIndex);
         usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock3Event, Dualshock3EventIndex);
         usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
+
+        usb_event_thread_isRunning = false;
+        usb_interface_change_thread_isRunning = false;
 
         //TODO: test this without the cancel
         g_usb_event_thread.CancelSynchronization();
