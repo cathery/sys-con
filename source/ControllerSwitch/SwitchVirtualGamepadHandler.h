@@ -2,7 +2,7 @@
 #include "switch.h"
 #include "IController.h"
 #include "SwitchControllerHandler.h"
-#include "SwitchThread.h"
+#include <stratosphere.hpp>
 
 //This class is a base class for SwitchHDLHandler and SwitchAbstractedPaadHandler.
 class SwitchVirtualGamepadHandler
@@ -11,8 +11,11 @@ protected:
     u32 m_vibrationDeviceHandle;
     SwitchControllerHandler m_controllerHandler;
 
-    SwitchThread m_inputThread;
-    SwitchThread m_outputThread;
+    ams::os::StaticThread<0x1'000> m_inputThread;
+    ams::os::StaticThread<0x1'000> m_outputThread;
+
+    bool m_inputThreadIsRunning = false;
+    bool m_outputThreadIsRunning = false;
 
     static void InputThreadLoop(void *argument);
     static void OutputThreadLoop(void *argument);
