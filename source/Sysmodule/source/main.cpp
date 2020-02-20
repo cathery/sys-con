@@ -5,6 +5,7 @@
 
 #include "usb_module.h"
 #include "controller_handler.h"
+#include "configFile.h"
 
 #define APP_VERSION "0.6.0"
 
@@ -79,6 +80,8 @@ int main(int argc, char *argv[])
     WriteToLog("\n\nNew sysmodule session started on version " APP_VERSION);
     handler::Initialize();
     usb::Initialize();
+
+    LoadAllConfigs();
 
     while (true)
     {
