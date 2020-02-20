@@ -6,10 +6,10 @@ TOPTARGETS := all clean
 all: $(COMPONENTS)
 
 AppletCompanion:
-	$(MAKE) -C $@ -j$(nproc)
+	$(MAKE) -C $@
 
 Sysmodule:
-	$(MAKE) -C $@ -j$(nproc)
+	$(MAKE) -C $@
 
 clean:
 	$(MAKE) -C AppletCompanion clean
