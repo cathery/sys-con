@@ -24,8 +24,8 @@ namespace syscon::usb
         ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x20);
         ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x20);
 
-        bool usb_event_thread_isRunning = false;
-        bool usb_interface_change_thread_isRunning = false;
+        bool is_usb_event_thread_running = false;
+        bool is_usb_interface_change_thread_running = false;
 
         Event g_usbCatchAllEvent;
         Event g_usbDualshock3Event;
@@ -38,7 +38,7 @@ namespace syscon::usb
         void UsbEventThreadFunc(void *arg)
         {
             WriteToLog("Starting USB Event Thread!");
-            while (usb_event_thread_isRunning)
+            while (is_usb_event_thread_running)
             {
                 if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
                 {
@@ -72,7 +72,7 @@ namespace syscon::usb
         void UsbInterfaceChangeThreadFunc(void *arg)
         {
             WriteToLog("Starting USB Interface Change Thread!");
-            while (usb_interface_change_thread_isRunning)
+            while (is_usb_interface_change_thread_running)
             {
                 if (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
                 {
@@ -183,10 +183,10 @@ namespace syscon::usb
         R_TRY(CreateDualshock3AvailableEvent());
         R_TRY(CreateDualshock4AvailableEvent());
 
-        usb_event_thread_isRunning = true;
+        is_usb_event_thread_running = true;
         R_TRY(g_usb_event_thread.Start().GetValue());
 
-        usb_interface_change_thread_isRunning = true;
+        is_usb_interface_change_thread_running = true;
         R_TRY(g_usb_interface_change_thread.Start().GetValue());
 
         return 0;
@@ -198,8 +198,8 @@ namespace syscon::usb
         usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock3Event, Dualshock3EventIndex);
         usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
 
-        usb_event_thread_isRunning = false;
-        usb_interface_change_thread_isRunning = false;
+        is_usb_event_thread_running = false;
+        is_usb_interface_change_thread_running = false;
 
         //TODO: test this without the cancel
         g_usb_event_thread.CancelSynchronization();
