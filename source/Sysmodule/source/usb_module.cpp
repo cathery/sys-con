@@ -1,6 +1,7 @@
 #include "switch.h"
 #include "usb_module.h"
 #include "controller_handler.h"
+#include "config_handler.h"
 
 
 #include "SwitchUSBDevice.h"
@@ -22,7 +23,7 @@ namespace syscon::usb
         void UsbInterfaceChangeThreadFunc(void *arg);
 
         ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x20);
-        ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x20);
+        ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x21);
 
         bool is_usb_event_thread_running = false;
         bool is_usb_interface_change_thread_running = false;
@@ -157,10 +158,10 @@ namespace syscon::usb
 
         Result CreateDualshock4AvailableEvent()
         {
-            constexpr UsbHsInterfaceFilter filter {
+            const UsbHsInterfaceFilter filter{
                 .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
                 .idVendor = VENDOR_SONY,
-                .idProduct = PRODUCT_DUALSHOCK4_2X,
+                .idProduct = config::globalConfig.dualshock4_productID,
             };
             return usbHsCreateInterfaceAvailableEvent(&g_usbDualshock4Event, true, Dualshock4EventIndex, &filter);
         }
@@ -209,5 +210,11 @@ namespace syscon::usb
         g_usb_interface_change_thread.Join();
 
         handler::Reset();
+    }
+
+    Result ReloadDualshock4Event()
+    {
+        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
+        return CreateDualshock4AvailableEvent();
     }
 }

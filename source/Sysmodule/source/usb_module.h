@@ -8,4 +8,6 @@ namespace syscon::usb {
 
     Result Enable();
     void Disable();
+
+    Result ReloadDualshock4Event();
 }

@@ -1,11 +1,10 @@
 #include "switch.h"
 #include "log.h"
-#include "mainLoop.h"
 #include <stratosphere.hpp>
 
 #include "usb_module.h"
 #include "controller_handler.h"
-#include "configFile.h"
+#include "config_handler.h"
 
 #define APP_VERSION "0.6.0"
 
@@ -78,10 +77,9 @@ using namespace syscon;
 int main(int argc, char *argv[])
 {
     WriteToLog("\n\nNew sysmodule session started on version " APP_VERSION);
+    config::Initialize();
     handler::Initialize();
     usb::Initialize();
-
-    LoadAllConfigs();
 
     while (true)
     {
@@ -90,4 +88,5 @@ int main(int argc, char *argv[])
 
     usb::Exit();
     handler::Exit();
+    config::Exit();
 }
