@@ -39,8 +39,7 @@ namespace syscon::usb
         void UsbEventThreadFunc(void *arg)
         {
             WriteToLog("Starting USB Event Thread!");
-            while (is_usb_event_thread_running)
-            {
+            do {
                 if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
                 {
                     WriteToLog("Event got caught!");
@@ -67,14 +66,13 @@ namespace syscon::usb
                     else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X)) != 0)
                         handler::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
                 }
-            }
+            } while (is_usb_event_thread_running);
         }
 
         void UsbInterfaceChangeThreadFunc(void *arg)
         {
             WriteToLog("Starting USB Interface Change Thread!");
-            while (is_usb_interface_change_thread_running)
-            {
+            do {
                 if (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
                 {
                     s32 total_entries;
@@ -109,7 +107,7 @@ namespace syscon::usb
                         }
                     }
                 }
-            }
+            } while (is_usb_interface_change_thread_running);
         }
 
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol)

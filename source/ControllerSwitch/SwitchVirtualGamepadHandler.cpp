@@ -20,18 +20,16 @@ void SwitchVirtualGamepadHandler::Exit()
 
 void SwitchVirtualGamepadHandler::InputThreadLoop(void *handler)
 {
-    while (static_cast<SwitchVirtualGamepadHandler*>(handler)->m_inputThreadIsRunning)
-    {
+    do {
         static_cast<SwitchVirtualGamepadHandler *>(handler)->UpdateInput();
-    }
+    } while (static_cast<SwitchVirtualGamepadHandler*>(handler)->m_inputThreadIsRunning);
 }
 
 void SwitchVirtualGamepadHandler::OutputThreadLoop(void *handler)
 {
-    while (static_cast<SwitchVirtualGamepadHandler*>(handler)->m_outputThreadIsRunning)
-    {
+    do {
        static_cast<SwitchVirtualGamepadHandler *>(handler)->UpdateOutput();
-    }
+    } while (static_cast<SwitchVirtualGamepadHandler*>(handler)->m_outputThreadIsRunning);
 }
 
 Result SwitchVirtualGamepadHandler::InitInputThread()

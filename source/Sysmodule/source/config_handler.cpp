@@ -181,8 +181,7 @@ namespace syscon::config
 
         void ConfigChangedCheckThreadFunc(void *arg)
         {
-            while (is_config_changed_check_thread_running)
-            {
+            do {
                 if (R_SUCCEEDED(waitSingle(filecheckTimerWaiter, 0)))
                 {
                     if (config::CheckForFileChanges())
@@ -192,7 +191,7 @@ namespace syscon::config
                         usb::ReloadDualshock4Event();
                     }
                 }
-            }
+            } while (is_config_changed_check_thread_running);
         }
     }
 
