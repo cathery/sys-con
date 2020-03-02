@@ -181,6 +181,7 @@ namespace syscon::config
 
         void ConfigChangedCheckThreadFunc(void *arg)
         {
+            WriteToLog("Starting config check thread!");
             do {
                 if (R_SUCCEEDED(waitSingle(filecheckTimerWaiter, 0)))
                 {
@@ -239,6 +240,7 @@ namespace syscon::config
         else
             WriteToLog("Failed to read from dualshock 4 config!");
     }
+
     bool CheckForFileChanges()
     {
         static u64 globalConfigLastModified;
@@ -305,15 +307,28 @@ namespace syscon::config
     Result Initialize()
     {
         config::LoadAllConfigs();
+        config::CheckForFileChanges();
         utimerCreate(&filecheckTimer, 1e+9L, TimerType_Repeating);
+        return Enable();
+    }
+
+    void Exit()
+    {
+        Disable();
+    }
+
+    Result Enable()
+    {
+        if (filecheckTimer.started)
+            return 1;
         utimerStart(&filecheckTimer);
         is_config_changed_check_thread_running = true;
         return g_config_changed_check_thread.Start().GetValue();
     }
 
-    void Exit()
+    void Disable()
     {
-        is_config_changed_check_thread_running = true;
+        is_config_changed_check_thread_running = false;
         utimerStop(&filecheckTimer);
         g_config_changed_check_thread.CancelSynchronization();
         g_config_changed_check_thread.Join();

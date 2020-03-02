@@ -28,4 +28,7 @@ namespace syscon::config
 
     Result Initialize();
     void Exit();
+
+    Result Enable();
+    void Disable();
 };
