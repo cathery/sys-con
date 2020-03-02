@@ -5,6 +5,7 @@
 #include "usb_module.h"
 #include "controller_handler.h"
 #include "config_handler.h"
+#include "psc_module.h"
 
 #define APP_VERSION "0.6.0"
 
@@ -80,12 +81,14 @@ int main(int argc, char *argv[])
     config::Initialize();
     handler::Initialize();
     usb::Initialize();
+    psc::Initialize();
 
     while (true)
     {
         svcSleepThread(1e+8L);
     }
 
+    psc::Exit();
     usb::Exit();
     handler::Exit();
     config::Exit();

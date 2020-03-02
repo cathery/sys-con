@@ -180,24 +180,18 @@ namespace syscon::usb
 
     Result Enable()
     {
-        R_TRY(CreateCatchAllAvailableEvent());
-        R_TRY(CreateDualshock3AvailableEvent());
-        R_TRY(CreateDualshock4AvailableEvent());
+        CreateUsbEvents();
 
         is_usb_event_thread_running = true;
         R_TRY(g_usb_event_thread.Start().GetValue());
-
         is_usb_interface_change_thread_running = true;
         R_TRY(g_usb_interface_change_thread.Start().GetValue());
-
         return 0;
     }
 
     void Disable()
     {
-        usbHsDestroyInterfaceAvailableEvent(&g_usbCatchAllEvent, CatchAllEventIndex);
-        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock3Event, Dualshock3EventIndex);
-        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
+        DestroyUsbEvents();
 
         is_usb_event_thread_running = false;
         is_usb_interface_change_thread_running = false;
@@ -210,6 +204,21 @@ namespace syscon::usb
         g_usb_interface_change_thread.Join();
 
         handler::Reset();
+    }
+
+    Result CreateUsbEvents()
+    {
+        R_TRY(CreateCatchAllAvailableEvent());
+        R_TRY(CreateDualshock3AvailableEvent());
+        R_TRY(CreateDualshock4AvailableEvent());
+        return 0;
+    }
+
+    void DestroyUsbEvents()
+    {
+        usbHsDestroyInterfaceAvailableEvent(&g_usbCatchAllEvent, CatchAllEventIndex);
+        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock3Event, Dualshock3EventIndex);
+        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
     }
 
     Result ReloadDualshock4Event()

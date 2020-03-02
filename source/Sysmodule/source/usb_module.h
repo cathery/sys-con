@@ -9,5 +9,8 @@ namespace syscon::usb {
     Result Enable();
     void Disable();
 
+    Result CreateUsbEvents();
+    void DestroyUsbEvents();
+
     Result ReloadDualshock4Event();
 }
