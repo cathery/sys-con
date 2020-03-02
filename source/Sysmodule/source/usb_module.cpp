@@ -76,7 +76,7 @@ namespace syscon::usb
                 if (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
                 {
                     s32 total_entries;
-                    //WriteToLog("Interface state was changed");
+                    WriteToLog("Interface state was changed");
                     eventClear(usbHsGetInterfaceStateChangeEvent());
                     if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
                     {
@@ -102,7 +102,7 @@ namespace syscon::usb
                             {
                                 //WriteToLog("Erasing controller! %i", (*it)->GetController()->GetType());
                                 handler::Get().erase(it--);
-                                //WriteToLog("Controller erased!");
+                                WriteToLog("Controller erased!");
                             }
                         }
                     }
