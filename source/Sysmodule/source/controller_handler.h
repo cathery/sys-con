@@ -3,7 +3,7 @@
 #include "ControllerHelpers.h"
 #include "SwitchVirtualGamepadHandler.h"
 
-namespace syscon::handler
+namespace syscon::controllers
 {
     bool IsAtControllerLimit();
 

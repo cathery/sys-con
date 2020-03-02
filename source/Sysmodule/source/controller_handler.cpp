@@ -7,7 +7,7 @@
 
 #include "log.h"
 
-namespace syscon::handler
+namespace syscon::controllers
 {
     namespace 
     {

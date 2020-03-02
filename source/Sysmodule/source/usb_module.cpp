@@ -43,28 +43,28 @@ namespace syscon::usb
                 if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
                 {
                     WriteToLog("Event got caught!");
-                    if (handler::IsAtControllerLimit())
+                    if (controllers::IsAtControllerLimit())
                         continue;
                     WriteToLog("Querying interfaces now");
                     s32 total_entries;
                     if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 93, 1)) != 0)
-                        handler::Insert(std::make_unique<Xbox360Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                        controllers::Insert(std::make_unique<Xbox360Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
 
                     else if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 93, 129)) != 0)
                         for (int i = 0; i != total_entries; ++i)
-                            handler::Insert(std::make_unique<Xbox360WirelessController>(std::make_unique<SwitchUSBDevice>(interfaces + i, 1)));
+                            controllers::Insert(std::make_unique<Xbox360WirelessController>(std::make_unique<SwitchUSBDevice>(interfaces + i, 1)));
 
                     else if ((total_entries = QueryInterfaces(0x58, 0x42, 0x00)) != 0)
-                        handler::Insert(std::make_unique<XboxController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                        controllers::Insert(std::make_unique<XboxController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
                     
                     else if ((total_entries = QueryInterfaces(USB_CLASS_VENDOR_SPEC, 71, 208)) != 0)
-                        handler::Insert(std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                        controllers::Insert(std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
 
                     else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3)) != 0)
-                        handler::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                        controllers::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
 
                     else if ((total_entries = QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X)) != 0)
-                        handler::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
+                        controllers::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries)));
                 }
             } while (is_usb_event_thread_running);
         }
@@ -80,7 +80,7 @@ namespace syscon::usb
                     eventClear(usbHsGetInterfaceStateChangeEvent());
                     if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
                     {
-                        for (auto it = handler::Get().begin(); it != handler::Get().end(); ++it)
+                        for (auto it = controllers::Get().begin(); it != controllers::Get().end(); ++it)
                         {
                             bool found_flag = false;
 
@@ -101,7 +101,7 @@ namespace syscon::usb
                             if (!found_flag)
                             {
                                 //WriteToLog("Erasing controller! %i", (*it)->GetController()->GetType());
-                                handler::Get().erase(it--);
+                                controllers::Get().erase(it--);
                                 WriteToLog("Controller erased!");
                             }
                         }
@@ -201,7 +201,7 @@ namespace syscon::usb
         g_usb_event_thread.Join();
         g_usb_interface_change_thread.Join();
 
-        handler::Reset();
+        controllers::Reset();
     }
 
     Result CreateUsbEvents()

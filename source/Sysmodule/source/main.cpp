@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 {
     WriteToLog("\n\nNew sysmodule session started on version " APP_VERSION);
     config::Initialize();
-    handler::Initialize();
+    controllers::Initialize();
     usb::Initialize();
     psc::Initialize();
 
@@ -90,6 +90,6 @@ int main(int argc, char *argv[])
 
     psc::Exit();
     usb::Exit();
-    handler::Exit();
+    controllers::Exit();
     config::Exit();
 }
