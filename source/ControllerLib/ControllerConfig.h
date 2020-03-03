@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
-enum ControllerButton : int8_t
+enum ControllerButton : uint8_t
 {
-    NOT_SET = -1,
+    NOT_SET = 0,
     FACE_UP,
     FACE_RIGHT,
     FACE_DOWN,
@@ -22,7 +22,7 @@ enum ControllerButton : int8_t
     SYNC,
     GUIDE,
     TOUCHPAD,
-    NUM_CONTROLLERBUTTONS,
+    NUM_CONTROLLERBUTTONS = TOUCHPAD,
 };
 
 struct NormalizedStick
@@ -47,12 +47,12 @@ struct ControllerConfig
 {
     uint8_t leftStickDeadzonePercent{10};
     uint8_t rightStickDeadzonePercent{10};
-    uint16_t leftStickRotationDegrees{0};
-    uint16_t rightStickRotationDegrees{0};
-    uint8_t triggerDeadzonePercent{0};
-    ControllerButton buttons[NUM_CONTROLLERBUTTONS];
-    float triggers[2]{0};
-    NormalizedStick sticks[2]{0};
+    uint16_t leftStickRotationDegrees{};
+    uint16_t rightStickRotationDegrees{};
+    uint8_t triggerDeadzonePercent{};
+    ControllerButton buttons[NUM_CONTROLLERBUTTONS]{};
+    float triggers[2]{};
+    NormalizedStick sticks[2]{};
     bool swapDPADandLSTICK{false};
     RGBAColor bodyColor{107, 107, 107, 255};
     RGBAColor buttonsColor{0, 0, 0, 255};
