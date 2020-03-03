@@ -5,7 +5,7 @@
             "label": "Build Release",
             "type": "shell",
             "promptOnClose": true,
-            "command": "make",
+            "command": "make -j4",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
