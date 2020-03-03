@@ -3,6 +3,7 @@
 #include "controller_handler.h"
 #include "config_handler.h"
 
+#include <stratosphere.hpp>
 
 #include "SwitchUSBDevice.h"
 #include "ControllerHelpers.h"

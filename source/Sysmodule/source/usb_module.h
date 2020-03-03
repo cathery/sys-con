@@ -1,5 +1,4 @@
 #pragma once
-#include <stratosphere.hpp>
 
 namespace syscon::usb {
 
