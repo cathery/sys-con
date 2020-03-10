@@ -133,7 +133,7 @@ namespace syscon::usb
 
                             if (!found_flag)
                             {
-                                //WriteToLog("Erasing controller! %i", (*it)->GetController()->GetType());
+                                WriteToLog("Erasing controller");
                                 controllers::Get().erase(it--);
                                 WriteToLog("Controller erased!");
                             }

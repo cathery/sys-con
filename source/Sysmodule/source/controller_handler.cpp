@@ -23,24 +23,22 @@ namespace syscon::controllers
 
     Result Insert(std::unique_ptr<IController> &&controllerPtr)
     {
-        WriteToLog("Inserting controller");
         std::unique_ptr<SwitchVirtualGamepadHandler> switchHandler;
         if (UseAbstractedPad)
         {
             switchHandler = std::make_unique<SwitchAbstractedPadHandler>(std::move(controllerPtr));
-            WriteToLog("Inserting as abstracted pad");
+            WriteToLog("Inserting controller as abstracted pad");
         }
         else
         {
             switchHandler = std::make_unique<SwitchHDLHandler>(std::move(controllerPtr));
-            WriteToLog("Inserting as HDLs");
+            WriteToLog("Inserting controller as HDLs");
         }
 
         Result rc = switchHandler->Initialize();
         if (R_SUCCEEDED(rc))
             controllerHandlers.push_back(std::move(switchHandler));
 
-        WriteToLog("Controller result: 0x%x", rc);
         return rc;
     }
 
