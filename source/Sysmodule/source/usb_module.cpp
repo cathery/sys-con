@@ -20,6 +20,8 @@ namespace syscon::usb
 
         constexpr size_t MaxUsbHsInterfacesSize = 16;
 
+        ams::os::Mutex usbMutex;
+
         void UsbEventThreadFunc(void *arg);
         void UsbDs3EventThreadFunc(void *arg);
         void UsbDs4EventThreadFunc(void *arg);
@@ -47,6 +49,8 @@ namespace syscon::usb
                 if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
                 {
                     WriteToLog("Catch-all event went off");
+
+                    std::scoped_lock usbLock(usbMutex);
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
@@ -74,6 +78,8 @@ namespace syscon::usb
                 if (R_SUCCEEDED(eventWait(&g_usbDualshock3Event, U64_MAX)))
                 {
                     WriteToLog("Dualshock 3 event went off");
+
+                    std::scoped_lock usbLock(usbMutex);
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
@@ -91,6 +97,8 @@ namespace syscon::usb
                 if (R_SUCCEEDED(eventWait(&g_usbDualshock4Event, U64_MAX)))
                 {
                     WriteToLog("Dualshock 4 event went off");
+
+                    std::scoped_lock usbLock(usbMutex);
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
@@ -109,6 +117,8 @@ namespace syscon::usb
                 {
                     s32 total_entries;
                     WriteToLog("Interface state was changed");
+
+                    std::scoped_lock usbLock(usbMutex);
                     eventClear(usbHsGetInterfaceStateChangeEvent());
                     if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
                     {
