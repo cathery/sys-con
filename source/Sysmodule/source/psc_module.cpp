@@ -32,11 +32,10 @@ namespace syscon::psc
                         switch (pscState)
                         {
                             case PscPmState_ReadyAwaken:
-                                WriteToLog("Enable usb events: 0x%x", usb::CreateUsbEvents());
+                                usb::CreateUsbEvents();
                                 break;
                             case PscPmState_ReadySleep:
                             case PscPmState_ReadyShutdown:
-                                WriteToLog("Destroy usb events");
                                 usb::DestroyUsbEvents();
                                 break;
                             default:
