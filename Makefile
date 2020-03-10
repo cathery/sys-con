@@ -1,19 +1,28 @@
-.PHONY: all build clean
+.PHONY: all build clean mrproper
+
+SOURCE_DIR		:=	source
+OUT_DIR			:=	out
+COMMON_DIR		:=	common
 
 all: build
-	rm -rf out
-	mkdir -p out/atmosphere/contents/690000000000000D/flags
-	mkdir -p out/config/sys-con
-	mkdir -p out/switch/
-	touch out/atmosphere/contents/690000000000000D/flags/boot2.flag
-	cp source/Sysmodule/sys-con.nsp out/atmosphere/contents/690000000000000D/exefs.nsp
-	cp source/AppletCompanion/sys-con.nro out/switch/sys-con.nro
-	cp -r common/. out/
-	@echo [DONE] sys-con compiled successfully. All files have been placed in out/
+	rm -rf $(OUT_DIR)
+	mkdir -p $(OUT_DIR)/atmosphere/contents/690000000000000D/flags
+	mkdir -p $(OUT_DIR)/config/sys-con
+	mkdir -p $(OUT_DIR)/switch/
+	touch $(OUT_DIR)/atmosphere/contents/690000000000000D/flags/boot2.flag
+	cp $(SOURCE_DIR)/Sysmodule/sys-con.nsp $(OUT_DIR)/atmosphere/contents/690000000000000D/exefs.nsp
+	cp $(SOURCE_DIR)/AppletCompanion/sys-con.nro $(OUT_DIR)/switch/sys-con.nro
+	cp -r $(COMMON_DIR)/. $(OUT_DIR)/
+	@echo [DONE] sys-con compiled successfully. All files have been placed in $(OUT_DIR)/
 
 build:
-	$(MAKE) -C source/
+	$(MAKE) -C $(SOURCE_DIR)
 
 clean:
-	$(MAKE) -C source/ clean
-	rm -rf out
+	$(MAKE) -C $(SOURCE_DIR) clean
+	rm -rf $(OUT_DIR)
+	
+mrproper:
+	$(MAKE) -C $(SOURCE_DIR) mrproper
+	rm -rf $(OUT_DIR)
+	

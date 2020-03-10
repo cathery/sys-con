@@ -5,7 +5,7 @@
             "label": "Build Release",
             "type": "shell",
             "promptOnClose": true,
-            "command": "make -j4",
+            "command": "make -j8",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
@@ -27,7 +27,7 @@
             }
         },
         {
-            "label": "Clean",
+            "label": "Clean only the project files",
             "type": "shell",
             "promptOnClose": true,
             "command": "make clean",
@@ -35,17 +35,18 @@
                 "reveal": "always",
                 "panel": "shared"
             },
-            "problemMatcher": {
-                "owner": "cpp",
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean everything",
+            "type": "shell",
+            "promptOnClose": true,
+            "command": "make mrproper",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
         }
     ]
 }
