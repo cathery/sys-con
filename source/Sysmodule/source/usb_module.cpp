@@ -39,7 +39,6 @@ namespace syscon::usb
         UsbHsInterface interfaces[MaxUsbHsInterfacesSize];
 
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol);
-        s32 QueryVendorProduct(uint16_t vendor_id, uint16_t product_id);
 
         void UsbEventThreadFunc(void *arg)
         {
@@ -150,18 +149,6 @@ namespace syscon::usb
                 .bInterfaceClass = iclass,
                 .bInterfaceSubClass = isubclass,
                 .bInterfaceProtocol = iprotocol,
-            };
-            s32 out_entries = 0;
-            usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &out_entries);
-            return out_entries;
-        }
-
-        s32 QueryVendorProduct(uint16_t vendor_id, uint16_t product_id)
-        {
-            UsbHsInterfaceFilter filter {
-                .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
-                .idVendor = vendor_id,
-                .idProduct = product_id,
             };
             s32 out_entries = 0;
             usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &out_entries);
