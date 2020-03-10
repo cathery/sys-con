@@ -198,7 +198,7 @@ namespace syscon::usb
 
     void Initialize()
     {
-        R_ASSERT(Enable());
+        R_ABORT_UNLESS(Enable());
     }
 
     void Exit()

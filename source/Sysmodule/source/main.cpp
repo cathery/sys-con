@@ -41,7 +41,7 @@ extern "C"
 namespace ams 
 {
     ncm::ProgramId CurrentProgramId = {0x690000000000000D};
-    namespace result { bool CallFatalOnResultAssertion = false; }
+    namespace result { bool CallFatalOnResultAssertion = true; }
 }
 
 
@@ -50,16 +50,16 @@ extern "C" void __appInit(void)
     ams::hos::SetVersionForLibnx();
     ams::sm::DoWithSession([] 
     {
-        R_ASSERT(timeInitialize());
-        R_ASSERT(hiddbgInitialize());
+        R_ABORT_UNLESS(timeInitialize());
+        R_ABORT_UNLESS(hiddbgInitialize());
         if (ams::hos::GetVersion() >= ams::hos::Version_700)
-            R_ASSERT(hiddbgAttachHdlsWorkBuffer());
-        R_ASSERT(usbHsInitialize());
-        R_ASSERT(pscmInitialize());
-        R_ASSERT(fsInitialize());
+            R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
+        R_ABORT_UNLESS(usbHsInitialize());
+        R_ABORT_UNLESS(pscmInitialize());
+        R_ABORT_UNLESS(fsInitialize());
     });
 
-    R_ASSERT(fsdevMountSdmc()); 
+    R_ABORT_UNLESS(fsdevMountSdmc()); 
 }
 
 extern "C" void __appExit(void)
