@@ -27,10 +27,10 @@ namespace syscon::usb
         void UsbDs4EventThreadFunc(void *arg);
         void UsbInterfaceChangeThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x20);
-        ams::os::StaticThread<0x2'000> g_ds3_event_thread(&UsbDs3EventThreadFunc, nullptr, 0x21);
-        ams::os::StaticThread<0x2'000> g_ds4_event_thread(&UsbDs4EventThreadFunc, nullptr, 0x22);
-        ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x23);
+        ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x3A);
+        ams::os::StaticThread<0x2'000> g_ds3_event_thread(&UsbDs3EventThreadFunc, nullptr, 0x3B);
+        ams::os::StaticThread<0x2'000> g_ds4_event_thread(&UsbDs4EventThreadFunc, nullptr, 0x3C);
+        ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x2C);
 
         bool is_usb_event_thread_running = false;
         bool is_usb_interface_change_thread_running = false;
