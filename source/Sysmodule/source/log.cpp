@@ -3,11 +3,11 @@
 #include "configFile.h"
 #include <stratosphere.hpp>
 
-static Mutex g_PrintMutex = 0;
+static ams::os::Mutex printMutex;
 
 void WriteToLog(const char *fmt, ...)
 {
-    mutexLock(&g_PrintMutex);
+    std::scoped_lock printLock(printMutex);
 
     u64 ts;
     TimeCalendarTime caltime;
@@ -27,13 +27,10 @@ void WriteToLog(const char *fmt, ...)
 
     fprintf(fp, "\n");
     fclose(fp);
-
-    mutexUnlock(&g_PrintMutex);
 }
 
 void LockedUpdateConsole()
 {
-    mutexLock(&g_PrintMutex);
+    std::scoped_lock printLock(printMutex);
     consoleUpdate(NULL);
-    mutexUnlock(&g_PrintMutex);
 }
