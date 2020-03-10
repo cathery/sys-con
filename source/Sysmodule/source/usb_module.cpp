@@ -168,7 +168,7 @@ namespace syscon::usb
             return out_entries;
         }
 
-        Result CreateCatchAllAvailableEvent()
+        inline Result CreateCatchAllAvailableEvent()
         {
             constexpr UsbHsInterfaceFilter filter {
                 .Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min,
@@ -177,7 +177,7 @@ namespace syscon::usb
             return usbHsCreateInterfaceAvailableEvent(&g_usbCatchAllEvent, true, CatchAllEventIndex, &filter);
         }
 
-        Result CreateDualshock3AvailableEvent()
+        inline Result CreateDualshock3AvailableEvent()
         {
             constexpr UsbHsInterfaceFilter filter {
                 .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
@@ -187,7 +187,7 @@ namespace syscon::usb
             return usbHsCreateInterfaceAvailableEvent(&g_usbDualshock3Event, true, Dualshock3EventIndex, &filter);
         }
 
-        Result CreateDualshock4AvailableEvent()
+        inline Result CreateDualshock4AvailableEvent()
         {
             const UsbHsInterfaceFilter filter{
                 .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
@@ -211,7 +211,7 @@ namespace syscon::usb
 
     Result Enable()
     {
-        CreateUsbEvents();
+        R_TRY(CreateUsbEvents());
 
         is_usb_event_thread_running = true;
         R_TRY(g_usb_event_thread.Start().GetValue());
@@ -245,9 +245,16 @@ namespace syscon::usb
 
     Result CreateUsbEvents()
     {
+        if (g_usbCatchAllEvent.revent != INVALID_HANDLE)
+            return 0x99;
         R_TRY(CreateCatchAllAvailableEvent());
         R_TRY(CreateDualshock3AvailableEvent());
         R_TRY(CreateDualshock4AvailableEvent());
+        /*
+        R_TRY(g_usb_event_thread.CancelSynchronization().GetValue());
+        R_TRY(g_ds3_event_thread.CancelSynchronization().GetValue());
+        R_TRY(g_ds4_event_thread.CancelSynchronization().GetValue());
+        */
         return 0;
     }
 
