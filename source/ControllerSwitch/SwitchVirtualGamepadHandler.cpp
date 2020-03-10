@@ -42,7 +42,6 @@ Result SwitchVirtualGamepadHandler::InitInputThread()
 void SwitchVirtualGamepadHandler::ExitInputThread()
 {
     m_inputThreadIsRunning = false;
-    m_inputThread.CancelSynchronization();
     m_inputThread.Join();
 }
 
@@ -56,6 +55,5 @@ Result SwitchVirtualGamepadHandler::InitOutputThread()
 void SwitchVirtualGamepadHandler::ExitOutputThread()
 {
     m_outputThreadIsRunning = false;
-    m_outputThread.CancelSynchronization();
     m_outputThread.Join();
 }
