@@ -1,7 +1,7 @@
 #include "SwitchControllerHandler.h"
 #include <cmath>
 
-#define JOYSTICK_MAX_FIXED (JOYSTICK_MAX - 1)
+#define JOYSTICK_MAX_FIXED (JOYSTICK_MAX)
 #define JOYSTICK_MIN_FIXED (JOYSTICK_MIN + 1)
 
 static_assert(
