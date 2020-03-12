@@ -34,7 +34,7 @@ void SwitchVirtualGamepadHandler::OutputThreadLoop(void *handler)
 
 Result SwitchVirtualGamepadHandler::InitInputThread()
 {
-    R_TRY(m_inputThread.Initialize(&SwitchVirtualGamepadHandler::InputThreadLoop, this, 0x3F).GetValue());
+    R_TRY(m_inputThread.Initialize(&SwitchVirtualGamepadHandler::InputThreadLoop, this, 0x30).GetValue());
     m_inputThreadIsRunning = true;
     return m_inputThread.Start().GetValue();
 }
@@ -47,7 +47,7 @@ void SwitchVirtualGamepadHandler::ExitInputThread()
 
 Result SwitchVirtualGamepadHandler::InitOutputThread()
 {
-    R_TRY(m_outputThread.Initialize(&SwitchVirtualGamepadHandler::OutputThreadLoop, this, 0x3F).GetValue());
+    R_TRY(m_outputThread.Initialize(&SwitchVirtualGamepadHandler::OutputThreadLoop, this, 0x30).GetValue());
     m_outputThreadIsRunning = true;
     return m_outputThread.Start().GetValue();
 }
