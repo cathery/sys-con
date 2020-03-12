@@ -8,6 +8,7 @@
 #include "SwitchUSBDevice.h"
 #include "ControllerHelpers.h"
 #include "log.h"
+#include <string.h>
 
 namespace syscon::usb
 {
@@ -120,6 +121,7 @@ namespace syscon::usb
 
                     std::scoped_lock usbLock(usbMutex);
                     eventClear(usbHsGetInterfaceStateChangeEvent());
+                    memset(interfaces, 0, sizeof(interfaces));
                     if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
                     {
                         for (auto it = controllers::Get().begin(); it != controllers::Get().end(); ++it)
@@ -161,6 +163,7 @@ namespace syscon::usb
                 .bInterfaceProtocol = iprotocol,
             };
             s32 out_entries = 0;
+            memset(interfaces, 0, sizeof(interfaces));
             usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &out_entries);
             return out_entries;
         }
