@@ -1,6 +1,6 @@
 #include "switch.h"
 #include "log.h"
-#include "configFile.h"
+#include "config_handler.h"
 #include <stratosphere.hpp>
 
 static ams::os::Mutex printMutex;
