@@ -15,13 +15,12 @@ namespace syscon::psc
 
         void PscThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x2'000> g_psc_thread(&PscThreadFunc, nullptr, 0x2C);
+        ams::os::StaticThread<0x1'000> g_psc_thread(&PscThreadFunc, nullptr, 0x2C);
 
         bool is_psc_thread_running = false;
 
         void PscThreadFunc(void *arg)
         {
-            WriteToLog("Starting PSC thread!");
             do {
                 if (R_SUCCEEDED(waitSingle(pscModuleWaiter, U64_MAX)))
                 {
