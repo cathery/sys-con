@@ -42,10 +42,10 @@ namespace syscon::usb
         UsbHsInterface interfaces[MaxUsbHsInterfacesSize];
 
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol);
+        s32 QueryVendorProduct(uint16_t vendor_id, uint16_t product_id);
 
         void UsbEventThreadFunc(void *arg)
         {
-            WriteToLog("Starting USB Catch-all Event Thread!");
             do {
                 if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
                 {
@@ -74,7 +74,6 @@ namespace syscon::usb
 
         void UsbDs3EventThreadFunc(void *arg)
         {
-            WriteToLog("Starting USB DS3 Event Thread!");
             do {
                 if (R_SUCCEEDED(eventWait(&g_usbDualshock3Event, U64_MAX)))
                 {
@@ -84,7 +83,8 @@ namespace syscon::usb
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
-                        if ((total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
+                        if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3) != 0)
+                        && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
                             WriteToLog("Initializing Dualshock 3 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
                     }
                 }
@@ -93,7 +93,6 @@ namespace syscon::usb
 
         void UsbDs4EventThreadFunc(void *arg)
         {
-            WriteToLog("Starting USB DS4 Event Thread!");
             do {
                 if (R_SUCCEEDED(eventWait(&g_usbDualshock4Event, U64_MAX)))
                 {
@@ -103,7 +102,8 @@ namespace syscon::usb
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
-                        if ((total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
+                        if ((QueryVendorProduct(VENDOR_SONY, config::globalConfig.dualshock4_productID) != 0)
+                        && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
                             WriteToLog("Initializing Dualshock 4 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
                     }
                 }
@@ -112,7 +112,6 @@ namespace syscon::usb
 
         void UsbInterfaceChangeThreadFunc(void *arg)
         {
-            WriteToLog("Starting USB Interface Change Thread!");
             do {
                 if (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
                 {
@@ -164,6 +163,18 @@ namespace syscon::usb
             };
             s32 out_entries = 0;
             memset(interfaces, 0, sizeof(interfaces));
+            usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &out_entries);
+            return out_entries;
+        }
+
+        s32 QueryVendorProduct(uint16_t vendor_id, uint16_t product_id)
+        {
+            UsbHsInterfaceFilter filter {
+                .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
+                .idVendor = vendor_id,
+                .idProduct = product_id,
+            };
+            s32 out_entries = 0;
             usbHsQueryAvailableInterfaces(&filter, interfaces, sizeof(interfaces), &out_entries);
             return out_entries;
         }
