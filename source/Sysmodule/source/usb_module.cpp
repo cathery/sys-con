@@ -47,7 +47,7 @@ namespace syscon::usb
         void UsbEventThreadFunc(void *arg)
         {
             do {
-                if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, U64_MAX)))
+                if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, UINT64_MAX)))
                 {
                     WriteToLog("Catch-all event went off");
 
@@ -75,7 +75,7 @@ namespace syscon::usb
         void UsbDs3EventThreadFunc(void *arg)
         {
             do {
-                if (R_SUCCEEDED(eventWait(&g_usbDualshock3Event, U64_MAX)))
+                if (R_SUCCEEDED(eventWait(&g_usbDualshock3Event, UINT64_MAX)))
                 {
                     WriteToLog("Dualshock 3 event went off");
 
@@ -94,7 +94,7 @@ namespace syscon::usb
         void UsbDs4EventThreadFunc(void *arg)
         {
             do {
-                if (R_SUCCEEDED(eventWait(&g_usbDualshock4Event, U64_MAX)))
+                if (R_SUCCEEDED(eventWait(&g_usbDualshock4Event, UINT64_MAX)))
                 {
                     WriteToLog("Dualshock 4 event went off");
 

@@ -22,7 +22,7 @@ namespace syscon::psc
         void PscThreadFunc(void *arg)
         {
             do {
-                if (R_SUCCEEDED(waitSingle(pscModuleWaiter, U64_MAX)))
+                if (R_SUCCEEDED(waitSingle(pscModuleWaiter, UINT64_MAX)))
                 {
                     PscPmState pscState;
                     u32 out_flags;

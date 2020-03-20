@@ -1,12 +1,9 @@
 #include "SwitchControllerHandler.h"
 #include <cmath>
 
-#define JOYSTICK_MAX_FIXED (JOYSTICK_MAX)
-#define JOYSTICK_MIN_FIXED (JOYSTICK_MIN + 1)
-
 static_assert(
-    JOYSTICK_MAX_FIXED == 32767 && JOYSTICK_MIN_FIXED == -32767, 
-    "Seems like you're using a libnx build that has fixed the joystick values, please remove these _FIXED defines and use the unmodified joystick values instead"
+    JOYSTICK_MAX == 32767 && JOYSTICK_MIN == -32767, 
+    "JOYSTICK_MAX and/or JOYSTICK_MIN has incorrect values. Update libnx"
 );
 
 SwitchControllerHandler::SwitchControllerHandler(std::unique_ptr<IController> &&controller)
@@ -36,10 +33,10 @@ void SwitchControllerHandler::ConvertAxisToSwitchAxis(float x, float y, float de
 {
     float floatRange = 2.0f;
     //JOYSTICK_MAX is 1 above and JOYSTICK_MIN is 1 below acceptable joystick values, causing crashes on various games including Xenoblade Chronicles 2 and Resident Evil 4
-    float newRange = (JOYSTICK_MAX_FIXED - JOYSTICK_MIN_FIXED);
+    float newRange = (JOYSTICK_MAX - JOYSTICK_MIN);
 
-    *x_out = (((x + 1.0f) * newRange) / floatRange) + JOYSTICK_MIN_FIXED;
-    *y_out = (((y + 1.0f) * newRange) / floatRange) + JOYSTICK_MIN_FIXED;
+    *x_out = (((x + 1.0f) * newRange) / floatRange) + JOYSTICK_MIN;
+    *y_out = (((y + 1.0f) * newRange) / floatRange) + JOYSTICK_MIN;
     /*
     OldRange = (OldMax - OldMin)  
     NewRange = (NewMax - NewMin)  

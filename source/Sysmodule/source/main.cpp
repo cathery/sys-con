@@ -59,7 +59,7 @@ extern "C" void __appInit(void)
         R_ABORT_UNLESS(fsInitialize());
     });
 
-    R_ABORT_UNLESS(fsdevMountSdmc()); 
+    R_ABORT_UNLESS(fsdevMountSdmc());
 }
 
 extern "C" void __appExit(void)
