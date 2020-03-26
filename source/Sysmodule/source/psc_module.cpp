@@ -48,7 +48,7 @@ namespace syscon::psc
     }
     Result Initialize()
     {
-        R_TRY(pscmGetPmModule(&pscModule, static_cast<PscPmModuleId>(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true));
+        R_TRY(pscmGetPmModule(&pscModule, PscPmModuleId(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true));
         pscModuleWaiter = waiterForEvent(&pscModule.event);
         is_psc_thread_running = true;
         return g_psc_thread.Start().GetValue();
