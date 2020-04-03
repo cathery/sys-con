@@ -15,6 +15,8 @@ enum VendorIDs : uint16_t
 {
     VENDOR_MICROSOFT = 0x45e,
     VENDOR_SONY = 0x54c,
+    VENDOR_VENOM = 0x79,
+    VENDOR_HORI = 0xf0d,
 };
 
 enum ProductIDs : uint16_t
@@ -29,6 +31,11 @@ enum ProductIDs : uint16_t
     PRODUCT_DUALSHOCK3 = 0x268,
     PRODUCT_DUALSHOCK4_1X = 0x5c4,
     PRODUCT_DUALSHOCK4_2X = 0x9cc,
+    
+    PRODUCT_VENOM_PS3 = 0x181a,
+    PRODUCT_VENOM_PS4 = 0x181b,
+    
+    PRODUCT_HORI_PS4_FS = 0x87,
 };
 
 enum ControllerSupport : uint8_t
