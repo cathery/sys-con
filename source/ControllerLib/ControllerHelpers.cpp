@@ -40,6 +40,18 @@ bool DoesControllerSupport(ControllerType type, ControllerSupport supportType)
         default:
             return false;
         }
+    case CONTROLLER_DUALSHOCK4:
+        switch (supportType)
+        {
+        case SUPPORTS_RUMBLE:
+            return true;
+        case SUPPORTS_BLUETOOTH:
+            return true;
+        case SUPPORTS_SIXAXIS:
+            return true;
+        default:
+            return false;
+        }
     default:
         return false;
     }
