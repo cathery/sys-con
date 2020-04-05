@@ -47,7 +47,7 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 
 Like all other switch projects, you need to have [devkitPro](https://switchbrew.org/wiki/Setting_up_Development_Environment) set up on your system.
 
-You will need to compile and use the master branch of [libnx](https://github.com/switchbrew/libnx) due to a [dependency](https://github.com/switchbrew/libnx/commit/c3b0b63471ee5309ea5040ad98f21919022ac9c7) in libstratosphere.
+This project uses libnx version 3.1.0 or later.
 
 If you have **Visual Studio Code**, you can open the project as a folder and run the build tasks from inside the program. It also has Intellisense configured for switch development, if you have DEVKITPRO correctly defined in your environment variables. Handy!
 
