@@ -82,6 +82,16 @@ Result CreateDualshock4AvailableEvent(Event &out)
     return rc;
 }
 
+Result CreateHoriPs4TataconAvailableEvent(Event &out)
+{
+    g_filter = {};
+    g_filter.Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct;
+    g_filter.idVendor = VENDOR_HORI;
+    g_filter.idProduct = PRODUCT_HORI_PS4_TATACON;
+    Result rc = usbHsCreateInterfaceAvailableEvent(&out, true, DS4EVENT_INDEX, &g_filter);
+    return rc;
+}
+
 Result CreateAllAvailableEvent(Event &out)
 {
     g_filter = {};
@@ -121,18 +131,22 @@ Result QueryVendorProduct(UsbHsInterface *interfaces, size_t interfaces_size, s3
 Event catchAllEvent;
 Event ds3Event;
 Event ds4Event;
+Event horiPs4TataconEvent;
 
 Result inline OpenEvents()
 {
     Result rc = CreateAllAvailableEvent(catchAllEvent);
     if (R_FAILED(rc))
-        return 3;
+        return 4;
     rc = CreateDualshck3AvailableEvent(ds3Event);
     if (R_FAILED(rc))
         return 1;
     rc = CreateDualshock4AvailableEvent(ds4Event);
     if (R_FAILED(rc))
         return 2;
+    rc = CreateHoriPs4TataconAvailableEvent(horiPs4TataconEvent);
+    if (R_FAILED(rc))
+        return 3;
 
     return 0;
 }
@@ -141,7 +155,9 @@ void inline CloseEvents()
 {
     usbHsDestroyInterfaceAvailableEvent(&ds3Event, DS3EVENT_INDEX);
     usbHsDestroyInterfaceAvailableEvent(&ds4Event, DS4EVENT_INDEX);
+    usbHsDestroyInterfaceAvailableEvent(&horiPs4TataconEvent, DS4EVENT_INDEX);
     usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, ALLEVENT_INDEX);
+
 }
 
 struct PSCLoopBuffer
@@ -222,6 +238,12 @@ void CheckForInterfaces()
             controllerPtr = std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
             WriteToLog("Registered DS4 controller");
         }
+        else if (R_SUCCEEDED(QueryVendorProduct(interfaces, sizeof(interfaces), &total_entries, VENDOR_HORI, PRODUCT_HORI_PS4_TATACON)))
+        {
+            controllerPtr = std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries));
+            WriteToLog("Registered HORI PS4 Tatacon controller");
+        }
+
         CallInitHandler(controllerPtr);
     }
 }
