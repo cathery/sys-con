@@ -131,6 +131,7 @@ Result QueryVendorProduct(UsbHsInterface *interfaces, size_t interfaces_size, s3
 Event catchAllEvent;
 Event ds3Event;
 Event ds4Event;
+Event horiPs4TataconEvent;
 
 Result inline OpenEvents()
 {
@@ -145,7 +146,7 @@ Result inline OpenEvents()
         return 2;
     rc = CreateHoriPs4TataconAvailableEvent(horiPs4TataconEvent);
     if (R_FAILED(rc))
-        return 2;
+        return 3;
 
     return 0;
 }
@@ -154,7 +155,9 @@ void inline CloseEvents()
 {
     usbHsDestroyInterfaceAvailableEvent(&ds3Event, DS3EVENT_INDEX);
     usbHsDestroyInterfaceAvailableEvent(&ds4Event, DS4EVENT_INDEX);
+    usbHsDestroyInterfaceAvailableEvent(&horiPs4TataconEvent, DS4EVENT_INDEX);
     usbHsDestroyInterfaceAvailableEvent(&catchAllEvent, ALLEVENT_INDEX);
+
 }
 
 struct PSCLoopBuffer
