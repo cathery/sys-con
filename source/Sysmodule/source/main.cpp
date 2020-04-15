@@ -47,12 +47,18 @@ namespace ams
 
 extern "C" void __appInit(void)
 {
-    ams::hos::SetVersionForLibnx();
     ams::sm::DoWithSession([] 
     {
+        //Initialize system firmware version
+        R_ABORT_UNLESS(setsysInitialize());
+        SetSysFirmwareVersion fw;
+        R_ABORT_UNLESS(setsysGetFirmwareVersion(&fw));
+        hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
+        setsysExit();
+
         R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(hiddbgInitialize());
-        if (ams::hos::GetVersion() >= ams::hos::Version_700)
+        if (hosversionAtLeast(7,0,0))
             R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
         R_ABORT_UNLESS(usbHsInitialize());
         //R_ABORT_UNLESS(pscmInitialize());
