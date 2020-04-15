@@ -61,7 +61,7 @@ extern "C" void __appInit(void)
         if (hosversionAtLeast(7,0,0))
             R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
         R_ABORT_UNLESS(usbHsInitialize());
-        //R_ABORT_UNLESS(pscmInitialize());
+        R_ABORT_UNLESS(pscmInitialize());
         R_ABORT_UNLESS(fsInitialize());
     });
 
@@ -70,7 +70,7 @@ extern "C" void __appInit(void)
 
 extern "C" void __appExit(void)
 {
-    //pscmExit();
+    pscmExit();
     usbHsExit();
     hiddbgReleaseHdlsWorkBuffer();
     hiddbgExit();
@@ -87,14 +87,14 @@ int main(int argc, char *argv[])
     config::Initialize();
     controllers::Initialize();
     usb::Initialize();
-    //psc::Initialize();
+    psc::Initialize();
 
     while (true)
     {
         svcSleepThread(1e+8L);
     }
 
-    //psc::Exit();
+    psc::Exit();
     usb::Exit();
     controllers::Exit();
     config::Exit();
