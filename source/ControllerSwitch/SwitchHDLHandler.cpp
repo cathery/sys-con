@@ -100,6 +100,7 @@ Result SwitchHDLHandler::UpdateHdlState()
 
 void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
 {
+    // we convert the input packet into switch-specific button states
     m_hdlState.buttons = 0;
 
     m_hdlState.buttons |= (data.buttons[0] ? KEY_X : 0);
@@ -135,10 +136,9 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
         daxis_y += data.buttons[14] ? -1.0f : 0.0f; //DDOWN
         daxis_x += data.buttons[15] ? -1.0f : 0.0f; //DLEFT
 
+        // clamp lefstick values to their acceptable range of values
         float real_magnitude = std::sqrt(daxis_x * daxis_x + daxis_y * daxis_y);
-
         float clipped_magnitude = std::min(1.0f, real_magnitude);
-
         float ratio = clipped_magnitude / real_magnitude;
 
         daxis_x *= ratio;
@@ -165,17 +165,19 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
 
 void SwitchHDLHandler::UpdateInput()
 {
-    Result rc;
-    rc = GetController()->GetInput();
+    // We process any input packets here. If it fails, return and try again
+    Result rc = GetController()->GetInput();
     if (R_FAILED(rc))
         return;
 
+    // This is a check for controllers that can prompt themselves to go inactive - e.g. wireless Xbox 360 controllers
     if (!GetController()->IsControllerActive())
     {
         hiddbgDetachHdlsVirtualDevice(m_hdlHandle);
     }
     else
     {
+        // We get the button inputs from the input packet and update the state of our controller
         FillHdlState(GetController()->GetNormalizedButtonData());
         rc = UpdateHdlState();
         if (R_FAILED(rc))
@@ -185,9 +187,11 @@ void SwitchHDLHandler::UpdateInput()
 
 void SwitchHDLHandler::UpdateOutput()
 {
+    // Process a single output packet from a buffer 
     if (R_SUCCEEDED(GetController()->OutputBuffer()))
         return;
 
+    // Process rumble values if supported
     if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_RUMBLE))
     {
         Result rc;
