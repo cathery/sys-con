@@ -44,10 +44,7 @@ Result SwitchUSBEndpoint::Write(const void *inBuffer, size_t bufferSize)
         return -1;
     u32 transferredSize = 0;
 
-    for (size_t byte = 0; byte != bufferSize; ++byte)
-    {
-        static_cast<uint8_t *>(m_buffer)[byte] = static_cast<const uint8_t *>(inBuffer)[byte];
-    }
+    memcpy(m_buffer, inBuffer, bufferSize);
 
     Result rc = usbHsEpPostBuffer(&m_epSession, m_buffer, bufferSize, &transferredSize);
 
@@ -69,10 +66,7 @@ Result SwitchUSBEndpoint::Read(void *outBuffer, size_t bufferSize)
 
     if (R_SUCCEEDED(rc))
     {
-        for (u32 byte = 0; byte != transferredSize; ++byte)
-        {
-            static_cast<uint8_t *>(outBuffer)[byte] = static_cast<uint8_t *>(m_buffer)[byte];
-        }
+        memcpy(outBuffer, m_buffer, transferredSize);
     }
     return rc;
 }
