@@ -13,7 +13,6 @@ SwitchControllerHandler::SwitchControllerHandler(std::unique_ptr<IController> &&
 
 SwitchControllerHandler::~SwitchControllerHandler()
 {
-    Exit();
 }
 
 Result SwitchControllerHandler::Initialize()
