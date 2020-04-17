@@ -11,6 +11,11 @@ SwitchUSBEndpoint::SwitchUSBEndpoint(UsbHsClientIfSession &if_session, usb_endpo
 SwitchUSBEndpoint::~SwitchUSBEndpoint()
 {
     Close();
+    if (m_buffer != nullptr)
+    {
+        free(m_buffer);
+        m_buffer = nullptr;
+    }
 }
 
 Result SwitchUSBEndpoint::Open(int maxPacketSize)
@@ -21,6 +26,8 @@ Result SwitchUSBEndpoint::Open(int maxPacketSize)
     if (R_FAILED(rc))
         return 73011;
 
+    if (m_buffer != nullptr)
+        free(m_buffer);
     m_buffer = memalign(0x1000, maxPacketSize);
     if (m_buffer == nullptr)
         return -1;
@@ -29,12 +36,6 @@ Result SwitchUSBEndpoint::Open(int maxPacketSize)
 
 void SwitchUSBEndpoint::Close()
 {
-    if (m_buffer != nullptr)
-    {
-        free(m_buffer);
-        m_buffer = nullptr;
-    }
-
     usbHsEpClose(&m_epSession);
 }
 
