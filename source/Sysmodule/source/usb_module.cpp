@@ -119,6 +119,8 @@ namespace syscon::usb
                     WriteToLog("Interface state was changed");
 
                     std::scoped_lock usbLock(usbMutex);
+                    std::scoped_lock controllersLock(controllers::GetScopedLock());
+
                     eventClear(usbHsGetInterfaceStateChangeEvent());
                     memset(interfaces, 0, sizeof(interfaces));
                     if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
