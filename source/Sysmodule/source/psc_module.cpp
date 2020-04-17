@@ -36,6 +36,7 @@ namespace syscon::psc
                             case PscPmState_ReadySleep:
                             case PscPmState_ReadyShutdown:
                                 usb::DestroyUsbEvents();
+                                controllers::Reset();
                                 break;
                             default:
                                 break;
