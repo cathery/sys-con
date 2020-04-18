@@ -10,7 +10,6 @@ SwitchUSBDevice::SwitchUSBDevice(UsbHsInterface *interfaces, int length)
 
 SwitchUSBDevice::~SwitchUSBDevice()
 {
-    Close();
 }
 
 SwitchUSBDevice::SwitchUSBDevice()

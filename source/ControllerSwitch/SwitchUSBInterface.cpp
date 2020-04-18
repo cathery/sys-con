@@ -10,7 +10,6 @@ SwitchUSBInterface::SwitchUSBInterface(UsbHsInterface &interface)
 
 SwitchUSBInterface::~SwitchUSBInterface()
 {
-    Close();
 }
 
 Result SwitchUSBInterface::Open()
