@@ -14,7 +14,7 @@ Xbox360WirelessController::Xbox360WirelessController(std::unique_ptr<IUSBDevice>
 
 Xbox360WirelessController::~Xbox360WirelessController()
 {
-    Exit();
+    //Exit();
 }
 
 Result Xbox360WirelessController::Initialize()
