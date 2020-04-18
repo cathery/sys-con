@@ -10,7 +10,6 @@ SwitchUSBEndpoint::SwitchUSBEndpoint(UsbHsClientIfSession &if_session, usb_endpo
 
 SwitchUSBEndpoint::~SwitchUSBEndpoint()
 {
-    Close();
     if (m_buffer != nullptr)
     {
         free(m_buffer);
