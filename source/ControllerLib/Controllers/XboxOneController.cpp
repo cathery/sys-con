@@ -68,7 +68,7 @@ XboxOneController::XboxOneController(std::unique_ptr<IUSBDevice> &&interface)
 
 XboxOneController::~XboxOneController()
 {
-    Exit();
+    //Exit();
 }
 
 Result XboxOneController::Initialize()

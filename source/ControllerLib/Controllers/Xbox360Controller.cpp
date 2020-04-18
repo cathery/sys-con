@@ -10,7 +10,7 @@ Xbox360Controller::Xbox360Controller(std::unique_ptr<IUSBDevice> &&interface)
 
 Xbox360Controller::~Xbox360Controller()
 {
-    Exit();
+    //Exit();
 }
 
 Result Xbox360Controller::Initialize()

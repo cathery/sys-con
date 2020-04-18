@@ -10,7 +10,7 @@ Dualshock3Controller::Dualshock3Controller(std::unique_ptr<IUSBDevice> &&interfa
 
 Dualshock3Controller::~Dualshock3Controller()
 {
-    Exit();
+    //Exit();
 }
 
 Result Dualshock3Controller::Initialize()

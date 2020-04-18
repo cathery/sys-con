@@ -11,7 +11,7 @@ Dualshock4Controller::Dualshock4Controller(std::unique_ptr<IUSBDevice> &&interfa
 
 Dualshock4Controller::~Dualshock4Controller()
 {
-    Exit();
+    //Exit();
 }
 
 Result Dualshock4Controller::SendInitBytes()
