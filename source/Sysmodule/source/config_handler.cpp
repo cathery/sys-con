@@ -306,6 +306,7 @@ namespace syscon::config
 
     Result Initialize()
     {
+        DiscardOldLogs();
         config::LoadAllConfigs();
         config::CheckForFileChanges();
         utimerCreate(&filecheckTimer, 1e+9L, TimerType_Repeating);
