@@ -42,13 +42,15 @@ Result SwitchAbstractedPadHandler::Initialize()
 
 void SwitchAbstractedPadHandler::Exit()
 {
-    m_controllerHandler.Exit();
-
     if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
+    {
+        m_controllerHandler.Exit();
         return;
+    }
 
     ExitInputThread();
     ExitOutputThread();
+    m_controllerHandler.Exit();
     ExitAbstractedPadState();
 }
 
