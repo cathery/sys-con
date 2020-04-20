@@ -82,86 +82,75 @@ namespace syscon::config
 
         int ParseConfigLine(void *dummy, const char *section, const char *name, const char *value)
         {
-            if (strcmp(section, "global") == 0)
+            if (strncmp(name, "key_", 4) == 0)
             {
-                if (strcmp(name, "use_dualshock_2nd_generation") == 0)
-                {
-                    tempGlobalConfig.dualshock4_productID = (strcmp(value, "true") ? PRODUCT_DUALSHOCK4_1X : PRODUCT_DUALSHOCK4_2X);
-                    return 1;
-                }
+                ControllerButton button = StringToKey(name + 4);
+                ControllerButton buttonValue = StringToKey(value);
+                tempConfig.buttons[button] = buttonValue;
+                tempConfig.buttons[buttonValue] = button;
+                return 1;
             }
-            else
+            else if (strcmp(name, "left_stick_deadzone") == 0)
             {
-                if (strncmp(name, "key_", 4) == 0)
+                tempConfig.leftStickDeadzonePercent = atoi(value);
+                return 1;
+            }
+            else if (strcmp(name, "right_stick_deadzone") == 0)
+            {
+                tempConfig.rightStickDeadzonePercent = atoi(value);
+                return 1;
+            }
+            else if (strcmp(name, "left_stick_rotation") == 0)
+            {
+                tempConfig.leftStickRotationDegrees = atoi(value);
+                return 1;
+            }
+            else if (strcmp(name, "right_stick_rotation") == 0)
+            {
+                tempConfig.rightStickRotationDegrees = atoi(value);
+                return 1;
+            }
+            else if (strcmp(name, "trigger_deadzone") == 0)
+            {
+                tempConfig.triggerDeadzonePercent = atoi(value);
+                return 1;
+            }
+            else if (strcmp(name, "swap_dpad_and_lstick") == 0)
+            {
+                tempConfig.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
+                return 1;
+            }
+            else if (strcmp(name, "firmware_path") == 0)
+            {
+                strcpy(firmwarePath, value);
+                return 1;
+            }
+            else if (strncmp(name, "color_", 6) == 0)
+            {
+                if (strcmp(name + 6, "body") == 0)
                 {
-                    ControllerButton button = StringToKey(name + 4);
-                    ControllerButton buttonValue = StringToKey(value);
-                    tempConfig.buttons[button] = buttonValue;
-                    tempConfig.buttons[buttonValue] = button;
+                    tempConfig.bodyColor = DecodeColorValue(value);
                     return 1;
                 }
-                else if (strcmp(name, "left_stick_deadzone") == 0)
+                else if (strcmp(name + 6, "buttons") == 0)
                 {
-                    tempConfig.leftStickDeadzonePercent = atoi(value);
+                    tempConfig.buttonsColor = DecodeColorValue(value);
                     return 1;
                 }
-                else if (strcmp(name, "right_stick_deadzone") == 0)
+                else if (strcmp(name + 6, "leftGrip") == 0)
                 {
-                    tempConfig.rightStickDeadzonePercent = atoi(value);
+                    tempConfig.leftGripColor = DecodeColorValue(value);
                     return 1;
                 }
-                else if (strcmp(name, "left_stick_rotation") == 0)
+                else if (strcmp(name + 6, "rightGrip") == 0)
                 {
-                    tempConfig.leftStickRotationDegrees = atoi(value);
+                    tempConfig.rightGripColor = DecodeColorValue(value);
                     return 1;
                 }
-                else if (strcmp(name, "right_stick_rotation") == 0)
+                else if (strcmp(name + 6, "led") == 0)
                 {
-                    tempConfig.rightStickRotationDegrees = atoi(value);
+                    tempColor = DecodeColorValue(value);
                     return 1;
-                }
-                else if (strcmp(name, "trigger_deadzone") == 0)
-                {
-                    tempConfig.triggerDeadzonePercent = atoi(value);
-                    return 1;
-                }
-                else if (strcmp(name, "swap_dpad_and_lstick") == 0)
-                {
-                    tempConfig.swapDPADandLSTICK = (strcmp(value, "true") ? false : true);
-                    return 1;
-                }
-                else if (strcmp(name, "firmware_path") == 0)
-                {
-                    strcpy(firmwarePath, value);
-                    return 1;
-                }
-                else if (strncmp(name, "color_", 6) == 0)
-                {
-                    if (strcmp(name + 6, "body") == 0)
-                    {
-                        tempConfig.bodyColor = DecodeColorValue(value);
-                        return 1;
-                    }
-                    else if (strcmp(name + 6, "buttons") == 0)
-                    {
-                        tempConfig.buttonsColor = DecodeColorValue(value);
-                        return 1;
-                    }
-                    else if (strcmp(name + 6, "leftGrip") == 0)
-                    {
-                        tempConfig.leftGripColor = DecodeColorValue(value);
-                        return 1;
-                    }
-                    else if (strcmp(name + 6, "rightGrip") == 0)
-                    {
-                        tempConfig.rightGripColor = DecodeColorValue(value);
-                        return 1;
-                    }
-                    else if (strcmp(name + 6, "led") == 0)
-                    {
-                        tempColor = DecodeColorValue(value);
-                        return 1;
-                    }
                 }
             }
 
@@ -189,7 +178,6 @@ namespace syscon::config
                     {
                         WriteToLog("File check succeeded! Loading configs...");
                         config::LoadAllConfigs();
-                        usb::ReloadDualshock4Event();
                     }
                 }
             } while (is_config_changed_check_thread_running);

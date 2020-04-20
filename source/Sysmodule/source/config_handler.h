@@ -14,12 +14,10 @@ namespace syscon::config
 {
     struct GlobalConfig
     {
-        uint16_t dualshock4_productID;
     };
 
     inline GlobalConfig globalConfig
     {
-        .dualshock4_productID = PRODUCT_DUALSHOCK4_1X,
     };
 
     void LoadGlobalConfig(const GlobalConfig &config);
