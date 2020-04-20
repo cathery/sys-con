@@ -15,8 +15,7 @@ namespace syscon::usb
     namespace
     {
         constexpr u8 CatchAllEventIndex = 2;
-        constexpr u8 Dualshock3EventIndex = 0;
-        constexpr u8 Dualshock4EventIndex = 1;
+        constexpr u8 SonyEventIndex = 0;
 
 
         constexpr size_t MaxUsbHsInterfacesSize = 16;
@@ -24,21 +23,18 @@ namespace syscon::usb
         ams::os::Mutex usbMutex;
 
         void UsbEventThreadFunc(void *arg);
-        void UsbDs3EventThreadFunc(void *arg);
-        void UsbDs4EventThreadFunc(void *arg);
+        void UsbSonyEventThreadFunc(void *arg);
         void UsbInterfaceChangeThreadFunc(void *arg);
 
         ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x3A);
-        ams::os::StaticThread<0x2'000> g_ds3_event_thread(&UsbDs3EventThreadFunc, nullptr, 0x3B);
-        ams::os::StaticThread<0x2'000> g_ds4_event_thread(&UsbDs4EventThreadFunc, nullptr, 0x3C);
+        ams::os::StaticThread<0x2'000> g_sony_event_thread(&UsbSonyEventThreadFunc, nullptr, 0x3B);
         ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x2C);
 
         bool is_usb_event_thread_running = false;
         bool is_usb_interface_change_thread_running = false;
 
         Event g_usbCatchAllEvent{};
-        Event g_usbDualshock3Event{};
-        Event g_usbDualshock4Event{};
+        Event g_usbSonyEvent{};
         UsbHsInterface interfaces[MaxUsbHsInterfacesSize];
 
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol);
@@ -72,12 +68,12 @@ namespace syscon::usb
             } while (is_usb_event_thread_running);
         }
 
-        void UsbDs3EventThreadFunc(void *arg)
+        void UsbSonyEventThreadFunc(void *arg)
         {
             do {
-                if (R_SUCCEEDED(eventWait(&g_usbDualshock3Event, UINT64_MAX)))
+                if (R_SUCCEEDED(eventWait(&g_usbSonyEvent, UINT64_MAX)))
                 {
-                    WriteToLog("Dualshock 3 event went off");
+                    WriteToLog("Sony event went off");
 
                     std::scoped_lock usbLock(usbMutex);
                     if (!controllers::IsAtControllerLimit())
@@ -86,23 +82,8 @@ namespace syscon::usb
                         if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3) != 0)
                         && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
                             WriteToLog("Initializing Dualshock 3 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
-                    }
-                }
-            } while (is_usb_event_thread_running);
-        }
 
-        void UsbDs4EventThreadFunc(void *arg)
-        {
-            do {
-                if (R_SUCCEEDED(eventWait(&g_usbDualshock4Event, UINT64_MAX)))
-                {
-                    WriteToLog("Dualshock 4 event went off");
-
-                    std::scoped_lock usbLock(usbMutex);
-                    if (!controllers::IsAtControllerLimit())
-                    {
-                        s32 total_entries;
-                        if ((QueryVendorProduct(VENDOR_SONY, config::globalConfig.dualshock4_productID) != 0)
+                        else if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_1X) != 0 || QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X) != 0)
                         && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
                             WriteToLog("Initializing Dualshock 4 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
                     }
@@ -190,24 +171,13 @@ namespace syscon::usb
             return usbHsCreateInterfaceAvailableEvent(&g_usbCatchAllEvent, true, CatchAllEventIndex, &filter);
         }
 
-        inline Result CreateDualshock3AvailableEvent()
+        inline Result CreateSonyAvailableEvent()
         {
             constexpr UsbHsInterfaceFilter filter {
-                .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
+                .Flags = UsbHsInterfaceFilterFlags_idVendor,
                 .idVendor = VENDOR_SONY,
-                .idProduct = PRODUCT_DUALSHOCK3,
             };
-            return usbHsCreateInterfaceAvailableEvent(&g_usbDualshock3Event, true, Dualshock3EventIndex, &filter);
-        }
-
-        inline Result CreateDualshock4AvailableEvent()
-        {
-            const UsbHsInterfaceFilter filter{
-                .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
-                .idVendor = VENDOR_SONY,
-                .idProduct = config::globalConfig.dualshock4_productID,
-            };
-            return usbHsCreateInterfaceAvailableEvent(&g_usbDualshock4Event, true, Dualshock4EventIndex, &filter);
+            return usbHsCreateInterfaceAvailableEvent(&g_usbSonyEvent, true, SonyEventIndex, &filter);
         }
     }
 
@@ -228,8 +198,7 @@ namespace syscon::usb
 
         is_usb_event_thread_running = true;
         R_TRY(g_usb_event_thread.Start().GetValue());
-        R_TRY(g_ds3_event_thread.Start().GetValue());
-        R_TRY(g_ds4_event_thread.Start().GetValue());
+        R_TRY(g_sony_event_thread.Start().GetValue());
         is_usb_interface_change_thread_running = true;
         R_TRY(g_usb_interface_change_thread.Start().GetValue());
         return 0;
@@ -244,13 +213,11 @@ namespace syscon::usb
 
         //TODO: test this without the cancel
         g_usb_event_thread.CancelSynchronization();
-        g_ds3_event_thread.CancelSynchronization();
-        g_ds4_event_thread.CancelSynchronization();
+        g_sony_event_thread.CancelSynchronization();
         g_usb_interface_change_thread.CancelSynchronization();
 
         g_usb_event_thread.Join();
-        g_ds3_event_thread.Join();
-        g_ds4_event_thread.Join();
+        g_sony_event_thread.Join();
         g_usb_interface_change_thread.Join();
 
         controllers::Reset();
@@ -261,26 +228,13 @@ namespace syscon::usb
         if (g_usbCatchAllEvent.revent != INVALID_HANDLE)
             return 0x99;
         R_TRY(CreateCatchAllAvailableEvent());
-        R_TRY(CreateDualshock3AvailableEvent());
-        R_TRY(CreateDualshock4AvailableEvent());
-        /*
-        R_TRY(g_usb_event_thread.CancelSynchronization().GetValue());
-        R_TRY(g_ds3_event_thread.CancelSynchronization().GetValue());
-        R_TRY(g_ds4_event_thread.CancelSynchronization().GetValue());
-        */
+        R_TRY(CreateSonyAvailableEvent());
         return 0;
     }
 
     void DestroyUsbEvents()
     {
         usbHsDestroyInterfaceAvailableEvent(&g_usbCatchAllEvent, CatchAllEventIndex);
-        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock3Event, Dualshock3EventIndex);
-        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
-    }
-
-    Result ReloadDualshock4Event()
-    {
-        usbHsDestroyInterfaceAvailableEvent(&g_usbDualshock4Event, Dualshock4EventIndex);
-        return CreateDualshock4AvailableEvent();
+        usbHsDestroyInterfaceAvailableEvent(&g_usbSonyEvent, SonyEventIndex);
     }
 }
