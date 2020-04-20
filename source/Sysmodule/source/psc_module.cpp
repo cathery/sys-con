@@ -31,11 +31,11 @@ namespace syscon::psc
                         switch (pscState)
                         {
                             case PscPmState_ReadyAwaken:
-                                usb::CreateUsbEvents();
+                                //usb::CreateUsbEvents();
                                 break;
                             case PscPmState_ReadySleep:
                             case PscPmState_ReadyShutdown:
-                                usb::DestroyUsbEvents();
+                                //usb::DestroyUsbEvents();
                                 controllers::Reset();
                                 break;
                             default:
