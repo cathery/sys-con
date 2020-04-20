@@ -5,6 +5,8 @@
 
 
 ## Description
+A modified version of [sys-con](https://github.com/cathery/sys-con) that makes HORI PS4 Tatacon compatible with the switch.
+
 This sysmodule aims to provide complete functionality for most popular game controllers not supported by Nintendo Switch.
 At the current moment, **only USB connection** is supported. 
 
