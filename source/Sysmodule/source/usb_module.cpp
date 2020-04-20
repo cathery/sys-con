@@ -197,21 +197,19 @@ namespace syscon::usb
         R_TRY(CreateUsbEvents());
 
         is_usb_event_thread_running = true;
+        is_usb_interface_change_thread_running = true;
+
         R_TRY(g_usb_event_thread.Start().GetValue());
         R_TRY(g_sony_event_thread.Start().GetValue());
-        is_usb_interface_change_thread_running = true;
         R_TRY(g_usb_interface_change_thread.Start().GetValue());
         return 0;
     }
 
     void Disable()
     {
-        DestroyUsbEvents();
-
         is_usb_event_thread_running = false;
         is_usb_interface_change_thread_running = false;
 
-        //TODO: test this without the cancel
         g_usb_event_thread.CancelSynchronization();
         g_sony_event_thread.CancelSynchronization();
         g_usb_interface_change_thread.CancelSynchronization();
@@ -220,6 +218,7 @@ namespace syscon::usb
         g_sony_event_thread.Join();
         g_usb_interface_change_thread.Join();
 
+        DestroyUsbEvents();
         controllers::Reset();
     }
 
