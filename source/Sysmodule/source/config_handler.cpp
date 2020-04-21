@@ -22,7 +22,7 @@ namespace syscon::config
 
         void ConfigChangedCheckThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x2'000> g_config_changed_check_thread(&ConfigChangedCheckThreadFunc, nullptr, 0x3F);
+        ams::os::StaticThread<0x2'000> g_config_changed_check_thread(&ConfigChangedCheckThreadFunc, nullptr, 0x3E);
 
         bool is_config_changed_check_thread_running = false;
 
@@ -172,7 +172,7 @@ namespace syscon::config
         {
             WriteToLog("Starting config check thread!");
             do {
-                if (R_SUCCEEDED(waitSingle(filecheckTimerWaiter, 0)))
+                if (R_SUCCEEDED(waitSingle(filecheckTimerWaiter, UINT64_MAX)))
                 {
                     if (config::CheckForFileChanges())
                     {
