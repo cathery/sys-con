@@ -172,11 +172,11 @@ namespace syscon::config
             return ini_parse(path, ParseConfigLine, NULL);
         }
 
-
         void ConfigChangedCheckThreadFunc(void *arg)
         {
             WriteToLog("Starting config check thread!");
-            do {
+            do
+            {
                 if (R_SUCCEEDED(waitSingle(filecheckTimerWaiter, UINT64_MAX)))
                 {
                     if (config::CheckForFileChanges())
@@ -187,7 +187,7 @@ namespace syscon::config
                 }
             } while (is_config_changed_check_thread_running);
         }
-    }
+    } // namespace
 
     void LoadGlobalConfig(const GlobalConfig &config)
     {
@@ -327,4 +327,4 @@ namespace syscon::config
         g_config_changed_check_thread.CancelSynchronization();
         g_config_changed_check_thread.Join();
     }
-}
+} // namespace syscon::config

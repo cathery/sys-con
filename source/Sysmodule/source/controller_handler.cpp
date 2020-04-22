@@ -9,13 +9,13 @@
 
 namespace syscon::controllers
 {
-    namespace 
+    namespace
     {
         constexpr size_t MaxControllerHandlersSize = 10;
         std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerHandlers;
         bool UseAbstractedPad;
         ams::os::Mutex controllerMutex;
-    }
+    } // namespace
 
     bool IsAtControllerLimit()
     {
@@ -46,12 +46,12 @@ namespace syscon::controllers
         return rc;
     }
 
-    std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>>& Get()
+    std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> &Get()
     {
         return controllerHandlers;
     }
 
-    ams::os::Mutex& GetScopedLock()
+    ams::os::Mutex &GetScopedLock()
     {
         return controllerMutex;
     }
@@ -78,4 +78,4 @@ namespace syscon::controllers
     {
         Reset();
     }
-}
+} // namespace syscon::controllers

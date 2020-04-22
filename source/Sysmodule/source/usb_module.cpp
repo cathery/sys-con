@@ -17,7 +17,6 @@ namespace syscon::usb
         constexpr u8 CatchAllEventIndex = 2;
         constexpr u8 SonyEventIndex = 0;
 
-
         constexpr size_t MaxUsbHsInterfacesSize = 16;
 
         ams::os::Mutex usbMutex;
@@ -42,7 +41,8 @@ namespace syscon::usb
 
         void UsbEventThreadFunc(void *arg)
         {
-            do {
+            do
+            {
                 if (R_SUCCEEDED(eventWait(&g_usbCatchAllEvent, UINT64_MAX)))
                 {
                     WriteToLog("Catch-all event went off");
@@ -70,7 +70,8 @@ namespace syscon::usb
 
         void UsbSonyEventThreadFunc(void *arg)
         {
-            do {
+            do
+            {
                 if (R_SUCCEEDED(eventWait(&g_usbSonyEvent, UINT64_MAX)))
                 {
                     WriteToLog("Sony event went off");
@@ -79,12 +80,10 @@ namespace syscon::usb
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
-                        if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3) != 0)
-                        && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
+                        if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK3) != 0) && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
                             WriteToLog("Initializing Dualshock 3 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock3Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
 
-                        else if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_1X) != 0 || QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X) != 0)
-                        && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
+                        else if ((QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_1X) != 0 || QueryVendorProduct(VENDOR_SONY, PRODUCT_DUALSHOCK4_2X) != 0) && (total_entries = QueryInterfaces(USB_CLASS_HID, 0, 0)) != 0)
                             WriteToLog("Initializing Dualshock 4 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
                     }
                 }
@@ -93,7 +92,8 @@ namespace syscon::usb
 
         void UsbInterfaceChangeThreadFunc(void *arg)
         {
-            do {
+            do
+            {
                 if (R_SUCCEEDED(eventWait(usbHsGetInterfaceStateChangeEvent(), UINT64_MAX)))
                 {
                     s32 total_entries;
@@ -138,7 +138,7 @@ namespace syscon::usb
 
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol)
         {
-            UsbHsInterfaceFilter filter {
+            UsbHsInterfaceFilter filter{
                 .Flags = UsbHsInterfaceFilterFlags_bInterfaceClass | UsbHsInterfaceFilterFlags_bInterfaceSubClass | UsbHsInterfaceFilterFlags_bInterfaceProtocol,
                 .bInterfaceClass = iclass,
                 .bInterfaceSubClass = isubclass,
@@ -152,7 +152,7 @@ namespace syscon::usb
 
         s32 QueryVendorProduct(uint16_t vendor_id, uint16_t product_id)
         {
-            UsbHsInterfaceFilter filter {
+            UsbHsInterfaceFilter filter{
                 .Flags = UsbHsInterfaceFilterFlags_idVendor | UsbHsInterfaceFilterFlags_idProduct,
                 .idVendor = vendor_id,
                 .idProduct = product_id,
@@ -164,7 +164,7 @@ namespace syscon::usb
 
         inline Result CreateCatchAllAvailableEvent()
         {
-            constexpr UsbHsInterfaceFilter filter {
+            constexpr UsbHsInterfaceFilter filter{
                 .Flags = UsbHsInterfaceFilterFlags_bcdDevice_Min,
                 .bcdDevice_Min = 0,
             };
@@ -173,14 +173,13 @@ namespace syscon::usb
 
         inline Result CreateSonyAvailableEvent()
         {
-            constexpr UsbHsInterfaceFilter filter {
+            constexpr UsbHsInterfaceFilter filter{
                 .Flags = UsbHsInterfaceFilterFlags_idVendor,
                 .idVendor = VENDOR_SONY,
             };
             return usbHsCreateInterfaceAvailableEvent(&g_usbSonyEvent, true, SonyEventIndex, &filter);
         }
-    }
-
+    } // namespace
 
     void Initialize()
     {
@@ -236,4 +235,4 @@ namespace syscon::usb
         usbHsDestroyInterfaceAvailableEvent(&g_usbCatchAllEvent, CatchAllEventIndex);
         usbHsDestroyInterfaceAvailableEvent(&g_usbSonyEvent, SonyEventIndex);
     }
-}
+} // namespace syscon::usb
