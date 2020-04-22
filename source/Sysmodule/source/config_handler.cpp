@@ -27,8 +27,6 @@ namespace syscon::config
         bool is_config_changed_check_thread_running = false;
 
         constexpr std::array keyNames{
-            "DEFAULT",
-            "NONE",
             "FACE_UP",
             "FACE_RIGHT",
             "FACE_DOWN",
@@ -51,16 +49,42 @@ namespace syscon::config
             "TOUCHPAD",
         };
 
-        ControllerButton StringToKey(const char *text)
+        ControllerKey StringToKey(const char *text)
         {
             for (int i = 0; i != keyNames.size(); ++i)
             {
                 if (strcmp(keyNames[i], text) == 0)
                 {
-                    return static_cast<ControllerButton>(i);
+                    return static_cast<ControllerKey>(i);
                 }
             }
-            return NONE;
+            return ControllerKey::INVALID;
+        }
+
+        ControllerButton StringToButton(const char *text)
+        {
+            ControllerButton button{
+                .mapped = true,
+            };
+            char buffer[128];
+            strcpy(buffer, text);
+            char *token = strtok(buffer, " ");
+            while (token != NULL)
+            {
+                if (strcmp(token, "NONE") == 0)
+                {
+                    button.key = ControllerKey::INVALID;
+                    break;
+                }
+                else if (strcmp(token, "TURBO_HOLD") == 0)
+                    button.turbo_mode = TurboMode::HOLD;
+                else if (strcmp(token, "TURBO_TOGGLE") == 0)
+                    button.turbo_mode = TurboMode::TOGGLE;
+                else
+                    button.key = StringToKey(token);
+                token = strtok(NULL, " ");
+            }
+            return button;
         }
 
         RGBAColor DecodeColorValue(const char *value)
@@ -86,13 +110,10 @@ namespace syscon::config
         {
             if (strncmp(name, "KEY_", 4) == 0)
             {
-                ControllerButton button = StringToKey(name + 4);
-                ControllerButton buttonValue = StringToKey(value);
-                if (button >= 2)
-                {
-                    tempConfig.buttons[button - 2] = buttonValue;
-                    return 1;
-                }
+                ControllerKey button = StringToKey(name + 4);
+                ControllerButton buttonValue = StringToButton(value);
+                tempConfig.buttonMap[button] = buttonValue;
+                return 1;
             }
             else if (strcmp(name, "left_stick_deadzone") == 0)
             {

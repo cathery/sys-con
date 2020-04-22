@@ -200,14 +200,7 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
         m_buttonData.guide,
     };
 
-    for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
-    {
-        ControllerButton button = _dualshock3ControllerConfig.buttons[i];
-        if (button == NONE)
-            continue;
-
-        normalData.buttons[(button != DEFAULT ? button - 2 : i)] += buttons[i];
-    }
+    MapButtonsToNormalizedData(normalData, _dualshock3ControllerConfig, buttons);
 
     return normalData;
 }

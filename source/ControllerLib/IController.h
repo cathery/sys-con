@@ -4,13 +4,6 @@
 #include "ControllerConfig.h"
 #include <memory>
 
-struct NormalizedButtonData
-{
-    bool buttons[MAX_CONTROLLER_BUTTONS];
-    float triggers[2];
-    NormalizedStick sticks[2];
-};
-
 class IController
 {
 protected:

@@ -284,14 +284,7 @@ NormalizedButtonData XboxOneController::GetNormalizedButtonData()
         m_GuidePressed,
     };
 
-    for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
-    {
-        ControllerButton button = _xboxoneControllerConfig.buttons[i];
-        if (button == NONE)
-            continue;
-
-        normalData.buttons[(button != DEFAULT ? button - 2 : i)] += buttons[i];
-    }
+    MapButtonsToNormalizedData(normalData, _xboxoneControllerConfig, buttons);
 
     return normalData;
 }

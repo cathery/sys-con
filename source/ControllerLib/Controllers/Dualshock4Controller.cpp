@@ -208,14 +208,7 @@ NormalizedButtonData Dualshock4Controller::GetNormalizedButtonData()
         m_buttonData.touchpad_finger1_unpressed == false,
     };
 
-    for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
-    {
-        ControllerButton button = _dualshock4ControllerConfig.buttons[i];
-        if (button == NONE)
-            continue;
-
-        normalData.buttons[(button != DEFAULT ? button - 2 : i)] += buttons[i];
-    }
+    MapButtonsToNormalizedData(normalData, _dualshock4ControllerConfig, buttons);
 
     return normalData;
 }

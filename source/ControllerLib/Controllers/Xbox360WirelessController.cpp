@@ -221,14 +221,7 @@ NormalizedButtonData Xbox360WirelessController::GetNormalizedButtonData()
         m_buttonData.guide,
     };
 
-    for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
-    {
-        ControllerButton button = _xbox360WControllerConfig.buttons[i];
-        if (button == NONE)
-            continue;
-
-        normalData.buttons[(button != DEFAULT ? button - 2 : i)] += buttons[i];
-    }
+    MapButtonsToNormalizedData(normalData, _xbox360WControllerConfig, buttons);
 
     return normalData;
 }
