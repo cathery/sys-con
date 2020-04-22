@@ -146,7 +146,7 @@ public:
 
     inline const Dualshock3ButtonData &GetButtonData() { return m_buttonData; };
 
-    float NormalizeTrigger(uint8_t value);
+    float NormalizeTrigger(uint8_t deadzonePercent, uint8_t value);
     void NormalizeAxis(uint8_t x, uint8_t y, uint8_t deadzonePercent, float *x_out, float *y_out);
 
     Result SendInitBytes();

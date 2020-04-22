@@ -206,9 +206,9 @@ Result XboxOneController::SendInitBytes()
     return rc;
 }
 
-float XboxOneController::NormalizeTrigger(uint16_t value)
+float XboxOneController::NormalizeTrigger(uint8_t deadzonePercent, uint16_t value)
 {
-    uint16_t deadzone = (TRIGGER_MAXVALUE * _xboxoneControllerConfig.triggerDeadzonePercent) / 100;
+    uint16_t deadzone = (TRIGGER_MAXVALUE * deadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
     return value < deadzone
                ? 0
@@ -253,17 +253,17 @@ void XboxOneController::NormalizeAxis(int16_t x,
 //Pass by value should hopefully be optimized away by RVO
 NormalizedButtonData XboxOneController::GetNormalizedButtonData()
 {
-    NormalizedButtonData normalData;
+    NormalizedButtonData normalData{};
 
-    normalData.triggers[0] = NormalizeTrigger(m_buttonData.trigger_left);
-    normalData.triggers[1] = NormalizeTrigger(m_buttonData.trigger_right);
+    normalData.triggers[0] = NormalizeTrigger(_xboxoneControllerConfig.triggerDeadzonePercent[0], m_buttonData.trigger_left);
+    normalData.triggers[1] = NormalizeTrigger(_xboxoneControllerConfig.triggerDeadzonePercent[1], m_buttonData.trigger_right);
 
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _xboxoneControllerConfig.leftStickDeadzonePercent,
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _xboxoneControllerConfig.stickDeadzonePercent[0],
                   &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _xboxoneControllerConfig.rightStickDeadzonePercent,
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _xboxoneControllerConfig.stickDeadzonePercent[1],
                   &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
 
-    bool buttons[NUM_CONTROLLERBUTTONS]{
+    bool buttons[MAX_CONTROLLER_BUTTONS]{
         m_buttonData.y,
         m_buttonData.b,
         m_buttonData.a,
@@ -284,10 +284,13 @@ NormalizedButtonData XboxOneController::GetNormalizedButtonData()
         m_GuidePressed,
     };
 
-    for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
+    for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
     {
         ControllerButton button = _xboxoneControllerConfig.buttons[i];
-        normalData.buttons[(button != NOT_SET ? button : i)] = buttons[i];
+        if (button == NONE)
+            continue;
+
+        normalData.buttons[(button != DEFAULT ? button - 2 : i)] += buttons[i];
     }
 
     return normalData;
