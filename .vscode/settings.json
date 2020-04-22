@@ -1,4 +1,8 @@
 {
+    "C_Cpp.dimInactiveRegions": true,
+    "C_Cpp.clang_format_fallbackStyle": "Visual Studio",
+    "C_Cpp.clang_format_style": "{BasedOnStyle: LLVM, UseTab: Never, IndentWidth: 4, BreakBeforeBraces: Allman, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: true, ColumnLimit: 0, NamespaceIndentation: All, AccessModifierOffset: -4, AlignConsecutiveMacros: true, PointerAlignment: Right, IndentPPDirectives: BeforeHash, SortIncludes: false}",
+    "editor.formatOnSave": true,
     "files.associations": {
         "array": "cpp",
         "*.tcc": "cpp",
@@ -56,5 +60,4 @@
         "mutex": "cpp",
         "shared_mutex": "cpp"
     },
-    "C_Cpp.dimInactiveRegions": true
 }

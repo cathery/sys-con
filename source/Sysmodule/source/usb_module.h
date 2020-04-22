@@ -1,7 +1,7 @@
 #pragma once
 
-namespace syscon::usb {
-
+namespace syscon::usb
+{
     void Initialize();
     void Exit();
 
@@ -10,4 +10,4 @@ namespace syscon::usb {
 
     Result CreateUsbEvents();
     void DestroyUsbEvents();
-}
+} // namespace syscon::usb
