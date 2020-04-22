@@ -2,7 +2,6 @@
 
 #include "switch.h"
 #include "IController.h"
-#include "SwitchControllerHandler.h"
 #include "SwitchVirtualGamepadHandler.h"
 
 //Wrapper for AbstractedPad for switch versions [5.0.0 - 8.1.0]

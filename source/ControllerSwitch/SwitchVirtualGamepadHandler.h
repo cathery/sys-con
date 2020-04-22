@@ -1,7 +1,6 @@
 #pragma once
 #include "switch.h"
 #include "IController.h"
-#include "SwitchControllerHandler.h"
 #include <stratosphere.hpp>
 
 //This class is a base class for SwitchHDLHandler and SwitchAbstractedPaadHandler.
@@ -9,7 +8,7 @@ class SwitchVirtualGamepadHandler
 {
 protected:
     u32 m_vibrationDeviceHandle;
-    SwitchControllerHandler m_controllerHandler;
+    std::unique_ptr<IController> m_controller;
 
     ams::os::StaticThread<0x1'000> m_inputThread;
     ams::os::StaticThread<0x1'000> m_outputThread;
@@ -44,8 +43,11 @@ public:
     //The function to call indefinitely by the output thread
     virtual void UpdateOutput() = 0;
 
-    //Get the raw controller handler pointer
-    inline SwitchControllerHandler *GetControllerHandler() { return &m_controllerHandler; }
-    inline IController *GetController() { return m_controllerHandler.GetController(); }
+    void ConvertAxisToSwitchAxis(float x, float y, float deadzone, s32 *x_out, s32 *y_out);
+
+    Result SetControllerVibration(float strong_mag, float weak_mag);
+
+    //Get the raw controller pointer
+    inline IController *GetController() { return m_controller.get(); }
     inline u32 *GetVibrationHandle() { return &m_vibrationDeviceHandle; }
 };
