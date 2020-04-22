@@ -2,7 +2,6 @@
 
 #include "switch.h"
 #include "IController.h"
-#include "SwitchControllerHandler.h"
 #include "SwitchVirtualGamepadHandler.h"
 
 //Wrapper for HDL functions for switch versions [7.0.0+]

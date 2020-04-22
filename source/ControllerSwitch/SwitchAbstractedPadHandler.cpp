@@ -15,47 +15,39 @@ SwitchAbstractedPadHandler::~SwitchAbstractedPadHandler()
 
 Result SwitchAbstractedPadHandler::Initialize()
 {
-    Result rc = m_controllerHandler.Initialize();
-    if (R_FAILED(rc))
-        return rc;
+    R_TRY(m_controller->Initialize());
 
     if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
-        return rc;
+        return 0;
 
-    rc = InitAbstractedPadState();
-    if (R_FAILED(rc))
-        return rc;
+    R_TRY(InitAbstractedPadState());
 
-    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_PAIRING))
+    if (DoesControllerSupport(m_controller->GetType(), SUPPORTS_PAIRING))
     {
-        rc = InitOutputThread();
-        if (R_FAILED(rc))
-            return rc;
+        R_TRY(InitOutputThread());
     }
 
-    rc = InitInputThread();
-    if (R_FAILED(rc))
-        return rc;
+    R_TRY(InitInputThread());
 
-    return rc;
+    return 0;
 }
 
 void SwitchAbstractedPadHandler::Exit()
 {
     if (DoesControllerSupport(GetController()->GetType(), SUPPORTS_NOTHING))
     {
-        m_controllerHandler.Exit();
+        m_controller->Exit();
         return;
     }
 
     ExitInputThread();
     ExitOutputThread();
-    m_controllerHandler.Exit();
+    m_controller->Exit();
     ExitAbstractedPadState();
 }
 
 //Used to give out unique ids to abstracted pads
-static std::array<bool, 8> uniqueIDs{false};
+static std::array<bool, 8> uniqueIDs{};
 
 static s8 getUniqueId()
 {
@@ -137,7 +129,7 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
         daxis_y += data.buttons[14] ? -1.0f : 0.0f; //DDOWN
         daxis_x += data.buttons[15] ? -1.0f : 0.0f; //DLEFT
 
-        m_controllerHandler.ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
     }
     else
     {
@@ -146,10 +138,10 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
         m_state.state.buttons |= (data.buttons[14] ? KEY_DDOWN : 0);
         m_state.state.buttons |= (data.buttons[15] ? KEY_DLEFT : 0);
 
-        m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
     }
 
-    m_controllerHandler.ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_state.state.joysticks[JOYSTICK_RIGHT].dx, &m_state.state.joysticks[JOYSTICK_RIGHT].dy);
+    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_state.state.joysticks[JOYSTICK_RIGHT].dx, &m_state.state.joysticks[JOYSTICK_RIGHT].dy);
 
     m_state.state.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
     m_state.state.buttons |= (data.buttons[17] ? KEY_HOME : 0);
@@ -175,10 +167,10 @@ void SwitchAbstractedPadHandler::UpdateInput()
 
 void SwitchAbstractedPadHandler::UpdateOutput()
 {
-    if (R_SUCCEEDED(m_controllerHandler.GetController()->OutputBuffer()))
+    if (R_SUCCEEDED(m_controller->OutputBuffer()))
         return;
 
-    if (DoesControllerSupport(m_controllerHandler.GetController()->GetType(), SUPPORTS_RUMBLE))
+    if (DoesControllerSupport(m_controller->GetType(), SUPPORTS_RUMBLE))
     {
         Result rc;
         HidVibrationValue value;
