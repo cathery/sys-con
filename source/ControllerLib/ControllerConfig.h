@@ -1,8 +1,14 @@
 #pragma once
 #include <cstdint>
+
+#define MAX_JOYSTICKS          2
+#define MAX_TRIGGERS           2
+#define MAX_CONTROLLER_BUTTONS 32
+
 enum ControllerButton : uint8_t
 {
-    NOT_SET = 0,
+    DEFAULT = 0,
+    NONE,
     FACE_UP,
     FACE_RIGHT,
     FACE_DOWN,
@@ -19,10 +25,10 @@ enum ControllerButton : uint8_t
     DPAD_RIGHT,
     DPAD_DOWN,
     DPAD_LEFT,
+    CAPTURE,
+    HOME,
     SYNC,
-    GUIDE,
     TOUCHPAD,
-    NUM_CONTROLLERBUTTONS = TOUCHPAD,
 };
 
 struct NormalizedStick
@@ -45,14 +51,12 @@ union RGBAColor {
 
 struct ControllerConfig
 {
-    uint8_t leftStickDeadzonePercent{10};
-    uint8_t rightStickDeadzonePercent{10};
-    uint16_t leftStickRotationDegrees{};
-    uint16_t rightStickRotationDegrees{};
-    uint8_t triggerDeadzonePercent{};
-    ControllerButton buttons[NUM_CONTROLLERBUTTONS]{};
-    float triggers[2]{};
-    NormalizedStick sticks[2]{};
+    uint8_t stickDeadzonePercent[MAX_JOYSTICKS]{};
+    uint16_t stickRotationDegrees[MAX_JOYSTICKS]{};
+    uint8_t triggerDeadzonePercent[MAX_TRIGGERS]{};
+    ControllerButton buttons[MAX_CONTROLLER_BUTTONS]{};
+    float triggers[MAX_TRIGGERS]{};
+    NormalizedStick sticks[MAX_JOYSTICKS]{};
     bool swapDPADandLSTICK{false};
     RGBAColor bodyColor{107, 107, 107, 255};
     RGBAColor buttonsColor{0, 0, 0, 255};

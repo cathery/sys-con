@@ -123,9 +123,9 @@ Result Dualshock3Controller::GetInput()
     return rc;
 }
 
-float Dualshock3Controller::NormalizeTrigger(uint8_t value)
+float Dualshock3Controller::NormalizeTrigger(uint8_t deadzonePercent, uint8_t value)
 {
-    uint8_t deadzone = (UINT8_MAX * _dualshock3ControllerConfig.triggerDeadzonePercent) / 100;
+    uint8_t deadzone = (UINT8_MAX * deadzonePercent) / 100;
     //If the given value is below the trigger zone, save the calc and return 0, otherwise adjust the value to the deadzone
     return value < deadzone
                ? 0
@@ -169,17 +169,17 @@ void Dualshock3Controller::NormalizeAxis(uint8_t x,
 //Pass by value should hopefully be optimized away by RVO
 NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
 {
-    NormalizedButtonData normalData;
+    NormalizedButtonData normalData{};
 
-    normalData.triggers[0] = NormalizeTrigger(m_buttonData.trigger_left_pressure);
-    normalData.triggers[1] = NormalizeTrigger(m_buttonData.trigger_right_pressure);
+    normalData.triggers[0] = NormalizeTrigger(_dualshock3ControllerConfig.triggerDeadzonePercent[0], m_buttonData.trigger_left_pressure);
+    normalData.triggers[1] = NormalizeTrigger(_dualshock3ControllerConfig.triggerDeadzonePercent[1], m_buttonData.trigger_right_pressure);
 
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock3ControllerConfig.leftStickDeadzonePercent,
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock3ControllerConfig.stickDeadzonePercent[0],
                   &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock3ControllerConfig.rightStickDeadzonePercent,
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock3ControllerConfig.stickDeadzonePercent[1],
                   &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
 
-    bool buttons[NUM_CONTROLLERBUTTONS] = {
+    bool buttons[MAX_CONTROLLER_BUTTONS] = {
         m_buttonData.triangle,
         m_buttonData.circle,
         m_buttonData.cross,
@@ -200,10 +200,13 @@ NormalizedButtonData Dualshock3Controller::GetNormalizedButtonData()
         m_buttonData.guide,
     };
 
-    for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
+    for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
     {
         ControllerButton button = _dualshock3ControllerConfig.buttons[i];
-        normalData.buttons[(button != NOT_SET ? button : i)] = buttons[i];
+        if (button == NONE)
+            continue;
+
+        normalData.buttons[(button != DEFAULT ? button - 2 : i)] += buttons[i];
     }
 
     return normalData;

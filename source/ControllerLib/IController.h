@@ -6,7 +6,7 @@
 
 struct NormalizedButtonData
 {
-    bool buttons[NUM_CONTROLLERBUTTONS];
+    bool buttons[MAX_CONTROLLER_BUTTONS];
     float triggers[2];
     NormalizedStick sticks[2];
 };

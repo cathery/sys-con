@@ -26,8 +26,9 @@ namespace syscon::config
 
         bool is_config_changed_check_thread_running = false;
 
-        constexpr const char *keyNames[NUM_CONTROLLERBUTTONS]
-        {
+        constexpr std::array keyNames{
+            "DEFAULT",
+            "NONE",
             "FACE_UP",
             "FACE_RIGHT",
             "FACE_DOWN",
@@ -44,21 +45,22 @@ namespace syscon::config
             "DPAD_RIGHT",
             "DPAD_DOWN",
             "DPAD_LEFT",
+            "CAPTURE",
+            "HOME",
             "SYNC",
-            "GUIDE",
             "TOUCHPAD",
         };
 
         ControllerButton StringToKey(const char *text)
         {
-            for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
+            for (int i = 0; i != keyNames.size(); ++i)
             {
                 if (strcmp(keyNames[i], text) == 0)
                 {
                     return static_cast<ControllerButton>(i);
                 }
             }
-            return NOT_SET;
+            return NONE;
         }
 
         RGBAColor DecodeColorValue(const char *value)
@@ -82,37 +84,44 @@ namespace syscon::config
 
         int ParseConfigLine(void *dummy, const char *section, const char *name, const char *value)
         {
-            if (strncmp(name, "key_", 4) == 0)
+            if (strncmp(name, "KEY_", 4) == 0)
             {
                 ControllerButton button = StringToKey(name + 4);
                 ControllerButton buttonValue = StringToKey(value);
-                tempConfig.buttons[button] = buttonValue;
-                tempConfig.buttons[buttonValue] = button;
-                return 1;
+                if (button >= 2)
+                {
+                    tempConfig.buttons[button - 2] = buttonValue;
+                    return 1;
+                }
             }
             else if (strcmp(name, "left_stick_deadzone") == 0)
             {
-                tempConfig.leftStickDeadzonePercent = atoi(value);
+                tempConfig.stickDeadzonePercent[0] = atoi(value);
                 return 1;
             }
             else if (strcmp(name, "right_stick_deadzone") == 0)
             {
-                tempConfig.rightStickDeadzonePercent = atoi(value);
+                tempConfig.stickDeadzonePercent[1] = atoi(value);
                 return 1;
             }
             else if (strcmp(name, "left_stick_rotation") == 0)
             {
-                tempConfig.leftStickRotationDegrees = atoi(value);
+                tempConfig.stickRotationDegrees[0] = atoi(value);
                 return 1;
             }
             else if (strcmp(name, "right_stick_rotation") == 0)
             {
-                tempConfig.rightStickRotationDegrees = atoi(value);
+                tempConfig.stickRotationDegrees[1] = atoi(value);
                 return 1;
             }
-            else if (strcmp(name, "trigger_deadzone") == 0)
+            else if (strcmp(name, "left_trigger_deadzone") == 0)
             {
-                tempConfig.triggerDeadzonePercent = atoi(value);
+                tempConfig.triggerDeadzonePercent[0] = atoi(value);
+                return 1;
+            }
+            else if (strcmp(name, "right_trigger_deadzone") == 0)
+            {
+                tempConfig.triggerDeadzonePercent[1] = atoi(value);
                 return 1;
             }
             else if (strcmp(name, "swap_dpad_and_lstick") == 0)
@@ -160,10 +169,6 @@ namespace syscon::config
         Result ReadFromConfig(const char *path)
         {
             tempConfig = ControllerConfig{};
-            for (int i = 0; i != NUM_CONTROLLERBUTTONS; ++i)
-            {
-                tempConfig.buttons[i] = NOT_SET;
-            }
             return ini_parse(path, ParseConfigLine, NULL);
         }
 
