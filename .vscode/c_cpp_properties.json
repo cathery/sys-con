@@ -17,11 +17,13 @@
                 "SWITCH",
                 "__SWITCH__",
                 "ATMOSPHERE_BOARD_NINTENDO_SWITCH",
-                "ATMOSPHERE_IS_STRATOSPHERE"
+                "ATMOSPHERE_IS_STRATOSPHERE",
+                "ATMOSPHERE_ARCH_ARM64",
+                "ATMOSPHERE_OS_HORIZON"
             ],
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-g++",
             "cStandard": "c11",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "gcc-x64"
         }
     ],

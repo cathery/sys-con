@@ -3,7 +3,7 @@
 #include "config_handler.h"
 #include <stratosphere.hpp>
 
-static ams::os::Mutex printMutex;
+static ams::os::Mutex printMutex(false);
 
 void DiscardOldLogs()
 {

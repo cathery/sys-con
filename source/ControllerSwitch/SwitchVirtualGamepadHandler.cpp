@@ -37,30 +37,34 @@ void SwitchVirtualGamepadHandler::OutputThreadLoop(void *handler)
 
 Result SwitchVirtualGamepadHandler::InitInputThread()
 {
-    R_TRY(m_inputThread.Initialize(&SwitchVirtualGamepadHandler::InputThreadLoop, this, 0x30).GetValue());
     m_inputThreadIsRunning = true;
-    return m_inputThread.Start().GetValue();
+    R_ABORT_UNLESS(threadCreate(&m_inputThread, &SwitchVirtualGamepadHandler::InputThreadLoop, this, input_thread_stack, sizeof(input_thread_stack), 0x30, -2));
+    R_ABORT_UNLESS(threadStart(&m_inputThread));
+    return 0;
 }
 
 void SwitchVirtualGamepadHandler::ExitInputThread()
 {
     m_inputThreadIsRunning = false;
-    m_inputThread.CancelSynchronization();
-    m_inputThread.Join();
+    svcCancelSynchronization(m_inputThread.handle);
+    threadWaitForExit(&m_inputThread);
+    threadClose(&m_inputThread);
 }
 
 Result SwitchVirtualGamepadHandler::InitOutputThread()
 {
-    R_TRY(m_outputThread.Initialize(&SwitchVirtualGamepadHandler::OutputThreadLoop, this, 0x30).GetValue());
     m_outputThreadIsRunning = true;
-    return m_outputThread.Start().GetValue();
+    R_ABORT_UNLESS(threadCreate(&m_outputThread, &SwitchVirtualGamepadHandler::OutputThreadLoop, this, output_thread_stack, sizeof(output_thread_stack), 0x30, -2));
+    R_ABORT_UNLESS(threadStart(&m_outputThread));
+    return 0;
 }
 
 void SwitchVirtualGamepadHandler::ExitOutputThread()
 {
     m_outputThreadIsRunning = false;
-    m_outputThread.CancelSynchronization();
-    m_outputThread.Join();
+    svcCancelSynchronization(m_outputThread.handle);
+    threadWaitForExit(&m_outputThread);
+    threadClose(&m_outputThread);
 }
 
 static_assert(JOYSTICK_MAX == 32767 && JOYSTICK_MIN == -32767,
