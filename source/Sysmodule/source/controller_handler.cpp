@@ -14,7 +14,7 @@ namespace syscon::controllers
         constexpr size_t MaxControllerHandlersSize = 10;
         std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> controllerHandlers;
         bool UseAbstractedPad;
-        ams::os::Mutex controllerMutex;
+        ams::os::Mutex controllerMutex(false);
     } // namespace
 
     bool IsAtControllerLimit()

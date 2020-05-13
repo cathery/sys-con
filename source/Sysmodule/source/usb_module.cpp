@@ -19,15 +19,22 @@ namespace syscon::usb
 
         constexpr size_t MaxUsbHsInterfacesSize = 16;
 
-        ams::os::Mutex usbMutex;
+        ams::os::Mutex usbMutex(false);
 
+        //Thread that waits on generic usb event
         void UsbEventThreadFunc(void *arg);
+        //Thread that waits on sony vendor usb event
         void UsbSonyEventThreadFunc(void *arg);
+        //Thread that waits on any disconnected usb devices
         void UsbInterfaceChangeThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x2'000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x3A);
-        ams::os::StaticThread<0x2'000> g_sony_event_thread(&UsbSonyEventThreadFunc, nullptr, 0x3B);
-        ams::os::StaticThread<0x2'000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x2C);
+        alignas(ams::os::ThreadStackAlignment) u8 usb_event_thread_stack[0x2000];
+        alignas(ams::os::ThreadStackAlignment) u8 sony_event_thread_stack[0x2000];
+        alignas(ams::os::ThreadStackAlignment) u8 usb_interface_change_thread_stack[0x2000];
+
+        Thread g_usb_event_thread;
+        Thread g_sony_event_thread;
+        Thread g_usb_interface_change_thread;
 
         bool is_usb_event_thread_running = false;
         bool is_usb_interface_change_thread_running = false;
@@ -198,9 +205,13 @@ namespace syscon::usb
         is_usb_event_thread_running = true;
         is_usb_interface_change_thread_running = true;
 
-        R_TRY(g_usb_event_thread.Start().GetValue());
-        R_TRY(g_sony_event_thread.Start().GetValue());
-        R_TRY(g_usb_interface_change_thread.Start().GetValue());
+        R_ABORT_UNLESS(threadCreate(&g_usb_event_thread, &UsbEventThreadFunc, nullptr, usb_event_thread_stack, sizeof(usb_event_thread_stack), 0x3A, -2));
+        R_ABORT_UNLESS(threadCreate(&g_sony_event_thread, &UsbSonyEventThreadFunc, nullptr, sony_event_thread_stack, sizeof(sony_event_thread_stack), 0x3B, -2));
+        R_ABORT_UNLESS(threadCreate(&g_usb_interface_change_thread, &UsbInterfaceChangeThreadFunc, nullptr, usb_interface_change_thread_stack, sizeof(usb_interface_change_thread_stack), 0x2C, -2));
+
+        R_ABORT_UNLESS(threadStart(&g_usb_event_thread));
+        R_ABORT_UNLESS(threadStart(&g_sony_event_thread));
+        R_ABORT_UNLESS(threadStart(&g_usb_interface_change_thread));
         return 0;
     }
 
@@ -209,13 +220,17 @@ namespace syscon::usb
         is_usb_event_thread_running = false;
         is_usb_interface_change_thread_running = false;
 
-        g_usb_event_thread.CancelSynchronization();
-        g_sony_event_thread.CancelSynchronization();
-        g_usb_interface_change_thread.CancelSynchronization();
+        svcCancelSynchronization(g_usb_event_thread.handle);
+        threadWaitForExit(&g_usb_event_thread);
+        threadClose(&g_usb_event_thread);
 
-        g_usb_event_thread.Join();
-        g_sony_event_thread.Join();
-        g_usb_interface_change_thread.Join();
+        svcCancelSynchronization(g_sony_event_thread.handle);
+        threadWaitForExit(&g_sony_event_thread);
+        threadClose(&g_sony_event_thread);
+
+        svcCancelSynchronization(g_usb_interface_change_thread.handle);
+        threadWaitForExit(&g_usb_interface_change_thread);
+        threadClose(&g_usb_interface_change_thread);
 
         DestroyUsbEvents();
         controllers::Reset();
