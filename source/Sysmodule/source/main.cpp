@@ -8,6 +8,15 @@
 #include "psc_module.h"
 #include "SwitchHDLHandler.h"
 
+extern "C" {
+    #include "ftp.h"
+    #include "util.h"
+    #include "console.h"
+    #include "minIni.h"
+}
+
+#include <sys/stat.h>
+
 #define APP_VERSION "0.6.4"
 
 // libnx fake heap initialization
@@ -20,7 +29,7 @@ extern "C"
     // We don't need to reserve memory for fsdev, so don't use it.
     u32 __nx_fsdev_direntry_cache_size = 1;
 
-#define INNER_HEAP_SIZE 0x40'000
+#define INNER_HEAP_SIZE 0xE7'000
     size_t nx_inner_heap_size = INNER_HEAP_SIZE;
     char nx_inner_heap[INNER_HEAP_SIZE];
 
@@ -55,6 +64,20 @@ namespace ams
 
 extern "C" void __appInit(void)
 {
+    static const SocketInitConfig socketInitConfig = {
+        .bsdsockets_version = 1,
+
+        .tcp_tx_buf_size = 0x800,
+        .tcp_rx_buf_size = 0x800,
+        .tcp_tx_buf_max_size = 0x25000,
+        .tcp_rx_buf_max_size = 0x25000,
+
+        //We don't use UDP, set all UDP buffers to 0
+        .udp_tx_buf_size = 0,
+        .udp_rx_buf_size = 0,
+
+        .sb_efficiency = 1,
+    };
     R_ABORT_UNLESS(smInitialize());
     // ams::sm::DoWithSession([]
     {
@@ -65,12 +88,18 @@ extern "C" void __appInit(void)
         hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
         setsysExit();
 
+
         R_ABORT_UNLESS(hiddbgInitialize());
+
+        R_ABORT_UNLESS(hidInitialize());
+        R_ABORT_UNLESS(hidsysInitialize());
+
         if (hosversionAtLeast(7, 0, 0))
             R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer(&SwitchHDLHandler::GetHdlsSessionId()));
         R_ABORT_UNLESS(usbHsInitialize());
         R_ABORT_UNLESS(pscmInitialize());
         R_ABORT_UNLESS(fsInitialize());
+        R_ABORT_UNLESS(socketInitialize(&socketInitConfig));
     }
     // );
     smExit();
@@ -80,6 +109,10 @@ extern "C" void __appInit(void)
 
 extern "C" void __appExit(void)
 {
+    socketExit();
+    hidsysExit();
+    hidExit();
+
     pscmExit();
     usbHsExit();
     hiddbgReleaseHdlsWorkBuffer(SwitchHDLHandler::GetHdlsSessionId());
@@ -90,6 +123,23 @@ extern "C" void __appExit(void)
 
 using namespace syscon;
 
+static loop_status_t loop(loop_status_t (*callback)(void))
+{
+    loop_status_t status = LOOP_CONTINUE;
+
+    while (true)
+    {
+        svcSleepThread(1e+7);
+        status = callback();
+        console_render();
+        if (status != LOOP_CONTINUE)
+            return status;
+        if (isPaused())
+            return LOOP_RESTART;
+    }
+    return LOOP_EXIT;
+}
+
 int main(int argc, char *argv[])
 {
     WriteToLog("\n\nNew sysmodule session started on version " APP_VERSION);
@@ -98,10 +148,57 @@ int main(int argc, char *argv[])
     usb::Initialize();
     psc::Initialize();
 
-    while (true)
+    FILE* should_log_file = fopen("/config/sys-ftpd/logs/ftpd_log_enabled", "r");
+    if (should_log_file != NULL)
     {
-        svcSleepThread(1e+8L);
+        should_log = true;
+        fclose(should_log_file);
+
+        mkdir("/config/sys-ftpd/logs", 0700);
+        unlink("/config/sys-ftpd/logs/ftpd.log");
     }
+
+    char buffer[100];
+    ini_gets("Pause", "disabled:", "0", buffer, 100, CONFIGPATH);
+
+    //Checks if pausing is disabled in the config file, in which case it skips the entire pause initialization
+    if (strncmp(buffer, "1", 4) != 0)
+    {
+        Result rc = pauseInit();
+        if (R_FAILED(rc))
+            fatalThrow(rc);
+    }
+
+    loop_status_t status = LOOP_RESTART;
+
+    WriteToLog("Going to pre_init");
+
+    ftp_pre_init();
+
+    WriteToLog("pre_init completed");
+
+    while (status == LOOP_RESTART)
+    {
+        while (isPaused())
+        {
+            svcSleepThread(1e+9);
+        }
+
+        /* initialize ftp subsystem */
+        if (ftp_init() == 0)
+        {
+            /* ftp loop */
+            status = loop(ftp_loop);
+
+            /* done with ftp */
+            ftp_exit();
+        }
+        else
+            status = LOOP_EXIT;
+    }
+    ftp_post_exit();
+
+    pauseExit();
 
     psc::Exit();
     usb::Exit();
