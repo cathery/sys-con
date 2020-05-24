@@ -1,7 +1,8 @@
 # sys-con
 
-#### A Nintedo Switch sysmodule for third-party controller support. No man-in-the-middle required! 
-###### \[Switch FW 5.0.0+\]
+#### A Nintendo Switch custom sysmodule for third-party controller support. No man-in-the-middle required! 
+###### \[Switch FW 5.0.0+\] [Atmosphère only]
+
 
 
 ## Description
