@@ -39,6 +39,7 @@
 #include "console.h"
 #include "led.h"
 #include "util.h"
+#include "Controllers/NetworkController.h"
 
 #define POLL_UNKNOWN (~(POLLIN | POLLPRI | POLLOUT))
 
@@ -447,6 +448,7 @@ ftp_session_close_cmd(ftp_session_t* session)
     /* close command socket */
     if (session->cmd_fd >= 0)
         ftp_closesocket(session->cmd_fd, true);
+
     session->cmd_fd = -1;
 }
 
@@ -1243,6 +1245,8 @@ ftp_session_new(int listen_fd)
     console_print(CYAN "accepted connection from %s:%u\n" RESET,
                   inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
+    registerNetworkController(new_fd);
+
     /* allocate a new session */
     session = (ftp_session_t*)calloc(1, sizeof(ftp_session_t));
     if (session == NULL)
@@ -1253,16 +1257,7 @@ ftp_session_new(int listen_fd)
     }
 
     /* initialize session */
-    strcpy(session->cwd, "/");
-    session->peer_addr.sin_addr.s_addr = INADDR_ANY;
     session->cmd_fd = new_fd;
-    session->pasv_fd = -1;
-    session->data_fd = -1;
-    session->mlst_flags = SESSION_MLST_TYPE | SESSION_MLST_SIZE | SESSION_MLST_MODIFY | SESSION_MLST_PERM;
-    session->state = COMMAND_STATE;
-    session->user_ok = false;
-    session->pass_ok = false;
-    session->led = true;
 
     /* link to the sessions list */
     if (sessions == NULL)
@@ -1288,10 +1283,6 @@ ftp_session_new(int listen_fd)
         return -1;
     }
 
-    session->cmd_fd = new_fd;
-
-    /* send initiator response */
-    ftp_send_response(session, 220, "Hello!\r\n");
     return 0;
 }
 
@@ -1738,41 +1729,6 @@ ftp_session_poll(ftp_session_t* session)
     pollinfo[0].events = POLLIN | POLLPRI;
     pollinfo[0].revents = 0;
 
-    switch (session->state)
-    {
-    case COMMAND_STATE:
-        /* we are waiting to read a command */
-        break;
-
-    case DATA_CONNECT_STATE:
-        if (session->flags & SESSION_PASV)
-        {
-            /* we are waiting for a PASV connection */
-            pollinfo[1].fd = session->pasv_fd;
-            pollinfo[1].events = POLLIN;
-        }
-        else
-        {
-            /* we are waiting to complete a PORT connection */
-            pollinfo[1].fd = session->data_fd;
-            pollinfo[1].events = POLLOUT;
-        }
-        pollinfo[1].revents = 0;
-        nfds = 2;
-        break;
-
-    case DATA_TRANSFER_STATE:
-        /* we need to transfer data */
-        pollinfo[1].fd = session->data_fd;
-        if (session->flags & SESSION_RECV)
-            pollinfo[1].events = POLLIN;
-        else
-            pollinfo[1].events = POLLOUT;
-        pollinfo[1].revents = 0;
-        nfds = 2;
-        break;
-    }
-
     /* poll the selected sockets */
     rc = poll(pollinfo, nfds, 0);
     if (rc < 0)
@@ -1795,59 +1751,14 @@ ftp_session_poll(ftp_session_t* session)
                 debug_print("cmd revents=0x%x\n", pollinfo[0].revents);
                 ftp_session_close_cmd(session);
             }
-            else if (pollinfo[0].revents & (POLLIN | POLLPRI))
-                ftp_session_read_command(session, pollinfo[0].revents);
-        }
 
-        /* check the data/pasv socket */
-        if (nfds > 1 && pollinfo[1].revents != 0)
-        {
-            switch (session->state)
+            ssize_t count;
+            uint8_t input_bytes[64];
+            count = recv(session->cmd_fd, input_bytes, sizeof(input_bytes), MSG_PEEK);
+            if (count == 0)
             {
-            case COMMAND_STATE:
-                /* this shouldn't happen? */
-                break;
-
-            case DATA_CONNECT_STATE:
-                if (pollinfo[1].revents & POLL_UNKNOWN)
-                    console_print(YELLOW "pasv_fd: revents=0x%08X\n" RESET, pollinfo[1].revents);
-
-                /* we need to accept the PASV connection */
-                if (pollinfo[1].revents & (POLLERR | POLLHUP))
-                {
-                    ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-                    ftp_send_response(session, 426, "Data connection failed\r\n");
-                }
-                else if (pollinfo[1].revents & POLLIN)
-                {
-                    if (ftp_session_accept(session) != 0)
-                        ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-                }
-                else if (pollinfo[1].revents & POLLOUT)
-                {
-
-                    console_print(CYAN "connected to %s:%u\n" RESET,
-                                  inet_ntoa(session->peer_addr.sin_addr),
-                                  ntohs(session->peer_addr.sin_port));
-
-                    ftp_session_set_state(session, DATA_TRANSFER_STATE, CLOSE_PASV);
-                    ftp_send_response(session, 150, "Ready\r\n");
-                }
-                break;
-
-            case DATA_TRANSFER_STATE:
-                if (pollinfo[1].revents & POLL_UNKNOWN)
-                    console_print(YELLOW "data_fd: revents=0x%08X\n" RESET, pollinfo[1].revents);
-
-                /* we need to transfer data */
-                if (pollinfo[1].revents & (POLLERR | POLLHUP))
-                {
-                    ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
-                    ftp_send_response(session, 426, "Data connection failed\r\n");
-                }
-                else if (pollinfo[1].revents & (POLLIN | POLLOUT))
-                    ftp_session_transfer(session);
-                break;
+                removeNetworkController(session->cmd_fd);
+                ftp_session_close_cmd(session);
             }
         }
     }
@@ -1858,10 +1769,6 @@ ftp_session_poll(ftp_session_t* session)
 
     /* disconnected from peer; destroy it and return next session */
     debug_print("disconnected from peer\n");
-    if (session->led)
-    {
-        flash_led_disconnect();
-    }
 
     return ftp_session_destroy(session);
 }
@@ -2175,24 +2082,6 @@ ftp_loop(void)
     session = sessions;
     while (session != NULL)
         session = ftp_session_poll(session);
-
-#ifdef _3DS
-    /* check if the user wants to exit */
-    hidScanInput();
-    u32 down = hidKeysDown();
-
-    if (down & KEY_B)
-        return LOOP_EXIT;
-
-    /* check if the user wants to toggle the LCD power */
-    if (down & KEY_START)
-    {
-        lcd_power = !lcd_power;
-        apt_hook(APTHOOK_ONRESTORE, NULL);
-    }
-#elif defined(__SWITCH__)
-        /* check if the user wants to exit */
-#endif
 
     return LOOP_CONTINUE;
 }
