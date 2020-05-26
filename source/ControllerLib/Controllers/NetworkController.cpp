@@ -15,7 +15,7 @@ extern "C" {
         for (auto it = syscon::controllers::Get().begin(); it != syscon::controllers::Get().end(); ++it)
         {
             auto ptr = (*it)->GetController();
-            if (ptr->GetType() == CONTROLLER_DUALSHOCK4)
+            if (ptr->GetType() == CONTROLLER_NETWORK)
             {
                 auto netController = static_cast<NetworkController*>(ptr);
                 if (netController->GetFD() == fd)

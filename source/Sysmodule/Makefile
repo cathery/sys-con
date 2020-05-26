@@ -5,7 +5,7 @@ include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/../libstratosphere/config
 
 TARGET		:=	sys-con
 SOURCES		+=	../ControllerSwitch ../ControllerLib ../ControllerLib/Controllers ../inih
-INCLUDES	+=	../ControllerSwitch ../ControllerLib ../inih
+INCLUDES	+=	../ControllerSwitch ../ControllerLib ../inih source
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
