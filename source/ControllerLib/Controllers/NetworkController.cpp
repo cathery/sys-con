@@ -30,7 +30,7 @@ extern "C" {
     }
 }
 
-static ControllerConfig _dualshock4ControllerConfig{};
+static ControllerConfig _networkControllerConfig{};
 static RGBAColor _ledValue{0x00, 0x00, 0x40};
 
 NetworkController::NetworkController(int fd)
@@ -76,17 +76,14 @@ void NetworkController::CloseInterfaces()
 
 Result NetworkController::GetInput()
 {
-    uint8_t input_bytes[64];
+    uint8_t input_bytes[7];
     ssize_t count;
 
     count = recv(m_fd, input_bytes, sizeof(input_bytes), 0);
     if (count == 0)
         return 1;
 
-    if (input_bytes[0] == 0x01)
-    {
-        m_buttonData = *reinterpret_cast<Dualshock4USBButtonData *>(input_bytes);
-    }
+    m_buttonData = *reinterpret_cast<NetworkButtonData *>(input_bytes);
     return 0;
 }
 
@@ -138,12 +135,14 @@ NormalizedButtonData NetworkController::GetNormalizedButtonData()
 {
     NormalizedButtonData normalData{};
 
-    normalData.triggers[0] = NormalizeTrigger(_dualshock4ControllerConfig.triggerDeadzonePercent[0], m_buttonData.l2_pressure);
-    normalData.triggers[1] = NormalizeTrigger(_dualshock4ControllerConfig.triggerDeadzonePercent[1], m_buttonData.r2_pressure);
+    normalData.triggers[0] = NormalizeTrigger(_networkControllerConfig.triggerDeadzonePercent[0], 
+0);
+    normalData.triggers[1] = NormalizeTrigger(_networkControllerConfig.triggerDeadzonePercent[1], 
+0);
 
-    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _dualshock4ControllerConfig.stickDeadzonePercent[0],
+    NormalizeAxis(m_buttonData.stick_left_x, m_buttonData.stick_left_y, _networkControllerConfig.stickDeadzonePercent[0],
                   &normalData.sticks[0].axis_x, &normalData.sticks[0].axis_y);
-    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _dualshock4ControllerConfig.stickDeadzonePercent[1],
+    NormalizeAxis(m_buttonData.stick_right_x, m_buttonData.stick_right_y, _networkControllerConfig.stickDeadzonePercent[1],
                   &normalData.sticks[1].axis_x, &normalData.sticks[1].axis_y);
 
     bool buttons[MAX_CONTROLLER_BUTTONS] = {
@@ -159,19 +158,19 @@ NormalizedButtonData NetworkController::GetNormalizedButtonData()
         m_buttonData.r2,
         m_buttonData.share,
         m_buttonData.options,
-        (m_buttonData.dpad == DS4_UP) || (m_buttonData.dpad == DS4_UPRIGHT) || (m_buttonData.dpad == DS4_UPLEFT),
-        (m_buttonData.dpad == DS4_RIGHT) || (m_buttonData.dpad == DS4_UPRIGHT) || (m_buttonData.dpad == DS4_DOWNRIGHT),
-        (m_buttonData.dpad == DS4_DOWN) || (m_buttonData.dpad == DS4_DOWNRIGHT) || (m_buttonData.dpad == DS4_DOWNLEFT),
-        (m_buttonData.dpad == DS4_LEFT) || (m_buttonData.dpad == DS4_UPLEFT) || (m_buttonData.dpad == DS4_DOWNLEFT),
+        m_buttonData.dup,
+        m_buttonData.dright,
+        m_buttonData.ddown,
+        m_buttonData.dleft,
         m_buttonData.touchpad_press,
         m_buttonData.psbutton,
         false,
-        m_buttonData.touchpad_finger1_unpressed == false,
+        true,
     };
 
     for (int i = 0; i != MAX_CONTROLLER_BUTTONS; ++i)
     {
-        ControllerButton button = _dualshock4ControllerConfig.buttons[i];
+        ControllerButton button = _networkControllerConfig.buttons[i];
         if (button == NONE)
             continue;
 
@@ -189,11 +188,11 @@ Result NetworkController::SetRumble(uint8_t strong_magnitude, uint8_t weak_magni
 
 void NetworkController::LoadConfig(const ControllerConfig *config, RGBAColor ledValue)
 {
-    _dualshock4ControllerConfig = *config;
+    _networkControllerConfig = *config;
     _ledValue = ledValue;
 }
 
 ControllerConfig *NetworkController::GetConfig()
 {
-    return &_dualshock4ControllerConfig;
+    return &_networkControllerConfig;
 }

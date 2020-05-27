@@ -2,7 +2,6 @@
 
 #ifdef __cplusplus
 #include "IController.h"
-#include "Dualshock4Controller.h"
 
 extern "C" {
 #endif
@@ -13,11 +12,41 @@ void removeNetworkController(int fd);
 #ifdef __cplusplus
 }
 
+struct NetworkButtonData
+{
+    uint8_t stick_left_x;
+    uint8_t stick_left_y;
+    uint8_t stick_right_x;
+    uint8_t stick_right_y;
+
+    bool dleft : 1;
+    bool dup : 1;
+    bool dright : 1;
+    bool ddown : 1;
+    bool square : 1;
+    bool cross : 1;
+    bool circle : 1;
+    bool triangle : 1;
+
+    bool l1 : 1;
+    bool r1 : 1;
+    bool l2 : 1;
+    bool r2 : 1;
+    bool share : 1;
+    bool options : 1;
+    bool l3 : 1;
+    bool r3 : 1;
+
+    bool psbutton : 1;
+    bool touchpad_press : 1;
+    uint8_t timestamp : 6;
+};
+
 class NetworkController : public IController
 {
 private:
     int m_fd;
-    Dualshock4USBButtonData m_buttonData{};
+    NetworkButtonData m_buttonData{};
     void DeleteNetworkController();
 public:
     NetworkController(int fd);
