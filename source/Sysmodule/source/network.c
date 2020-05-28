@@ -73,7 +73,7 @@ network_closesocket(int fd,
     socklen_t addrlen = sizeof(addr);
     struct pollfd pollinfo;
 
-    //  WriteToLog("0x%X\n", socketGetLastBsdResult());
+    //  WriteToLog("0x%X", socketGetLastBsdResult());
 
     if (connected)
     {
@@ -81,17 +81,17 @@ network_closesocket(int fd,
         rc = getpeername(fd, (struct sockaddr*)&addr, &addrlen);
         if (rc != 0)
         {
-            WriteToLog("getpeername: %d %s\n", errno, strerror(errno));
-            WriteToLog("closing connection to fd=%d\n", fd);
+            WriteToLog("getpeername: %d %s", errno, strerror(errno));
+            WriteToLog("closing connection to fd=%d", fd);
         }
         else
-            WriteToLog("closing connection to %s:%u\n",
+            WriteToLog("closing connection to %s:%u",
                           inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
         /* shutdown connection */
         rc = shutdown(fd, SHUT_WR);
         if (rc != 0)
-            WriteToLog("shutdown: %d %s\n", errno, strerror(errno));
+            WriteToLog("shutdown: %d %s", errno, strerror(errno));
 
         /* wait for client to close connection */
         pollinfo.fd = fd;
@@ -99,7 +99,7 @@ network_closesocket(int fd,
         pollinfo.revents = 0;
         rc = poll(&pollinfo, 1, 250);
         if (rc < 0)
-            WriteToLog("poll: %d %s\n", errno, strerror(errno));
+            WriteToLog("poll: %d %s", errno, strerror(errno));
     }
 
     /* set linger to 0 */
@@ -109,13 +109,13 @@ network_closesocket(int fd,
     rc = setsockopt(fd, SOL_SOCKET, SO_LINGER,
                     &linger, sizeof(linger));
     if (rc != 0)
-        WriteToLog("setsockopt: SO_LINGER %d %s\n",
+        WriteToLog("setsockopt: SO_LINGER %d %s",
                       errno, strerror(errno));
 
     /* close socket */
     rc = close(fd);
     if (rc != 0)
-        WriteToLog("close: %d %s\n", errno, strerror(errno));
+        WriteToLog("close: %d %s", errno, strerror(errno));
 }
 
 /*! close command socket on network session
@@ -181,11 +181,11 @@ network_session_new(int listen_fd)
     new_fd = accept(listen_fd, (struct sockaddr*)&addr, &addrlen);
     if (new_fd < 0)
     {
-        WriteToLog("accept: %d %s\n", errno, strerror(errno));
+        WriteToLog("accept: %d %s", errno, strerror(errno));
         return -1;
     }
 
-    WriteToLog("accepted connection from %s:%u\n",
+    WriteToLog("accepted connection from %s:%u",
                   inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
     registerNetworkController(new_fd);
@@ -194,7 +194,7 @@ network_session_new(int listen_fd)
     session = (network_session_t*)calloc(1, sizeof(network_session_t));
     if (session == NULL)
     {
-        WriteToLog("failed to allocate session\n");
+        WriteToLog("failed to allocate session");
         network_closesocket(new_fd, true);
         return -1;
     }
@@ -220,7 +220,7 @@ network_session_new(int listen_fd)
     rc = getsockname(new_fd, (struct sockaddr*)&session->client_addr, &addrlen);
     if (rc != 0)
     {
-        WriteToLog("getsockname: %d %s\n", errno, strerror(errno));
+        WriteToLog("getsockname: %d %s", errno, strerror(errno));
         network_session_destroy(session);
         return -1;
     }
@@ -250,7 +250,7 @@ network_session_poll(network_session_t* session)
     rc = poll(pollinfo, nfds, 0);
     if (rc < 0)
     {
-        WriteToLog("poll: %d %s\n", errno, strerror(errno));
+        WriteToLog("poll: %d %s", errno, strerror(errno));
         network_session_close_cmd(session);
     }
     else if (rc > 0)
@@ -260,12 +260,12 @@ network_session_poll(network_session_t* session)
         {
             /* handle command */
             if (pollinfo[0].revents & POLL_UNKNOWN)
-                WriteToLog("cmd_fd: revents=0x%08X\n", pollinfo[0].revents);
+                WriteToLog("cmd_fd: revents=0x%08X", pollinfo[0].revents);
 
             /* we need to read a new command */
             if (pollinfo[0].revents & (POLLERR | POLLHUP))
             {
-                WriteToLog("cmd revents=0x%x\n", pollinfo[0].revents);
+                WriteToLog("cmd revents=0x%x", pollinfo[0].revents);
                 network_session_close_cmd(session);
             }
 
@@ -285,7 +285,7 @@ network_session_poll(network_session_t* session)
         return session->next;
 
     /* disconnected from peer; destroy it and return next session */
-    WriteToLog("disconnected from peer\n");
+    WriteToLog("disconnected from peer");
 
     return network_session_destroy(session);
 }
@@ -317,9 +317,10 @@ void network_pre_init(void)
 
 static int network_parse_config_line(void *dummy, const char *section, const char *name, const char *value)
 {
-    if (strncmp(name, "port:", 5) == 0)
+    if (strncmp(name, "port", 4) == 0)
     {
         LISTEN_PORT = atoi(value);
+        return 1;
     }
 
     return 0;
@@ -334,7 +335,7 @@ int network_init(void)
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if (listenfd < 0)
     {
-        WriteToLog("socket: %d %s\n", errno, strerror(errno));
+        WriteToLog("socket: %d %s", errno, strerror(errno));
         network_exit();
         return -1;
     }
@@ -345,6 +346,7 @@ int network_init(void)
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     ini_parse(CONFIGPATH, network_parse_config_line, NULL);
     serv_addr.sin_port = htons(LISTEN_PORT);
+    WriteToLog("server port: %d", LISTEN_PORT);
 
     /* reuse address */
     {
@@ -352,7 +354,7 @@ int network_init(void)
         rc = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
         if (rc != 0)
         {
-            WriteToLog("setsockopt: %d %s\n", errno, strerror(errno));
+            WriteToLog("setsockopt: %d %s", errno, strerror(errno));
             network_exit();
             return -1;
         }
@@ -362,7 +364,7 @@ int network_init(void)
     rc = bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     if (rc != 0)
     {
-        WriteToLog("bind: %d %s\n", errno, strerror(errno));
+        WriteToLog("bind: %d %s", errno, strerror(errno));
         network_exit();
         return -1;
     }
@@ -371,7 +373,7 @@ int network_init(void)
     rc = listen(listenfd, 5);
     if (rc != 0)
     {
-        WriteToLog("listen: %d %s\n", errno, strerror(errno));
+        WriteToLog("listen: %d %s", errno, strerror(errno));
         network_exit();
         return -1;
     }
@@ -383,7 +385,7 @@ int network_init(void)
 void network_exit(void)
 {
 
-    WriteToLog("exiting network server\n");
+    WriteToLog("exiting network server");
 
     /* clean up all sessions */
     while (sessions != NULL)
@@ -394,7 +396,7 @@ void network_exit(void)
         network_closesocket(listenfd, false);
 
     /* deinitialize socket driver */
-    WriteToLog("Waiting for socketExit()...\n");
+    WriteToLog("Waiting for socketExit()...");
 }
 
 void network_post_exit(void)
@@ -422,12 +424,12 @@ network_loop(void)
     if (rc < 0)
     {
         /* wifi got disabled */
-        WriteToLog("poll: FAILED!\n");
+        WriteToLog("poll: FAILED!");
 
         if (errno == ENETDOWN)
             return LOOP_RESTART;
 
-        WriteToLog("poll: %d %s\n", errno, strerror(errno));
+        WriteToLog("poll: %d %s", errno, strerror(errno));
         return LOOP_EXIT;
     }
     else if (rc > 0)
@@ -442,7 +444,7 @@ network_loop(void)
         }
         else
         {
-            WriteToLog("listenfd: revents=0x%08X\n", pollinfo.revents);
+            WriteToLog("listenfd: revents=0x%08X", pollinfo.revents);
         }
     }
 
