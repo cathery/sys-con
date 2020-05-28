@@ -11,7 +11,6 @@
 extern "C" {
     #include "ftp.h"
     #include "util.h"
-    #include "console.h"
     #include "minIni.h"
 }
 
@@ -131,7 +130,6 @@ static loop_status_t loop(loop_status_t (*callback)(void))
     {
         svcSleepThread(1e+7);
         status = callback();
-        console_render();
         if (status != LOOP_CONTINUE)
             return status;
         if (isPaused())
@@ -147,16 +145,6 @@ int main(int argc, char *argv[])
     controllers::Initialize();
     usb::Initialize();
     psc::Initialize();
-
-    FILE* should_log_file = fopen("/config/sys-ftpd/logs/ftpd_log_enabled", "r");
-    if (should_log_file != NULL)
-    {
-        should_log = true;
-        fclose(should_log_file);
-
-        mkdir("/config/sys-ftpd/logs", 0700);
-        unlink("/config/sys-ftpd/logs/ftpd.log");
-    }
 
     char buffer[100];
     ini_gets("Pause", "disabled:", "0", buffer, 100, CONFIGPATH);
