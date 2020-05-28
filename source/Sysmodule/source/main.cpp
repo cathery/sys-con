@@ -9,9 +9,7 @@
 #include "SwitchHDLHandler.h"
 
 extern "C" {
-    #include "ftp.h"
-    #include "util.h"
-    #include "minIni.h"
+    #include "network.h"
 }
 
 #include <sys/stat.h>
@@ -132,8 +130,6 @@ static loop_status_t loop(loop_status_t (*callback)(void))
         status = callback();
         if (status != LOOP_CONTINUE)
             return status;
-        if (isPaused())
-            return LOOP_RESTART;
     }
     return LOOP_EXIT;
 }
@@ -146,47 +142,29 @@ int main(int argc, char *argv[])
     usb::Initialize();
     psc::Initialize();
 
-    char buffer[100];
-    ini_gets("Pause", "disabled:", "0", buffer, 100, CONFIGPATH);
-
-    //Checks if pausing is disabled in the config file, in which case it skips the entire pause initialization
-    if (strncmp(buffer, "1", 4) != 0)
-    {
-        Result rc = pauseInit();
-        if (R_FAILED(rc))
-            fatalThrow(rc);
-    }
-
     loop_status_t status = LOOP_RESTART;
 
     WriteToLog("Going to pre_init");
 
-    ftp_pre_init();
+    network_pre_init();
 
     WriteToLog("pre_init completed");
 
     while (status == LOOP_RESTART)
     {
-        while (isPaused())
-        {
-            svcSleepThread(1e+9);
-        }
-
         /* initialize ftp subsystem */
-        if (ftp_init() == 0)
+        if (network_init() == 0)
         {
             /* ftp loop */
-            status = loop(ftp_loop);
+            status = loop(network_loop);
 
             /* done with ftp */
-            ftp_exit();
+            network_exit();
         }
         else
             status = LOOP_EXIT;
     }
-    ftp_post_exit();
-
-    pauseExit();
+    network_post_exit();
 
     psc::Exit();
     usb::Exit();

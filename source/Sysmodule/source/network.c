@@ -1,12 +1,10 @@
 // This file is under the terms of the unlicense (https://github.com/DavidBuchanan314/ftpd/blob/master/LICENSE)
 
 #define ENABLE_LOGGING 1
-#include "ftp.h"
+#include "network.h"
 #include <arpa/inet.h>
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <malloc.h>
 #include <math.h>
@@ -17,13 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
 #include <switch.h>
 #define lstat stat
-#include "util.h"
 #include "log.h"
 #include "Controllers/NetworkController.h"
 
@@ -31,9 +26,9 @@
 
 int LISTEN_PORT;
 //#define LISTEN_PORT 5000
-#define DATA_PORT 0 /* ephemeral port */
+#define CONFIGPATH "/config/sys-con/port_config.ini"
 
-#include "minIni.h"
+#include "ini.h"
 #include <assert.h>
 
 int Callback(const char* section, const char* key, const char* value, void* userdata)
@@ -43,15 +38,15 @@ int Callback(const char* section, const char* key, const char* value, void* user
     return 1;
 }
 
-typedef struct ftp_session_t ftp_session_t;
+typedef struct network_session_t network_session_t;
 
-/*! ftp session */
-struct ftp_session_t
+/*! network session */
+struct network_session_t
 {
     struct sockaddr_in client_addr;  /*!< listen address for PASV connection */
     int cmd_fd;                      /*!< socket for command connection */
-    ftp_session_t* next;             /*!< link to next session */
-    ftp_session_t* prev;             /*!< link to prev session */
+    network_session_t* next;             /*!< link to next session */
+    network_session_t* prev;             /*!< link to prev session */
 };
 
 /*! appletHook cookie */
@@ -61,8 +56,8 @@ static AppletHookCookie cookie;
 static struct sockaddr_in serv_addr;
 /*! listen file descriptor */
 static int listenfd = -1;
-/*! list of ftp sessions */
-static ftp_session_t* sessions = NULL;
+/*! list of network sessions */
+static network_session_t* sessions = NULL;
 
 /*! close a socket
  *
@@ -70,7 +65,7 @@ static ftp_session_t* sessions = NULL;
  *  @param[in] connected whether this socket is connected
  */
 static void
-ftp_closesocket(int fd,
+network_closesocket(int fd,
                 bool connected)
 {
     int rc;
@@ -123,33 +118,33 @@ ftp_closesocket(int fd,
         WriteToLog("close: %d %s\n", errno, strerror(errno));
 }
 
-/*! close command socket on ftp session
+/*! close command socket on network session
  *
- *  @param[in] session ftp session
+ *  @param[in] session network session
  */
 static void
-ftp_session_close_cmd(ftp_session_t* session)
+network_session_close_cmd(network_session_t* session)
 {
     /* close command socket */
     if (session->cmd_fd >= 0)
-        ftp_closesocket(session->cmd_fd, true);
+        network_closesocket(session->cmd_fd, true);
 
     session->cmd_fd = -1;
 }
 
-/*! destroy ftp session
+/*! destroy network session
  *
- *  @param[in] session ftp session
+ *  @param[in] session network session
  *
  *  @returns the next session in the list
  */
-static ftp_session_t*
-ftp_session_destroy(ftp_session_t* session)
+static network_session_t*
+network_session_destroy(network_session_t* session)
 {
-    ftp_session_t* next = session->next;
+    network_session_t* next = session->next;
 
     /* close all sockets/files */
-    ftp_session_close_cmd(session);
+    network_session_close_cmd(session);
 
     /* unlink from sessions list */
     if (session->next)
@@ -169,16 +164,16 @@ ftp_session_destroy(ftp_session_t* session)
     return next;
 }
 
-/*! allocate new ftp session
+/*! allocate new network session
  *
  *  @param[in] listen_fd socket to accept connection from
  */
 static int
-ftp_session_new(int listen_fd)
+network_session_new(int listen_fd)
 {
     ssize_t rc;
     int new_fd;
-    ftp_session_t* session;
+    network_session_t* session;
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
 
@@ -196,11 +191,11 @@ ftp_session_new(int listen_fd)
     registerNetworkController(new_fd);
 
     /* allocate a new session */
-    session = (ftp_session_t*)calloc(1, sizeof(ftp_session_t));
+    session = (network_session_t*)calloc(1, sizeof(network_session_t));
     if (session == NULL)
     {
         WriteToLog("failed to allocate session\n");
-        ftp_closesocket(new_fd, true);
+        network_closesocket(new_fd, true);
         return -1;
     }
 
@@ -226,21 +221,21 @@ ftp_session_new(int listen_fd)
     if (rc != 0)
     {
         WriteToLog("getsockname: %d %s\n", errno, strerror(errno));
-        ftp_session_destroy(session);
+        network_session_destroy(session);
         return -1;
     }
 
     return 0;
 }
 
-/*! poll sockets for ftp session
+/*! poll sockets for network session
  *
- *  @param[in] session ftp session
+ *  @param[in] session network session
  *
  *  @returns next session
  */
-static ftp_session_t*
-ftp_session_poll(ftp_session_t* session)
+static network_session_t*
+network_session_poll(network_session_t* session)
 {
     int rc;
     struct pollfd pollinfo[2];
@@ -256,7 +251,7 @@ ftp_session_poll(ftp_session_t* session)
     if (rc < 0)
     {
         WriteToLog("poll: %d %s\n", errno, strerror(errno));
-        ftp_session_close_cmd(session);
+        network_session_close_cmd(session);
     }
     else if (rc > 0)
     {
@@ -271,7 +266,7 @@ ftp_session_poll(ftp_session_t* session)
             if (pollinfo[0].revents & (POLLERR | POLLHUP))
             {
                 WriteToLog("cmd revents=0x%x\n", pollinfo[0].revents);
-                ftp_session_close_cmd(session);
+                network_session_close_cmd(session);
             }
 
             ssize_t count;
@@ -280,7 +275,7 @@ ftp_session_poll(ftp_session_t* session)
             if (count == 0)
             {
                 removeNetworkController(session->cmd_fd);
-                ftp_session_close_cmd(session);
+                network_session_close_cmd(session);
             }
         }
     }
@@ -292,7 +287,7 @@ ftp_session_poll(ftp_session_t* session)
     /* disconnected from peer; destroy it and return next session */
     WriteToLog("disconnected from peer\n");
 
-    return ftp_session_destroy(session);
+    return network_session_destroy(session);
 }
 
 /*! Handle applet events
@@ -314,14 +309,24 @@ applet_hook(AppletHookType type,
     }
 }
 
-void ftp_pre_init(void)
+void network_pre_init(void)
 {
     /* register applet hook */
     appletHook(&cookie, applet_hook, NULL);
 }
 
-/*! initialize ftp subsystem */
-int ftp_init(void)
+static int network_parse_config_line(void *dummy, const char *section, const char *name, const char *value)
+{
+    if (strncmp(name, "port:", 5) == 0)
+    {
+        LISTEN_PORT = atoi(value);
+    }
+
+    return 0;
+}
+
+/*! initialize network subsystem */
+int network_init(void)
 {
     int rc = 0;
 
@@ -330,7 +335,7 @@ int ftp_init(void)
     if (listenfd < 0)
     {
         WriteToLog("socket: %d %s\n", errno, strerror(errno));
-        ftp_exit();
+        network_exit();
         return -1;
     }
 
@@ -338,9 +343,7 @@ int ftp_init(void)
     serv_addr.sin_family = AF_INET;
 
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    char str_port[100];
-    ini_gets("Port", "port:", "dummy", str_port, sizearray(str_port), CONFIGPATH);
-    LISTEN_PORT = atoi(str_port);
+    ini_parse(CONFIGPATH, network_parse_config_line, NULL);
     serv_addr.sin_port = htons(LISTEN_PORT);
 
     /* reuse address */
@@ -350,7 +353,7 @@ int ftp_init(void)
         if (rc != 0)
         {
             WriteToLog("setsockopt: %d %s\n", errno, strerror(errno));
-            ftp_exit();
+            network_exit();
             return -1;
         }
     }
@@ -360,7 +363,7 @@ int ftp_init(void)
     if (rc != 0)
     {
         WriteToLog("bind: %d %s\n", errno, strerror(errno));
-        ftp_exit();
+        network_exit();
         return -1;
     }
 
@@ -369,45 +372,45 @@ int ftp_init(void)
     if (rc != 0)
     {
         WriteToLog("listen: %d %s\n", errno, strerror(errno));
-        ftp_exit();
+        network_exit();
         return -1;
     }
 
     return 0;
 }
 
-/*! deinitialize ftp subsystem */
-void ftp_exit(void)
+/*! deinitialize network subsystem */
+void network_exit(void)
 {
 
-    WriteToLog("exiting ftp server\n");
+    WriteToLog("exiting network server\n");
 
     /* clean up all sessions */
     while (sessions != NULL)
-        ftp_session_destroy(sessions);
+        network_session_destroy(sessions);
 
     /* stop listening for new clients */
     if (listenfd >= 0)
-        ftp_closesocket(listenfd, false);
+        network_closesocket(listenfd, false);
 
     /* deinitialize socket driver */
     WriteToLog("Waiting for socketExit()...\n");
 }
 
-void ftp_post_exit(void)
+void network_post_exit(void)
 {
 }
 
-/*! ftp look
+/*! network look
  *
  *  @returns whether to keep looping
  */
 loop_status_t
-ftp_loop(void)
+network_loop(void)
 {
     int rc;
     struct pollfd pollinfo;
-    ftp_session_t* session;
+    network_session_t* session;
 
     /* we will poll for new client connections */
     pollinfo.fd = listenfd;
@@ -432,7 +435,7 @@ ftp_loop(void)
         if (pollinfo.revents & POLLIN)
         {
             /* we got a new client */
-            if (ftp_session_new(listenfd) != 0)
+            if (network_session_new(listenfd) != 0)
             {
                 return LOOP_RESTART;
             }
@@ -446,7 +449,7 @@ ftp_loop(void)
     /* poll each session */
     session = sessions;
     while (session != NULL)
-        session = ftp_session_poll(session);
+        session = network_session_poll(session);
 
     return LOOP_CONTINUE;
 }
