@@ -3,7 +3,7 @@
         {
             "name": "AArch64 libnx",
             "includePath": [
-                "${DEVKITPRO}/devkitA64/lib/gcc/aarch64-none-elf/9.2.0/include",
+                "${DEVKITPRO}/devkitA64/lib/gcc/aarch64-none-elf/10.1.0/include",
                 "${DEVKITPRO}/devkitA64/aarch64-none-elf/include",
                 "${DEVKITPRO}/portlibs/switch/include",
                 "${DEVKITPRO}/libnx/include",
@@ -22,9 +22,9 @@
                 "ATMOSPHERE_OS_HORIZON"
             ],
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-g++",
-            "cStandard": "c11",
-            "cppStandard": "c++20",
-            "intelliSenseMode": "gcc-x64"
+            "cStandard": "gnu18",
+            "cppStandard": "gnu++20",
+            "intelliSenseMode": "gcc-arm64"
         }
     ],
     "version": 4

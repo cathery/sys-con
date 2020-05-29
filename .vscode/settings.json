@@ -58,6 +58,7 @@
         "map": "cpp",
         "set": "cpp",
         "mutex": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "span": "cpp"
     },
 }
