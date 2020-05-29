@@ -33,15 +33,12 @@ void WriteToLog(const char *fmt, ...)
 {
     std::scoped_lock printLock(printMutex);
 
-    u64 ts;
-    TimeCalendarTime caltime;
-    timeGetCurrentTime(TimeType_LocalSystemClock, &ts);
-    timeToCalendarTimeWithMyRule(ts, &caltime, nullptr);
+    ams::TimeSpan ts = ams::os::ConvertToTimeSpan(ams::os::GetSystemTick());
 
     FILE *fp = fopen(LOG_PATH, "a");
 
     //Print time
-    fprintf(fp, "%04i-%02i-%02i %02i:%02i:%02i: ", caltime.year, caltime.month, caltime.day, caltime.hour, caltime.minute, caltime.second);
+    fprintf(fp, "%02lid %02li:%02li:%02li: ", ts.GetDays(), ts.GetHours() % 24, ts.GetMinutes() % 60, ts.GetSeconds() % 60);
 
     //Print the actual text
     va_list va;
