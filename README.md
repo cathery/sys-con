@@ -1,3 +1,14 @@
+# sys-con-plus-mitm
+
+#### Adding man-in-the-middle support to the sys-con sysmodule 
+
+## Description
+This sysmodule aims to add **Wireless** support for third-party controllers to the Nintendo Switch. This will be useless once sys-con sysmodule achieves the direct bluetooth support.
+
+This sysmodule is inspired by the hid-mitm sysmodule (https://github.com/jakibaki/hid-mitm) which is now obsolete.
+
+The **USB** support provided by the original sys-con is intended to remain untouched so that both wireless and wired controllers can work together.
+
 # sys-con
 
 #### A Nintendo Switch custom sysmodule for third-party controller support. No man-in-the-middle required! 
