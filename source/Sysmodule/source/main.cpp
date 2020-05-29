@@ -62,7 +62,6 @@ extern "C" void __appInit(void)
         hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
         setsysExit();
 
-        R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(hiddbgInitialize());
         if (hosversionAtLeast(7, 0, 0))
             R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
@@ -82,7 +81,6 @@ extern "C" void __appExit(void)
     hiddbgExit();
     fsdevUnmountAll();
     fsExit();
-    timeExit();
 }
 
 using namespace syscon;
