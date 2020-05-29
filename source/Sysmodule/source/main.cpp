@@ -7,7 +7,7 @@
 #include "config_handler.h"
 #include "psc_module.h"
 
-#define APP_VERSION "0.6.1"
+#define APP_VERSION "0.6.2"
 
 // libnx fake heap initialization
 extern "C"
