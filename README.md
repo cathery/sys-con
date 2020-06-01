@@ -11,9 +11,7 @@ The **USB** support provided by the original sys-con is intended to remain untou
 
 ## Example setup
 
-🎮
-     )))  Bluetooth  ((( Raspberry PI )))    WiFi   ((( Nintendo Switch
-🎮
+🎮 )))  Bluetooth  ((( RaspberryPI )))    WiFi   ((( NintendoSwitch
 
 # sys-con
 
