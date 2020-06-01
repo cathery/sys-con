@@ -9,6 +9,12 @@ This sysmodule is inspired by the hid-mitm sysmodule (https://github.com/jakibak
 
 The **USB** support provided by the original sys-con is intended to remain untouched so that both wireless and wired controllers can work together.
 
+## Example setup
+
+🎮
+     )))  Bluetooth  ((( Raspberry PI )))    WiFi   ((( Nintendo Switch
+🎮
+
 # sys-con
 
 #### A Nintendo Switch custom sysmodule for third-party controller support. No man-in-the-middle required! 
