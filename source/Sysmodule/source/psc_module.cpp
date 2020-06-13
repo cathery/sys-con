@@ -11,7 +11,7 @@ namespace syscon::psc
     {
         PscPmModule pscModule;
         Waiter pscModuleWaiter;
-        const uint16_t dependencies[] = {PscPmModuleId_Usb};
+        const uint16_t dependencies[] = {PscPmModuleId_Fs};
 
         //Thread to check for psc:pm state change (console waking up/going to sleep)
         void PscThreadFunc(void *arg);
