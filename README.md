@@ -1,24 +1,18 @@
 # sys-con
 
-#### A Nintedo Switch sysmodule for third-party controller support. No man-in-the-middle required! 
-###### \[Switch FW 5.0.0+\]
+#### A Nintendo Switch custom sysmodule for third-party controller support. No man-in-the-middle required! 
+###### \[Switch FW 5.0.0+\] [Atmosphère only]
+
 
 
 ## Description
 This sysmodule aims to provide complete functionality for most popular game controllers not supported by Nintendo Switch.
-At the current moment, **only USB connection** is supported. 
+At the current moment, **only USB connection** is supported.
 
 This app is missing a lot of features. For more information, see the [issues page](https://github.com/cathery/sys-con/issues).
 
 ### ⚠ I can't support your generic 3rd party HID controller yet.
 It is a limitation of the firmware and I'm looking to work around it.
-
-### ⚠ If you get the error 2003-0008 (0x1003):
-You're running too many sysmodules. Disable other memory demanding sysmodules like sys-ftpd or ldn_mitm.
-
-### ⚠ If you have a second-generation Dualshock 4:
-You need to go to `sdmc:/config/sys-con/config_global.ini` and change the value of `use_dualshock_2nd_generation` from **false** to **true**.
-
 
 
 ## Install
@@ -45,9 +39,13 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 
 ## Building (For developers)
 
-Like all other switch projects, you need to have [devkitPro](https://switchbrew.org/wiki/Setting_up_Development_Environment) set up on your system.
+Don't download the project as ZIP. It doesn't copy the submodules correctly and you will be left with empty folders.
 
-This project uses libnx version 3.1.0 or later.
+Instead, clone the repository **recursively** using any git client you have. (Git Bash, Git GUI, Github Desktop, etc.)
+
+Like all other switch projects, you need to have [devkitA64](https://switchbrew.org/wiki/Setting_up_Development_Environment) set up on your system.
+
+This project uses libnx version **3.3.0**.
 
 If you have **Visual Studio Code**, you can open the project as a folder and run the build tasks from inside the program. It also has Intellisense configured for switch development, if you have DEVKITPRO correctly defined in your environment variables. Handy!
 

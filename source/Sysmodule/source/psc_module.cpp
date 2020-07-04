@@ -11,11 +11,13 @@ namespace syscon::psc
     {
         PscPmModule pscModule;
         Waiter pscModuleWaiter;
-        const uint16_t dependencies[] = {PscPmModuleId_Usb};
+        const uint16_t dependencies[] = {PscPmModuleId_Fs};
 
+        //Thread to check for psc:pm state change (console waking up/going to sleep)
         void PscThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x1'000> g_psc_thread(&PscThreadFunc, nullptr, 0x2C);
+        alignas(ams::os::ThreadStackAlignment) u8 psc_thread_stack[0x1000];
+        Thread g_psc_thread;
 
         bool is_psc_thread_running = false;
 
@@ -31,6 +33,7 @@ namespace syscon::psc
                     {
                         switch (pscState)
                         {
+                            case PscPmState_Awake:
                             case PscPmState_ReadyAwaken:
                                 //usb::CreateUsbEvents();
                                 break;
@@ -53,7 +56,9 @@ namespace syscon::psc
         R_TRY(pscmGetPmModule(&pscModule, PscPmModuleId(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true));
         pscModuleWaiter = waiterForEvent(&pscModule.event);
         is_psc_thread_running = true;
-        return g_psc_thread.Start().GetValue();
+        R_ABORT_UNLESS(threadCreate(&g_psc_thread, &PscThreadFunc, nullptr, psc_thread_stack, sizeof(psc_thread_stack), 0x2C, -2));
+        R_ABORT_UNLESS(threadStart(&g_psc_thread));
+        return 0;
     }
 
     void Exit()
@@ -64,7 +69,8 @@ namespace syscon::psc
         pscPmModuleClose(&pscModule);
         eventClose(&pscModule.event);
 
-        g_psc_thread.CancelSynchronization();
-        g_psc_thread.Join();
+        svcCancelSynchronization(g_psc_thread.handle);
+        threadWaitForExit(&g_psc_thread);
+        threadClose(&g_psc_thread);
     }
 }; // namespace syscon::psc

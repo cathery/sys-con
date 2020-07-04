@@ -7,12 +7,17 @@
 #include "config_handler.h"
 #include "psc_module.h"
 
-#define APP_VERSION "0.6.0"
+#define APP_VERSION "0.6.2"
 
 // libnx fake heap initialization
 extern "C"
 {
+    // We aren't an applet, so disable applet functionality.
     u32 __nx_applet_type = AppletType_None;
+    // We are a sysmodule, so don't use more FS sessions than needed.
+    u32 __nx_fs_num_sessions = 1;
+    // We don't need to reserve memory for fsdev, so don't use it.
+    u32 __nx_fsdev_direntry_cache_size = 1;
 
 #define INNER_HEAP_SIZE 0x40'000
     size_t nx_inner_heap_size = INNER_HEAP_SIZE;
@@ -57,7 +62,6 @@ extern "C" void __appInit(void)
         hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
         setsysExit();
 
-        R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(hiddbgInitialize());
         if (hosversionAtLeast(7, 0, 0))
             R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
@@ -77,7 +81,6 @@ extern "C" void __appExit(void)
     hiddbgExit();
     fsdevUnmountAll();
     fsExit();
-    timeExit();
 }
 
 using namespace syscon;

@@ -20,9 +20,11 @@ namespace syscon::config
         UTimer filecheckTimer;
         Waiter filecheckTimerWaiter = waiterForUTimer(&filecheckTimer);
 
+        // Thread to check for any config changes
         void ConfigChangedCheckThreadFunc(void *arg);
 
-        ams::os::StaticThread<0x2'000> g_config_changed_check_thread(&ConfigChangedCheckThreadFunc, nullptr, 0x3E);
+        alignas(ams::os::ThreadStackAlignment) u8 config_thread_stack[0x2000];
+        Thread g_config_changed_check_thread;
 
         bool is_config_changed_check_thread_running = false;
 
@@ -338,14 +340,17 @@ namespace syscon::config
             return 1;
         utimerStart(&filecheckTimer);
         is_config_changed_check_thread_running = true;
-        return g_config_changed_check_thread.Start().GetValue();
+        R_ABORT_UNLESS(threadCreate(&g_config_changed_check_thread, &ConfigChangedCheckThreadFunc, nullptr, config_thread_stack, sizeof(config_thread_stack), 0x3E, -2));
+        R_ABORT_UNLESS(threadStart(&g_config_changed_check_thread));
+        return 0;
     }
 
     void Disable()
     {
         is_config_changed_check_thread_running = false;
         utimerStop(&filecheckTimer);
-        g_config_changed_check_thread.CancelSynchronization();
-        g_config_changed_check_thread.Join();
+        svcCancelSynchronization(g_config_changed_check_thread.handle);
+        threadWaitForExit(&g_config_changed_check_thread);
+        threadClose(&g_config_changed_check_thread);
     }
 } // namespace syscon::config

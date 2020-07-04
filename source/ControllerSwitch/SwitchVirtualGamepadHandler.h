@@ -10,8 +10,11 @@ protected:
     u32 m_vibrationDeviceHandle;
     std::unique_ptr<IController> m_controller;
 
-    ams::os::StaticThread<0x1'000> m_inputThread;
-    ams::os::StaticThread<0x1'000> m_outputThread;
+    alignas(ams::os::ThreadStackAlignment) u8 input_thread_stack[0x1000];
+    alignas(ams::os::ThreadStackAlignment) u8 output_thread_stack[0x1000];
+
+    Thread m_inputThread;
+    Thread m_outputThread;
 
     bool m_inputThreadIsRunning = false;
     bool m_outputThreadIsRunning = false;
