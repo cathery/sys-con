@@ -59,6 +59,13 @@
         "set": "cpp",
         "mutex": "cpp",
         "shared_mutex": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "xtr1common": "cpp",
+        "list": "cpp",
+        "ranges": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "stop_token": "cpp"
     },
+    "C_Cpp.errorSquiggles": "Enabled",
 }

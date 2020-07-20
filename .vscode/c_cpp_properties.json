@@ -9,17 +9,12 @@
                 "${DEVKITPRO}/libnx/include",
                 "source/ControllerLib",
                 "source/ControllerSwitch",
-                "source/inih",
-                "source/libstratosphere/libstratosphere/include",
-                "source/libstratosphere/libvapours/include"
+                "source/lib/inih",
+                "source/lib/libframe/include"
             ],
             "defines": [
                 "SWITCH",
-                "__SWITCH__",
-                "ATMOSPHERE_BOARD_NINTENDO_SWITCH",
-                "ATMOSPHERE_IS_STRATOSPHERE",
-                "ATMOSPHERE_ARCH_ARM64",
-                "ATMOSPHERE_OS_HORIZON"
+                "__SWITCH__"
             ],
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-g++",
             "cStandard": "gnu18",

@@ -1,6 +1,6 @@
 #include "switch.h"
 #include "log.h"
-#include <stratosphere.hpp>
+#include "utils.hpp"
 
 #include "usb_module.h"
 #include "controller_handler.h"
@@ -32,45 +32,21 @@ extern "C"
         fake_heap_start = nx_inner_heap;
         fake_heap_end = nx_inner_heap + nx_inner_heap_size;
     }
-
-    // Exception handling
-    alignas(16) u8 __nx_exception_stack[ams::os::MemoryPageSize];
-    u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
-    void __libnx_exception_handler(ThreadExceptionDump *ctx)
-    {
-        ams::CrashHandler(ctx);
-    }
 }
-
-// libstratosphere variables
-namespace ams
-{
-    ncm::ProgramId CurrentProgramId = {0x690000000000000D};
-    namespace result
-    {
-        bool CallFatalOnResultAssertion = true;
-    }
-} // namespace ams
 
 extern "C" void __appInit(void)
 {
-    ams::sm::DoWithSession([] {
-        //Initialize system firmware version
-        R_ABORT_UNLESS(setsysInitialize());
-        SetSysFirmwareVersion fw;
-        R_ABORT_UNLESS(setsysGetFirmwareVersion(&fw));
-        hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
-        setsysExit();
-
-        R_ABORT_UNLESS(hiddbgInitialize());
+    util::DoWithSmSession([] {
+        util::SetHOSVersion();
+        R_ASSERT(hiddbgInitialize());
         if (hosversionAtLeast(7, 0, 0))
-            R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
-        R_ABORT_UNLESS(usbHsInitialize());
-        R_ABORT_UNLESS(pscmInitialize());
-        R_ABORT_UNLESS(fsInitialize());
+            R_ASSERT(hiddbgAttachHdlsWorkBuffer());
+        R_ASSERT(usbHsInitialize());
+        R_ASSERT(pscmInitialize());
+        R_ASSERT(fsInitialize());
     });
 
-    R_ABORT_UNLESS(fsdevMountSdmc());
+    R_ASSERT(fsdevMountSdmc());
 }
 
 extern "C" void __appExit(void)

@@ -24,7 +24,7 @@ void SwitchVirtualGamepadHandler::InputThreadLoop(void *handler)
     do
     {
         static_cast<SwitchVirtualGamepadHandler *>(handler)->UpdateInput();
-    } while (static_cast<SwitchVirtualGamepadHandler *>(handler)->m_inputThreadIsRunning);
+    } while (static_cast<SwitchVirtualGamepadHandler *>(handler)->m_inputThread.IsRunning());
 }
 
 void SwitchVirtualGamepadHandler::OutputThreadLoop(void *handler)
@@ -32,39 +32,29 @@ void SwitchVirtualGamepadHandler::OutputThreadLoop(void *handler)
     do
     {
         static_cast<SwitchVirtualGamepadHandler *>(handler)->UpdateOutput();
-    } while (static_cast<SwitchVirtualGamepadHandler *>(handler)->m_outputThreadIsRunning);
+    } while (static_cast<SwitchVirtualGamepadHandler *>(handler)->m_outputThread.IsRunning());
 }
 
 Result SwitchVirtualGamepadHandler::InitInputThread()
 {
-    m_inputThreadIsRunning = true;
-    R_ABORT_UNLESS(threadCreate(&m_inputThread, &SwitchVirtualGamepadHandler::InputThreadLoop, this, input_thread_stack, sizeof(input_thread_stack), 0x30, -2));
-    R_ABORT_UNLESS(threadStart(&m_inputThread));
-    return 0;
+    R_TRY(m_inputThread.Initialize(&SwitchVirtualGamepadHandler::InputThreadLoop, this, 0x30));
+    return m_inputThread.Start();
 }
 
 void SwitchVirtualGamepadHandler::ExitInputThread()
 {
-    m_inputThreadIsRunning = false;
-    svcCancelSynchronization(m_inputThread.handle);
-    threadWaitForExit(&m_inputThread);
-    threadClose(&m_inputThread);
+    m_inputThread.Join();
 }
 
 Result SwitchVirtualGamepadHandler::InitOutputThread()
 {
-    m_outputThreadIsRunning = true;
-    R_ABORT_UNLESS(threadCreate(&m_outputThread, &SwitchVirtualGamepadHandler::OutputThreadLoop, this, output_thread_stack, sizeof(output_thread_stack), 0x30, -2));
-    R_ABORT_UNLESS(threadStart(&m_outputThread));
-    return 0;
+    R_TRY(m_outputThread.Initialize(&SwitchVirtualGamepadHandler::OutputThreadLoop, this, 0x30));
+    return m_outputThread.Start();
 }
 
 void SwitchVirtualGamepadHandler::ExitOutputThread()
 {
-    m_outputThreadIsRunning = false;
-    svcCancelSynchronization(m_outputThread.handle);
-    threadWaitForExit(&m_outputThread);
-    threadClose(&m_outputThread);
+    m_outputThread.Join();
 }
 
 static_assert(JOYSTICK_MAX == 32767 && JOYSTICK_MIN == -32767,

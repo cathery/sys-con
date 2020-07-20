@@ -1,13 +1,15 @@
 #include "switch.h"
 #include "log.h"
 #include "config_handler.h"
-#include <stratosphere.hpp>
+#include <cstdarg>
+#include "scoped_mutex.hpp"
+#include "time_span.hpp"
 
-static ams::os::Mutex printMutex(false);
+static ScopedMutex printMutex;
 
 void DiscardOldLogs()
 {
-    std::scoped_lock printLock(printMutex);
+    SCOPED_LOCK(printMutex);
 
     FsFileSystem *fs = fsdevGetDeviceFileSystem("sdmc");
     FsFile file;
@@ -31,9 +33,9 @@ void DiscardOldLogs()
 
 void WriteToLog(const char *fmt, ...)
 {
-    std::scoped_lock printLock(printMutex);
+    SCOPED_LOCK(printMutex);
 
-    ams::TimeSpan ts = ams::os::ConvertToTimeSpan(ams::os::GetSystemTick());
+    TimeSpan ts = TimeSpan::FromSystemTick();
 
     FILE *fp = fopen(LOG_PATH, "a");
 
@@ -52,6 +54,6 @@ void WriteToLog(const char *fmt, ...)
 
 void LockedUpdateConsole()
 {
-    std::scoped_lock printLock(printMutex);
+    SCOPED_LOCK(printMutex);
     consoleUpdate(NULL);
 }

@@ -5,8 +5,8 @@
 #include "log.h"
 #include "ini.h"
 #include <cstring>
-#include <stratosphere.hpp>
 #include "usb_module.h"
+#include "static_thread.hpp"
 
 namespace syscon::config
 {
@@ -23,10 +23,7 @@ namespace syscon::config
         // Thread to check for any config changes
         void ConfigChangedCheckThreadFunc(void *arg);
 
-        alignas(ams::os::ThreadStackAlignment) u8 config_thread_stack[0x2000];
-        Thread g_config_changed_check_thread;
-
-        bool is_config_changed_check_thread_running = false;
+        StaticThread<0x2000> g_config_changed_check_thread(&ConfigChangedCheckThreadFunc, nullptr, 0x3E);
 
         constexpr std::array keyNames{
             "FACE_UP",
@@ -208,7 +205,7 @@ namespace syscon::config
                         config::LoadAllConfigs();
                     }
                 }
-            } while (is_config_changed_check_thread_running);
+            } while (g_config_changed_check_thread.IsRunning());
         }
     } // namespace
 
@@ -339,18 +336,12 @@ namespace syscon::config
         if (filecheckTimer.started)
             return 1;
         utimerStart(&filecheckTimer);
-        is_config_changed_check_thread_running = true;
-        R_ABORT_UNLESS(threadCreate(&g_config_changed_check_thread, &ConfigChangedCheckThreadFunc, nullptr, config_thread_stack, sizeof(config_thread_stack), 0x3E, -2));
-        R_ABORT_UNLESS(threadStart(&g_config_changed_check_thread));
-        return 0;
+        return g_config_changed_check_thread.Start();
     }
 
     void Disable()
     {
-        is_config_changed_check_thread_running = false;
         utimerStop(&filecheckTimer);
-        svcCancelSynchronization(g_config_changed_check_thread.handle);
-        threadWaitForExit(&g_config_changed_check_thread);
-        threadClose(&g_config_changed_check_thread);
+        g_config_changed_check_thread.Join();
     }
 } // namespace syscon::config

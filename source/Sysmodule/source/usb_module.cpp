@@ -3,12 +3,12 @@
 #include "controller_handler.h"
 #include "config_handler.h"
 
-#include <stratosphere.hpp>
-
 #include "SwitchUSBDevice.h"
 #include "ControllerHelpers.h"
 #include "log.h"
 #include <string.h>
+#include "static_thread.hpp"
+#include "scoped_mutex.hpp"
 
 namespace syscon::usb
 {
@@ -19,7 +19,7 @@ namespace syscon::usb
 
         constexpr size_t MaxUsbHsInterfacesSize = 16;
 
-        ams::os::Mutex usbMutex(false);
+        ScopedMutex usbMutex;
 
         //Thread that waits on generic usb event
         void UsbEventThreadFunc(void *arg);
@@ -28,16 +28,9 @@ namespace syscon::usb
         //Thread that waits on any disconnected usb devices
         void UsbInterfaceChangeThreadFunc(void *arg);
 
-        alignas(ams::os::ThreadStackAlignment) u8 usb_event_thread_stack[0x2000];
-        alignas(ams::os::ThreadStackAlignment) u8 sony_event_thread_stack[0x2000];
-        alignas(ams::os::ThreadStackAlignment) u8 usb_interface_change_thread_stack[0x2000];
-
-        Thread g_usb_event_thread;
-        Thread g_sony_event_thread;
-        Thread g_usb_interface_change_thread;
-
-        bool is_usb_event_thread_running = false;
-        bool is_usb_interface_change_thread_running = false;
+        StaticThread<0x2000> g_usb_event_thread(&UsbEventThreadFunc, nullptr, 0x3A);
+        StaticThread<0x2000> g_sony_event_thread(&UsbSonyEventThreadFunc, nullptr, 0x3B);
+        StaticThread<0x2000> g_usb_interface_change_thread(&UsbInterfaceChangeThreadFunc, nullptr, 0x2C);
 
         Event g_usbCatchAllEvent{};
         Event g_usbSonyEvent{};
@@ -72,7 +65,7 @@ namespace syscon::usb
                             WriteToLog("Initializing Xbox One controller: 0x%x", controllers::Insert(std::make_unique<XboxOneController>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
                     }
                 }
-            } while (is_usb_event_thread_running);
+            } while (g_usb_event_thread.IsRunning());
         }
 
         void UsbSonyEventThreadFunc(void *arg)
@@ -94,7 +87,7 @@ namespace syscon::usb
                             WriteToLog("Initializing Dualshock 4 controller: 0x%x", controllers::Insert(std::make_unique<Dualshock4Controller>(std::make_unique<SwitchUSBDevice>(interfaces, total_entries))));
                     }
                 }
-            } while (is_usb_event_thread_running);
+            } while (g_sony_event_thread.IsRunning());
         }
 
         void UsbInterfaceChangeThreadFunc(void *arg)
@@ -140,7 +133,7 @@ namespace syscon::usb
                         }
                     }
                 }
-            } while (is_usb_interface_change_thread_running);
+            } while (g_usb_interface_change_thread.IsRunning());
         }
 
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol)
@@ -190,7 +183,7 @@ namespace syscon::usb
 
     void Initialize()
     {
-        R_ABORT_UNLESS(Enable());
+        R_ASSERT(Enable());
     }
 
     void Exit()
@@ -201,36 +194,17 @@ namespace syscon::usb
     Result Enable()
     {
         R_TRY(CreateUsbEvents());
-
-        is_usb_event_thread_running = true;
-        is_usb_interface_change_thread_running = true;
-
-        R_ABORT_UNLESS(threadCreate(&g_usb_event_thread, &UsbEventThreadFunc, nullptr, usb_event_thread_stack, sizeof(usb_event_thread_stack), 0x3A, -2));
-        R_ABORT_UNLESS(threadCreate(&g_sony_event_thread, &UsbSonyEventThreadFunc, nullptr, sony_event_thread_stack, sizeof(sony_event_thread_stack), 0x3B, -2));
-        R_ABORT_UNLESS(threadCreate(&g_usb_interface_change_thread, &UsbInterfaceChangeThreadFunc, nullptr, usb_interface_change_thread_stack, sizeof(usb_interface_change_thread_stack), 0x2C, -2));
-
-        R_ABORT_UNLESS(threadStart(&g_usb_event_thread));
-        R_ABORT_UNLESS(threadStart(&g_sony_event_thread));
-        R_ABORT_UNLESS(threadStart(&g_usb_interface_change_thread));
+        R_TRY(g_usb_event_thread.Start());
+        R_TRY(g_sony_event_thread.Start());
+        R_TRY(g_usb_interface_change_thread.Start());
         return 0;
     }
 
     void Disable()
     {
-        is_usb_event_thread_running = false;
-        is_usb_interface_change_thread_running = false;
-
-        svcCancelSynchronization(g_usb_event_thread.handle);
-        threadWaitForExit(&g_usb_event_thread);
-        threadClose(&g_usb_event_thread);
-
-        svcCancelSynchronization(g_sony_event_thread.handle);
-        threadWaitForExit(&g_sony_event_thread);
-        threadClose(&g_sony_event_thread);
-
-        svcCancelSynchronization(g_usb_interface_change_thread.handle);
-        threadWaitForExit(&g_usb_interface_change_thread);
-        threadClose(&g_usb_interface_change_thread);
+        g_usb_event_thread.Join();
+        g_sony_event_thread.Join();
+        g_usb_interface_change_thread.Join();
 
         DestroyUsbEvents();
         controllers::Reset();

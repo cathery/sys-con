@@ -1,9 +1,9 @@
 #include "psc_module.h"
-#include <stratosphere.hpp>
 #include "usb_module.h"
 #include "config_handler.h"
 #include "controller_handler.h"
 #include "log.h"
+#include "static_thread.hpp"
 
 namespace syscon::psc
 {
@@ -16,10 +16,7 @@ namespace syscon::psc
         //Thread to check for psc:pm state change (console waking up/going to sleep)
         void PscThreadFunc(void *arg);
 
-        alignas(ams::os::ThreadStackAlignment) u8 psc_thread_stack[0x1000];
-        Thread g_psc_thread;
-
-        bool is_psc_thread_running = false;
+        StaticThread<0x1000> g_psc_thread(&PscThreadFunc, nullptr, 0x2C);
 
         void PscThreadFunc(void *arg)
         {
@@ -48,29 +45,22 @@ namespace syscon::psc
                         pscPmModuleAcknowledge(&pscModule, pscState);
                     }
                 }
-            } while (is_psc_thread_running);
+            } while (g_psc_thread.IsRunning());
         }
     } // namespace
     Result Initialize()
     {
         R_TRY(pscmGetPmModule(&pscModule, PscPmModuleId(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true));
         pscModuleWaiter = waiterForEvent(&pscModule.event);
-        is_psc_thread_running = true;
-        R_ABORT_UNLESS(threadCreate(&g_psc_thread, &PscThreadFunc, nullptr, psc_thread_stack, sizeof(psc_thread_stack), 0x2C, -2));
-        R_ABORT_UNLESS(threadStart(&g_psc_thread));
-        return 0;
+        return g_psc_thread.Start();
     }
 
     void Exit()
     {
-        is_psc_thread_running = false;
-
         pscPmModuleFinalize(&pscModule);
         pscPmModuleClose(&pscModule);
         eventClose(&pscModule.event);
 
-        svcCancelSynchronization(g_psc_thread.handle);
-        threadWaitForExit(&g_psc_thread);
-        threadClose(&g_psc_thread);
+        g_psc_thread.Join();
     }
 }; // namespace syscon::psc

@@ -1,7 +1,7 @@
 #pragma once
 #include "switch.h"
 #include "IController.h"
-#include <stratosphere.hpp>
+#include "static_thread.hpp"
 
 //This class is a base class for SwitchHDLHandler and SwitchAbstractedPaadHandler.
 class SwitchVirtualGamepadHandler
@@ -10,17 +10,11 @@ protected:
     u32 m_vibrationDeviceHandle;
     std::unique_ptr<IController> m_controller;
 
-    alignas(ams::os::ThreadStackAlignment) u8 input_thread_stack[0x1000];
-    alignas(ams::os::ThreadStackAlignment) u8 output_thread_stack[0x1000];
-
-    Thread m_inputThread;
-    Thread m_outputThread;
-
-    bool m_inputThreadIsRunning = false;
-    bool m_outputThreadIsRunning = false;
-
     static void InputThreadLoop(void *argument);
     static void OutputThreadLoop(void *argument);
+
+    StaticThread<0x1000> m_inputThread;
+    StaticThread<0x1000> m_outputThread;
 
 public:
     SwitchVirtualGamepadHandler(std::unique_ptr<IController> &&controller);

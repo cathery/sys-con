@@ -2,15 +2,18 @@
 
 #include "ControllerHelpers.h"
 #include "SwitchVirtualGamepadHandler.h"
-#include <stratosphere.hpp>
+#include "scoped_mutex.hpp"
+#include "static_vector.hpp"
 
 namespace syscon::controllers
 {
-    bool IsAtControllerLimit();
+    constexpr size_t MaxControllerHandlerSize = 10;
+    typedef StaticVector<std::unique_ptr<SwitchVirtualGamepadHandler>, MaxControllerHandlerSize> ControllersVector;
 
+    bool IsAtControllerLimit();
     Result Insert(std::unique_ptr<IController> &&controllerPtr);
-    std::vector<std::unique_ptr<SwitchVirtualGamepadHandler>> &Get();
-    ams::os::Mutex &GetScopedLock();
+    ControllersVector &Get();
+    ScopedMutex &GetScopedLock();
 
     //void Remove(void Remove(bool (*func)(std::unique_ptr<SwitchVirtualGamepadHandler> a)));;
 

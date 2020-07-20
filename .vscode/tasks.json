@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build Release",
+            "label": "Build",
             "type": "shell",
             "promptOnClose": true,
             "command": "make -j3",
@@ -27,21 +27,10 @@
             }
         },
         {
-            "label": "Clean only the project files",
+            "label": "Clean",
             "type": "shell",
             "promptOnClose": true,
             "command": "make clean",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Clean everything",
-            "type": "shell",
-            "promptOnClose": true,
-            "command": "make mrproper",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
