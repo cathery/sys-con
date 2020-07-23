@@ -194,14 +194,14 @@ namespace syscon::config
 
         void ConfigChangedCheckThreadFunc(void *arg)
         {
-            WriteToLog("Starting config check thread!");
+            LOG("Starting config check thread!");
             do
             {
                 if (R_SUCCEEDED(waitSingle(filecheckTimerWaiter, UINT64_MAX)))
                 {
                     if (config::CheckForFileChanges())
                     {
-                        WriteToLog("File check succeeded! Loading configs...");
+                        LOG("File check succeeded! Loading configs...");
                         config::LoadAllConfigs();
                     }
                 }
@@ -221,19 +221,19 @@ namespace syscon::config
             LoadGlobalConfig(tempGlobalConfig);
         }
         else
-            WriteToLog("Failed to read from global config!");
+            LOG("Failed to read from global config!");
 
         if (R_SUCCEEDED(ReadFromConfig(XBOXCONFIG)))
         {
             XboxController::LoadConfig(&tempConfig);
         }
         else
-            WriteToLog("Failed to read from xbox orig config!");
+            LOG("Failed to read from xbox orig config!");
 
         if (R_SUCCEEDED(ReadFromConfig(XBOXONECONFIG)))
             XboxOneController::LoadConfig(&tempConfig);
         else
-            WriteToLog("Failed to read from xbox one config!");
+            LOG("Failed to read from xbox one config!");
 
         if (R_SUCCEEDED(ReadFromConfig(XBOX360CONFIG)))
         {
@@ -241,17 +241,17 @@ namespace syscon::config
             Xbox360WirelessController::LoadConfig(&tempConfig);
         }
         else
-            WriteToLog("Failed to read from xbox 360 config!");
+            LOG("Failed to read from xbox 360 config!");
 
         if (R_SUCCEEDED(ReadFromConfig(DUALSHOCK3CONFIG)))
             Dualshock3Controller::LoadConfig(&tempConfig);
         else
-            WriteToLog("Failed to read from dualshock 3 config!");
+            LOG("Failed to read from dualshock 3 config!");
 
         if (R_SUCCEEDED(ReadFromConfig(DUALSHOCK4CONFIG)))
             Dualshock4Controller::LoadConfig(&tempConfig, tempColor);
         else
-            WriteToLog("Failed to read from dualshock 4 config!");
+            LOG("Failed to read from dualshock 4 config!");
     }
 
     bool CheckForFileChanges()

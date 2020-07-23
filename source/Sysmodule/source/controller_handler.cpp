@@ -27,12 +27,12 @@ namespace syscon::controllers
         if (UseAbstractedPad)
         {
             switchHandler = std::make_unique<SwitchAbstractedPadHandler>(std::move(controllerPtr));
-            WriteToLog("Inserting controller as abstracted pad");
+            LOG("Inserting controller as abstracted pad");
         }
         else
         {
             switchHandler = std::make_unique<SwitchHDLHandler>(std::move(controllerPtr));
-            WriteToLog("Inserting controller as HDLs");
+            LOG("Inserting controller as HDLs");
         }
 
         Result rc = switchHandler->Initialize();

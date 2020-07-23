@@ -27,7 +27,7 @@ void DiscardOldLogs()
     if (fileSize >= 0x20'000)
     {
         fsFsDeleteFile(fs, LOG_PATH);
-        WriteToLog("Deleted previous log file");
+        LOG("Deleted previous log file");
     }
 }
 
@@ -48,7 +48,6 @@ void WriteToLog(const char *fmt, ...)
     vfprintf(fp, fmt, va);
     va_end(va);
 
-    fprintf(fp, "\n");
     fclose(fp);
 }
 
