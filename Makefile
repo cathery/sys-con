@@ -16,13 +16,13 @@ all: build
 	@echo [DONE] sys-con compiled successfully. All files have been placed in $(OUT_DIR)/
 
 build:
-	$(MAKE) -C $(SOURCE_DIR)
+	@$(MAKE) --no-print-directory -C $(SOURCE_DIR)
 
 clean:
-	$(MAKE) -C $(SOURCE_DIR) clean
-	rm -rf $(OUT_DIR)
+	@$(MAKE) --no-print-directory -C $(SOURCE_DIR) clean
+	@rm -rf $(OUT_DIR)
 	
 mrproper:
-	$(MAKE) -C $(SOURCE_DIR) mrproper
-	rm -rf $(OUT_DIR)
+	@$(MAKE) --no-print-directory -C $(SOURCE_DIR) mrproper
+	@rm -rf $(OUT_DIR)
 	

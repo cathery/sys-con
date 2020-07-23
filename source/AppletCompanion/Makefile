@@ -161,43 +161,33 @@ endif
 all: $(BUILD)
 
 $(BUILD):
-	@echo building applet companion ...
+	@echo Building applet companion...
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory \
 	-C $@ -f $(CURDIR)/Makefile \
-	makeNRO
+	applet
 
 clean:
-	@echo cleaning applet companion ...
+	@echo Cleaning applet companion...
 	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 
 # Makefile commands
 #---------------------------------------------------------------------------------
 else
-.PHONY:	makeNRO makeNSP
+.PHONY:	applet
 
 DEPENDS	:=	$(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-makeNRO: $(OUTPUT).nro
-
-makeNSP: $(OUTPUT).nsp
-
-#TODO: add an option to make exefs.nsp instead of $(OUTPUT).nsp
+applet: $(OUTPUT).nro
 
 ifeq ($(strip $(NO_NACP)),)
 $(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
 else
 $(OUTPUT).nro	:	$(OUTPUT).elf
 endif
-
-
-
-$(OUTPUT).nsp	:	$(OUTPUT).nso $(OUTPUT).npdm
-
-$(OUTPUT).nso	:	$(OUTPUT).elf
 
 $(OUTPUT).elf	:	$(OFILES)
 

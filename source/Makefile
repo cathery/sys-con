@@ -6,11 +6,11 @@ TOPTARGETS := all clean mrproper
 all: $(COMPONENTS)
 
 AppletCompanion:
-	$(MAKE) -C $@
+	@$(MAKE) --no-print-directory -C $@
 
 Sysmodule:
-	$(MAKE) -C $@
+	@$(MAKE) --no-print-directory -C $@
 
 clean:
-	$(MAKE) -C AppletCompanion clean
-	$(MAKE) -C Sysmodule clean
+	@$(MAKE) --no-print-directory -C AppletCompanion clean
+	@$(MAKE) --no-print-directory -C Sysmodule clean

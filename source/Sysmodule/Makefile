@@ -134,25 +134,26 @@ endif
 all: $(BUILD)
 
 $(BUILD):
-	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@echo Building sysmodule...
+	@mkdir -p $@
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile sysmodule
 
 #---------------------------------------------------------------------------------
 clean:
-	@echo clean ...
+	@echo Cleaning sysmodule...
 	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).npdm $(TARGET).nso $(TARGET).elf
 
 # Makefile commands
 #---------------------------------------------------------------------------------
 else
-.PHONY:	all
+.PHONY:	sysmodule
 
 DEPENDS	:=	$(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all				:	$(OUTPUT).nsp
+sysmodule		:	$(OUTPUT).nsp
 
 
 ifeq ($(strip $(APP_JSON)),)
