@@ -1,7 +1,7 @@
 #include "switch.h"
 #include "log.h"
-#include "config_handler.h"
 #include <cstdarg>
+#include <sys/stat.h>
 #include "scoped_mutex.hpp"
 #include "time_span.hpp"
 
@@ -36,6 +36,8 @@ void WriteToLog(const char *fmt, ...)
     SCOPED_LOCK(printMutex);
 
     TimeSpan ts = TimeSpan::FromSystemTick();
+
+    mkdir(CONFIG_PATH, 777);
 
     FILE *fp = fopen(LOG_PATH, "a");
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "config_handler.h"
 
 #define LOG_PATH CONFIG_PATH "log.txt"
 
