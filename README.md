@@ -59,7 +59,4 @@ Otherwise, you can open the console inside the project directory and use one of 
 
 For an in-depth explanation of how sys-con works, see [here](source).
 
-## Support
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H316ZQV)
-
-If you wish to see added support for more controllers in the future, consider funding my project on Ko-fi!
