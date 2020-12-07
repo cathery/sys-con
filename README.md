@@ -33,7 +33,7 @@ sys-con comes with a config folder located at `sdmc:/config/sys-con/`. It contai
 - [x] **~~Xbox 360 Wireless adapter~~**
 - [x] **~~Dualshock 4 Support~~**
 - [ ] **[Rumble Support](https://github.com/cathery/sys-con/issues/1)**
-- [ ] **[Bluetooth Support](https://github.com/cathery/sys-con/issues/5)**
+- [ ] **~~[Bluetooth Support]~~** See ndeadly's [MissionControl](https://github.com/ndeadly/MissionControl)
 - [ ] **[Motion Controls Support](https://github.com/cathery/sys-con/issues/9)**
 - [ ] **Config application**
 
