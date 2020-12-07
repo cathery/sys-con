@@ -22,7 +22,7 @@
                 "ATMOSPHERE_OS_HORIZON"
             ],
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-g++",
-            "cStandard": "gnu18",
+            "cStandard": "gnu17",
             "cppStandard": "gnu++20",
             "intelliSenseMode": "gcc-arm64"
         }

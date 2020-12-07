@@ -8,7 +8,7 @@
 class SwitchHDLHandler : public SwitchVirtualGamepadHandler
 {
 private:
-    u64 m_hdlHandle;
+    HiddbgHdlsHandle m_hdlHandle;
     HiddbgHdlsDeviceInfo m_deviceInfo;
     HiddbgHdlsState m_hdlState;
 

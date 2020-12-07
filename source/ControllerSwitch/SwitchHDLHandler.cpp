@@ -48,13 +48,13 @@ void SwitchHDLHandler::Exit()
 
 Result SwitchHDLHandler::InitHdlState()
 {
-    m_hdlHandle = 0;
+    m_hdlHandle = {0};
     m_deviceInfo = {0};
     m_hdlState = {0};
 
     // Set the controller type to Pro-Controller, and set the npadInterfaceType.
     m_deviceInfo.deviceType = HidDeviceType_FullKey15;
-    m_deviceInfo.npadInterfaceType = NpadInterfaceType_USB;
+    m_deviceInfo.npadInterfaceType = HidNpadInterfaceType_USB;
     // Set the controller colors. The grip colors are for Pro-Controller on [9.0.0+].
     ControllerConfig *config = m_controller->GetConfig();
     m_deviceInfo.singleColorBody = config->bodyColor.rgbaValue;
@@ -62,11 +62,11 @@ Result SwitchHDLHandler::InitHdlState()
     m_deviceInfo.colorLeftGrip = config->leftGripColor.rgbaValue;
     m_deviceInfo.colorRightGrip = config->rightGripColor.rgbaValue;
 
-    m_hdlState.batteryCharge = 4; // Set battery charge to full.
-    m_hdlState.joysticks[JOYSTICK_LEFT].dx = 0x1234;
-    m_hdlState.joysticks[JOYSTICK_LEFT].dy = -0x1234;
-    m_hdlState.joysticks[JOYSTICK_RIGHT].dx = 0x5678;
-    m_hdlState.joysticks[JOYSTICK_RIGHT].dy = -0x5678;
+    m_hdlState.battery_level = 4; // Set battery charge to full.
+    m_hdlState.analog_stick_l.x = 0x1234;
+    m_hdlState.analog_stick_l.y = -0x1234;
+    m_hdlState.analog_stick_r.x = 0x5678;
+    m_hdlState.analog_stick_r.y = -0x5678;
 
     if (m_controller->IsControllerActive())
         return hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
@@ -139,7 +139,7 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
         daxis_x *= ratio;
         daxis_y *= ratio;
 
-        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_hdlState.joysticks[JOYSTICK_LEFT].dx, &m_hdlState.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_hdlState.analog_stick_l.x, &m_hdlState.analog_stick_l.y);
     }
     else
     {
@@ -148,10 +148,10 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
         m_hdlState.buttons |= (data.buttons[14] ? KEY_DDOWN : 0);
         m_hdlState.buttons |= (data.buttons[15] ? KEY_DLEFT : 0);
 
-        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_hdlState.joysticks[JOYSTICK_LEFT].dx, &m_hdlState.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_hdlState.analog_stick_l.x, &m_hdlState.analog_stick_l.y);
     }
 
-    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_hdlState.joysticks[JOYSTICK_RIGHT].dx, &m_hdlState.joysticks[JOYSTICK_RIGHT].dy);
+    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_hdlState.analog_stick_r.x, &m_hdlState.analog_stick_r.y);
 
     m_hdlState.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
     m_hdlState.buttons |= (data.buttons[17] ? KEY_HOME : 0);
@@ -185,15 +185,17 @@ void SwitchHDLHandler::UpdateOutput()
     if (R_SUCCEEDED(m_controller->OutputBuffer()))
         return;
 
+    /*
     // Process rumble values if supported
     if (DoesControllerSupport(m_controller->GetType(), SUPPORTS_RUMBLE))
     {
         Result rc;
         HidVibrationValue value;
-        rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
+        rc = hidGetActualVibrationValue(m_vibrationDeviceHandle, &value);
         if (R_SUCCEEDED(rc))
             m_controller->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
     }
+    */
 
     svcSleepThread(1e+7L);
 }

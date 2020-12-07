@@ -73,9 +73,9 @@ Result SwitchAbstractedPadHandler::InitAbstractedPadState()
     m_state = {0};
     m_abstractedPadID = getUniqueId();
     m_state.type = BIT(0);
-    m_state.npadInterfaceType = NpadInterfaceType_USB;
+    m_state.npadInterfaceType = HidNpadInterfaceType_USB;
     m_state.flags = 0xff;
-    m_state.state.batteryCharge = 4;
+    m_state.state.battery_level = 4;
     ControllerConfig *config = GetController()->GetConfig();
     m_state.singleColorBody = config->bodyColor.rgbaValue;
     m_state.singleColorButtons = config->buttonsColor.rgbaValue;
@@ -129,7 +129,7 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
         daxis_y += data.buttons[14] ? -1.0f : 0.0f; //DDOWN
         daxis_x += data.buttons[15] ? -1.0f : 0.0f; //DLEFT
 
-        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_state.state.analog_stick_l.x, &m_state.state.analog_stick_l.y);
     }
     else
     {
@@ -138,10 +138,10 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
         m_state.state.buttons |= (data.buttons[14] ? KEY_DDOWN : 0);
         m_state.state.buttons |= (data.buttons[15] ? KEY_DLEFT : 0);
 
-        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_state.state.joysticks[JOYSTICK_LEFT].dx, &m_state.state.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_state.state.analog_stick_l.x, &m_state.state.analog_stick_l.y);
     }
 
-    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_state.state.joysticks[JOYSTICK_RIGHT].dx, &m_state.state.joysticks[JOYSTICK_RIGHT].dy);
+    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_state.state.analog_stick_r.x, &m_state.state.analog_stick_r.y);
 
     m_state.state.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
     m_state.state.buttons |= (data.buttons[17] ? KEY_HOME : 0);
@@ -170,14 +170,16 @@ void SwitchAbstractedPadHandler::UpdateOutput()
     if (R_SUCCEEDED(m_controller->OutputBuffer()))
         return;
 
+    /*
     if (DoesControllerSupport(m_controller->GetType(), SUPPORTS_RUMBLE))
     {
         Result rc;
         HidVibrationValue value;
-        rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
+        rc = hidGetActualVibrationValue(m_vibrationDeviceHandle, &value);
         if (R_SUCCEEDED(rc))
             GetController()->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
     }
+    */
 
     svcSleepThread(1e+7L);
 }
