@@ -1,6 +1,6 @@
 #include "switch.h"
 #include "log.h"
-#include "config_handler.h"
+#include <sys/stat.h>
 #include <stratosphere.hpp>
 
 static ams::os::Mutex printMutex(false);
@@ -34,6 +34,8 @@ void WriteToLog(const char *fmt, ...)
     std::scoped_lock printLock(printMutex);
 
     ams::TimeSpan ts = ams::os::ConvertToTimeSpan(ams::os::GetSystemTick());
+
+    mkdir(CONFIG_PATH, 777);
 
     FILE *fp = fopen(LOG_PATH, "a");
 
