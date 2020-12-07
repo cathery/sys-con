@@ -15,3 +15,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+#define LOG(fmt, ...) WriteToLog(fmt "\n", ##__VA_ARGS__)
