@@ -1,11 +1,12 @@
-COMPONENTS := libstratosphere AppletCompanion Sysmodule
+Libstrat   := Atmosphere-libs/libstratosphere
+COMPONENTS := $(Libstrat) AppletCompanion Sysmodule
 TOPTARGETS := all clean mrproper
 
 .PHONY: $(TOPTARGETS) $(COMPONENTS)
 
 all: $(COMPONENTS)
 
-libstratosphere:
+$(Libstrat):
 	@echo Building libstratosphere...
 	@$(MAKE) --no-print-directory -C $@
 
@@ -13,7 +14,7 @@ AppletCompanion:
 	@echo Building applet companion...
 	@$(MAKE) --no-print-directory -C $@
 
-Sysmodule: libstratosphere
+Sysmodule: $(Libstrat)
 	@echo Building sysmodule...
 	@$(MAKE) --no-print-directory -C $@
 
@@ -25,4 +26,4 @@ clean:
 	
 mrproper: clean
 	@echo Cleaning libstratosphere...
-	@$(MAKE) --no-print-directory -C libstratosphere clean
+	@$(MAKE) --no-print-directory -C $(Libstrat) clean

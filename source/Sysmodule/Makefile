@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------------------
 # pull in common stratosphere sysmodule configuration
 #---------------------------------------------------------------------------------
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/../libstratosphere/config/templates/stratosphere.mk
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/../Atmosphere-libs/config/templates/stratosphere.mk
 
 TARGET		:=	sys-con
 SOURCES		+=	../ControllerSwitch ../ControllerLib ../ControllerLib/Controllers ../inih
