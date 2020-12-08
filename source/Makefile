@@ -6,17 +6,23 @@ TOPTARGETS := all clean mrproper
 all: $(COMPONENTS)
 
 libstratosphere:
-	$(MAKE) -C $@
+	@echo Building libstratosphere...
+	@$(MAKE) --no-print-directory -C $@
 
 AppletCompanion:
-	$(MAKE) -C $@
+	@echo Building applet companion...
+	@$(MAKE) --no-print-directory -C $@
 
 Sysmodule: libstratosphere
-	$(MAKE) -C $@
+	@echo Building sysmodule...
+	@$(MAKE) --no-print-directory -C $@
 
 clean:
-	$(MAKE) -C AppletCompanion clean
-	$(MAKE) -C Sysmodule clean
+	@echo Cleaning applet companion...
+	@$(MAKE) --no-print-directory -C AppletCompanion clean
+	@echo Cleaning sysmodule...
+	@$(MAKE) --no-print-directory -C Sysmodule clean
 	
 mrproper: clean
-	$(MAKE) -C libstratosphere clean
+	@echo Cleaning libstratosphere...
+	@$(MAKE) --no-print-directory -C libstratosphere clean
