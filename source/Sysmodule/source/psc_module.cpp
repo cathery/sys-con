@@ -11,7 +11,7 @@ namespace syscon::psc
     {
         PscPmModule pscModule;
         Waiter pscModuleWaiter;
-        const uint16_t dependencies[] = {PscPmModuleId_Fs};
+        const uint32_t dependencies[] = {PscPmModuleId_Fs};
 
         //Thread to check for psc:pm state change (console waking up/going to sleep)
         void PscThreadFunc(void *arg);
@@ -53,7 +53,7 @@ namespace syscon::psc
     } // namespace
     Result Initialize()
     {
-        R_TRY(pscmGetPmModule(&pscModule, PscPmModuleId(126), dependencies, sizeof(dependencies) / sizeof(uint16_t), true));
+        R_TRY(pscmGetPmModule(&pscModule, PscPmModuleId(126), dependencies, sizeof(dependencies) / sizeof(uint32_t), true));
         pscModuleWaiter = waiterForEvent(&pscModule.event);
         is_psc_thread_running = true;
         R_ABORT_UNLESS(threadCreate(&g_psc_thread, &PscThreadFunc, nullptr, psc_thread_stack, sizeof(psc_thread_stack), 0x2C, -2));

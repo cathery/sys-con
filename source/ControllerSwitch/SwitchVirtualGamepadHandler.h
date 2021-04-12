@@ -7,7 +7,7 @@
 class SwitchVirtualGamepadHandler
 {
 protected:
-    u32 m_vibrationDeviceHandle;
+    HidVibrationDeviceHandle m_vibrationDeviceHandle;
     std::unique_ptr<IController> m_controller;
 
     alignas(ams::os::ThreadStackAlignment) u8 input_thread_stack[0x1000];
@@ -52,5 +52,5 @@ public:
 
     //Get the raw controller pointer
     inline IController *GetController() { return m_controller.get(); }
-    inline u32 *GetVibrationHandle() { return &m_vibrationDeviceHandle; }
+    inline HidVibrationDeviceHandle *GetVibrationHandle() { return &m_vibrationDeviceHandle; }
 };

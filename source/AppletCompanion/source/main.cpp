@@ -3,22 +3,25 @@
 
 int main()
 {
-	consoleInit(NULL);
-	
-	printf("Hello\n");
-	
-	while(appletMainLoop())
-	{
-		hidScanInput();
-		u64 kDown = 0;
-		for (u8 controller = 0; controller < 10; controller++)
-			kDown |= hidKeysDown(static_cast<HidControllerID>(controller));
-		
-		if (kDown & KEY_PLUS || kDown & KEY_B)
-			break;
-		consoleUpdate(NULL);
-	}
+    consoleInit(NULL);
 
-	consoleExit(NULL);
-	return 0;
+    padConfigureInput(8, HidNpadStyleSet_NpadStandard);
+    PadState pad;
+    padInitializeAny(&pad);
+    hidSetNpadHandheldActivationMode(HidNpadHandheldActivationMode_Single);
+
+    printf("Hello\n");
+
+    while (appletMainLoop())
+    {
+        padUpdate(&pad);
+        u64 kDown = padGetButtonsDown(&pad);
+
+        if (kDown & HidNpadButton_Plus || kDown & HidNpadButton_B)
+            break;
+        consoleUpdate(NULL);
+    }
+
+    consoleExit(NULL);
+    return 0;
 }

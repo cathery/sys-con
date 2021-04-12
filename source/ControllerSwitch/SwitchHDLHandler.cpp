@@ -48,13 +48,13 @@ void SwitchHDLHandler::Exit()
 
 Result SwitchHDLHandler::InitHdlState()
 {
-    m_hdlHandle = 0;
+    m_hdlHandle = {0};
     m_deviceInfo = {0};
     m_hdlState = {0};
 
     // Set the controller type to Pro-Controller, and set the npadInterfaceType.
     m_deviceInfo.deviceType = HidDeviceType_FullKey15;
-    m_deviceInfo.npadInterfaceType = NpadInterfaceType_USB;
+    m_deviceInfo.npadInterfaceType = HidNpadInterfaceType_USB;
     // Set the controller colors. The grip colors are for Pro-Controller on [9.0.0+].
     ControllerConfig *config = m_controller->GetConfig();
     m_deviceInfo.singleColorBody = config->bodyColor.rgbaValue;
@@ -62,11 +62,11 @@ Result SwitchHDLHandler::InitHdlState()
     m_deviceInfo.colorLeftGrip = config->leftGripColor.rgbaValue;
     m_deviceInfo.colorRightGrip = config->rightGripColor.rgbaValue;
 
-    m_hdlState.batteryCharge = 4; // Set battery charge to full.
-    m_hdlState.joysticks[JOYSTICK_LEFT].dx = 0x1234;
-    m_hdlState.joysticks[JOYSTICK_LEFT].dy = -0x1234;
-    m_hdlState.joysticks[JOYSTICK_RIGHT].dx = 0x5678;
-    m_hdlState.joysticks[JOYSTICK_RIGHT].dy = -0x5678;
+    m_hdlState.battery_level = 4; // Set battery charge to full.
+    m_hdlState.analog_stick_l.x = 0x1234;
+    m_hdlState.analog_stick_l.y = -0x1234;
+    m_hdlState.analog_stick_r.x = 0x5678;
+    m_hdlState.analog_stick_r.y = -0x5678;
 
     if (m_controller->IsControllerActive())
         return hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
@@ -98,31 +98,31 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
     // we convert the input packet into switch-specific button states
     m_hdlState.buttons = 0;
 
-    m_hdlState.buttons |= (data.buttons[0] ? KEY_X : 0);
-    m_hdlState.buttons |= (data.buttons[1] ? KEY_A : 0);
-    m_hdlState.buttons |= (data.buttons[2] ? KEY_B : 0);
-    m_hdlState.buttons |= (data.buttons[3] ? KEY_Y : 0);
+    m_hdlState.buttons |= (data.buttons[0] ? HidNpadButton_X : 0);
+    m_hdlState.buttons |= (data.buttons[1] ? HidNpadButton_A : 0);
+    m_hdlState.buttons |= (data.buttons[2] ? HidNpadButton_B : 0);
+    m_hdlState.buttons |= (data.buttons[3] ? HidNpadButton_Y : 0);
 
-    m_hdlState.buttons |= (data.buttons[4] ? KEY_LSTICK : 0);
-    m_hdlState.buttons |= (data.buttons[5] ? KEY_RSTICK : 0);
+    m_hdlState.buttons |= (data.buttons[4] ? HidNpadButton_StickL : 0);
+    m_hdlState.buttons |= (data.buttons[5] ? HidNpadButton_StickR : 0);
 
-    m_hdlState.buttons |= (data.buttons[6] ? KEY_L : 0);
-    m_hdlState.buttons |= (data.buttons[7] ? KEY_R : 0);
+    m_hdlState.buttons |= (data.buttons[6] ? HidNpadButton_L : 0);
+    m_hdlState.buttons |= (data.buttons[7] ? HidNpadButton_R : 0);
 
-    m_hdlState.buttons |= (data.buttons[8] ? KEY_ZL : 0);
-    m_hdlState.buttons |= (data.buttons[9] ? KEY_ZR : 0);
+    m_hdlState.buttons |= (data.buttons[8] ? HidNpadButton_ZL : 0);
+    m_hdlState.buttons |= (data.buttons[9] ? HidNpadButton_ZR : 0);
 
-    m_hdlState.buttons |= (data.buttons[10] ? KEY_MINUS : 0);
-    m_hdlState.buttons |= (data.buttons[11] ? KEY_PLUS : 0);
+    m_hdlState.buttons |= (data.buttons[10] ? HidNpadButton_Minus : 0);
+    m_hdlState.buttons |= (data.buttons[11] ? HidNpadButton_Plus : 0);
 
     ControllerConfig *config = m_controller->GetConfig();
 
     if (config && config->swapDPADandLSTICK)
     {
-        m_hdlState.buttons |= ((data.sticks[0].axis_y > 0.5f) ? KEY_DUP : 0);
-        m_hdlState.buttons |= ((data.sticks[0].axis_x > 0.5f) ? KEY_DRIGHT : 0);
-        m_hdlState.buttons |= ((data.sticks[0].axis_y < -0.5f) ? KEY_DDOWN : 0);
-        m_hdlState.buttons |= ((data.sticks[0].axis_x < -0.5f) ? KEY_DLEFT : 0);
+        m_hdlState.buttons |= ((data.sticks[0].axis_y > 0.5f) ? HidNpadButton_Up : 0);
+        m_hdlState.buttons |= ((data.sticks[0].axis_x > 0.5f) ? HidNpadButton_Right : 0);
+        m_hdlState.buttons |= ((data.sticks[0].axis_y < -0.5f) ? HidNpadButton_Down : 0);
+        m_hdlState.buttons |= ((data.sticks[0].axis_x < -0.5f) ? HidNpadButton_Left : 0);
 
         float daxis_x{}, daxis_y{};
 
@@ -139,22 +139,22 @@ void SwitchHDLHandler::FillHdlState(const NormalizedButtonData &data)
         daxis_x *= ratio;
         daxis_y *= ratio;
 
-        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_hdlState.joysticks[JOYSTICK_LEFT].dx, &m_hdlState.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_hdlState.analog_stick_l.x, &m_hdlState.analog_stick_l.y);
     }
     else
     {
-        m_hdlState.buttons |= (data.buttons[12] ? KEY_DUP : 0);
-        m_hdlState.buttons |= (data.buttons[13] ? KEY_DRIGHT : 0);
-        m_hdlState.buttons |= (data.buttons[14] ? KEY_DDOWN : 0);
-        m_hdlState.buttons |= (data.buttons[15] ? KEY_DLEFT : 0);
+        m_hdlState.buttons |= (data.buttons[12] ? HidNpadButton_Up : 0);
+        m_hdlState.buttons |= (data.buttons[13] ? HidNpadButton_Right : 0);
+        m_hdlState.buttons |= (data.buttons[14] ? HidNpadButton_Down : 0);
+        m_hdlState.buttons |= (data.buttons[15] ? HidNpadButton_Left : 0);
 
-        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_hdlState.joysticks[JOYSTICK_LEFT].dx, &m_hdlState.joysticks[JOYSTICK_LEFT].dy);
+        ConvertAxisToSwitchAxis(data.sticks[0].axis_x, data.sticks[0].axis_y, 0, &m_hdlState.analog_stick_l.x, &m_hdlState.analog_stick_l.y);
     }
 
-    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_hdlState.joysticks[JOYSTICK_RIGHT].dx, &m_hdlState.joysticks[JOYSTICK_RIGHT].dy);
+    ConvertAxisToSwitchAxis(data.sticks[1].axis_x, data.sticks[1].axis_y, 0, &m_hdlState.analog_stick_r.x, &m_hdlState.analog_stick_r.y);
 
-    m_hdlState.buttons |= (data.buttons[16] ? KEY_CAPTURE : 0);
-    m_hdlState.buttons |= (data.buttons[17] ? KEY_HOME : 0);
+    m_hdlState.buttons |= (data.buttons[16] ? HiddbgNpadButton_Capture : 0);
+    m_hdlState.buttons |= (data.buttons[17] ? HiddbgNpadButton_Home : 0);
 }
 
 void SwitchHDLHandler::UpdateInput()
@@ -190,7 +190,7 @@ void SwitchHDLHandler::UpdateOutput()
     {
         Result rc;
         HidVibrationValue value;
-        rc = hidGetActualVibrationValue(&m_vibrationDeviceHandle, &value);
+        rc = hidGetActualVibrationValue(m_vibrationDeviceHandle, &value);
         if (R_SUCCEEDED(rc))
             m_controller->SetRumble(static_cast<uint8_t>(value.amp_high * 255.0f), static_cast<uint8_t>(value.amp_low * 255.0f));
     }
