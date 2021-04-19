@@ -54,7 +54,9 @@ namespace ams
 
 extern "C" void __appInit(void)
 {
-    ams::sm::DoWithSession([] {
+    R_ABORT_UNLESS(smInitialize());
+    // ams::sm::DoWithSession([]
+    {
         //Initialize system firmware version
         R_ABORT_UNLESS(setsysInitialize());
         SetSysFirmwareVersion fw;
@@ -68,7 +70,9 @@ extern "C" void __appInit(void)
         R_ABORT_UNLESS(usbHsInitialize());
         R_ABORT_UNLESS(pscmInitialize());
         R_ABORT_UNLESS(fsInitialize());
-    });
+    }
+    // );
+    smExit();
 
     R_ABORT_UNLESS(fsdevMountSdmc());
 }
