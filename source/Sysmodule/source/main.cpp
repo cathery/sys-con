@@ -6,8 +6,9 @@
 #include "controller_handler.h"
 #include "config_handler.h"
 #include "psc_module.h"
+#include "SwitchHDLHandler.h"
 
-#define APP_VERSION "0.6.3"
+#define APP_VERSION "0.6.4"
 
 // libnx fake heap initialization
 extern "C"
@@ -66,7 +67,7 @@ extern "C" void __appInit(void)
 
         R_ABORT_UNLESS(hiddbgInitialize());
         if (hosversionAtLeast(7, 0, 0))
-            R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer());
+            R_ABORT_UNLESS(hiddbgAttachHdlsWorkBuffer(&SwitchHDLHandler::GetHdlsSessionId()));
         R_ABORT_UNLESS(usbHsInitialize());
         R_ABORT_UNLESS(pscmInitialize());
         R_ABORT_UNLESS(fsInitialize());
@@ -81,7 +82,7 @@ extern "C" void __appExit(void)
 {
     pscmExit();
     usbHsExit();
-    hiddbgReleaseHdlsWorkBuffer();
+    hiddbgReleaseHdlsWorkBuffer(SwitchHDLHandler::GetHdlsSessionId());
     hiddbgExit();
     fsdevUnmountAll();
     fsExit();

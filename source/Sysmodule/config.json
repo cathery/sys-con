@@ -11,6 +11,8 @@
 	"pool_partition":	2,
 	"is_64_bit":	true,
 	"address_space_type":	1,
+	"system_resource_size": "0",
+	"disable_device_address_space_merge": true,
 	"filesystem_access":	{
 		"permissions":	"0xffffffffffffffff"
 	},

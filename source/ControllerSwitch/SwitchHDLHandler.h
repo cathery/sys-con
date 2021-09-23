@@ -34,4 +34,6 @@ public:
     void FillHdlState(const NormalizedButtonData &data);
     //Passes the HDL state to HID so that it could register the inputs
     Result UpdateHdlState();
+
+    static HiddbgHdlsSessionId &GetHdlsSessionId();
 };

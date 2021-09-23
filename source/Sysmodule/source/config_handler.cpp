@@ -55,7 +55,7 @@ namespace syscon::config
 
         ControllerButton StringToKey(const char *text)
         {
-            for (int i = 0; i != keyNames.size(); ++i)
+            for (std::size_t i = 0; i != keyNames.size(); ++i)
             {
                 if (strcmp(keyNames[i], text) == 0)
                 {

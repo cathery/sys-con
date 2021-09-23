@@ -2,6 +2,8 @@
 #include "ControllerHelpers.h"
 #include <cmath>
 
+static HiddbgHdlsSessionId g_hdlsSessionId;
+
 SwitchHDLHandler::SwitchHDLHandler(std::unique_ptr<IController> &&controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
 {
@@ -84,7 +86,7 @@ Result SwitchHDLHandler::UpdateHdlState()
     //Checks if the virtual device was erased, in which case re-attach the device
     bool isAttached;
 
-    if (R_SUCCEEDED(hiddbgIsHdlsVirtualDeviceAttached(m_hdlHandle, &isAttached)))
+    if (R_SUCCEEDED(hiddbgIsHdlsVirtualDeviceAttached(GetHdlsSessionId(), m_hdlHandle, &isAttached)))
     {
         if (!isAttached)
             hiddbgAttachHdlsVirtualDevice(&m_hdlHandle, &m_deviceInfo);
@@ -196,4 +198,9 @@ void SwitchHDLHandler::UpdateOutput()
     }
 
     svcSleepThread(1e+7L);
+}
+
+HiddbgHdlsSessionId &SwitchHDLHandler::GetHdlsSessionId()
+{
+    return g_hdlsSessionId;
 }
