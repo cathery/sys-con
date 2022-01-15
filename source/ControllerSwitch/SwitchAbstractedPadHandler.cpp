@@ -145,6 +145,20 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
 
     m_state.state.buttons |= (data.buttons[16] ? HiddbgNpadButton_Capture : 0);
     m_state.state.buttons |= (data.buttons[17] ? HiddbgNpadButton_Home : 0);
+
+    if (data.buttons[10] && data.buttons[12])
+    {
+        m_state.state.buttons ^= HidNpadButton_Minus
+        m_state.state.buttons ^= HidNpadButton_Up
+        m_state.state.buttons |= HiddbgNpadButton_Capture
+    }
+
+    if (data.buttons[10] && data.buttons[14])
+    {
+        m_state.state.buttons ^= HidNpadButton_Minus
+        m_state.state.buttons ^= HidNpadButton_Down
+        m_state.state.buttons |= HiddbgNpadButton_Home
+    }
 }
 
 Result SwitchAbstractedPadHandler::UpdateAbstractedState()
