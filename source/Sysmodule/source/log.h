@@ -1,6 +1,6 @@
 #pragma once
-#include "config_handler.h"
 
+#define CONFIG_PATH "/config/sys-con/"
 #define LOG_PATH CONFIG_PATH "log.txt"
 
 #ifdef __cplusplus
