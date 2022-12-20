@@ -234,6 +234,11 @@ namespace syscon::config
             Dualshock4Controller::LoadConfig(&tempConfig, tempColor);
         else
             WriteToLog("Failed to read from dualshock 4 config!");
+
+        if (R_SUCCEEDED(ReadFromConfig(NETWORKCONFIG)))
+            NetworkController::LoadConfig(&tempConfig, tempColor);
+        else
+            WriteToLog("Failed to read from dualshock 4 config!");
     }
 
     bool CheckForFileChanges()

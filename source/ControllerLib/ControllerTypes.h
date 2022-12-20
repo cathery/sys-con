@@ -9,6 +9,7 @@ enum ControllerType : uint8_t
     CONTROLLER_XBOXONEW,
     CONTROLLER_DUALSHOCK3,
     CONTROLLER_DUALSHOCK4,
+    CONTROLLER_NETWORK,
 };
 
 enum VendorIDs : uint16_t
