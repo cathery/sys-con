@@ -5,8 +5,8 @@
 #include "log.h"
 #include "ini.h"
 #include <cstring>
-#include <stratosphere.hpp>
 #include "usb_module.h"
+#include "SwitchUtils.h"
 
 namespace syscon::config
 {
@@ -23,7 +23,7 @@ namespace syscon::config
         // Thread to check for any config changes
         void ConfigChangedCheckThreadFunc(void *arg);
 
-        alignas(ams::os::ThreadStackAlignment) u8 config_thread_stack[0x2000];
+        alignas(SwitchUtils::ThreadStackAlignment) u8 config_thread_stack[0x2000];
         Thread g_config_changed_check_thread;
 
         bool is_config_changed_check_thread_running = false;

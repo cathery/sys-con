@@ -1,9 +1,9 @@
 #include "psc_module.h"
-#include <stratosphere.hpp>
 #include "usb_module.h"
 #include "config_handler.h"
 #include "controller_handler.h"
 #include "log.h"
+#include "SwitchUtils.h"
 
 namespace syscon::psc
 {
@@ -13,15 +13,15 @@ namespace syscon::psc
         Waiter pscModuleWaiter;
         const uint32_t dependencies[] = {PscPmModuleId_Fs};
 
-        //Thread to check for psc:pm state change (console waking up/going to sleep)
-        void PscThreadFunc(void *arg);
+        // Thread to check for psc:pm state change (console waking up/going to sleep)
+        void PscThreadFunc(void* arg);
 
-        alignas(ams::os::ThreadStackAlignment) u8 psc_thread_stack[0x1000];
+        alignas(SwitchUtils::ThreadStackAlignment) u8 psc_thread_stack[0x1000];
         Thread g_psc_thread;
 
         bool is_psc_thread_running = false;
 
-        void PscThreadFunc(void *arg)
+        void PscThreadFunc(void* arg)
         {
             do
             {
@@ -35,11 +35,11 @@ namespace syscon::psc
                         {
                             case PscPmState_Awake:
                             case PscPmState_ReadyAwaken:
-                                //usb::CreateUsbEvents();
+                                // usb::CreateUsbEvents();
                                 break;
                             case PscPmState_ReadySleep:
                             case PscPmState_ReadyShutdown:
-                                //usb::DestroyUsbEvents();
+                                // usb::DestroyUsbEvents();
                                 controllers::Reset();
                                 break;
                             default:

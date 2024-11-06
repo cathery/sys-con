@@ -3,12 +3,11 @@
 #include "controller_handler.h"
 #include "config_handler.h"
 
-#include <stratosphere.hpp>
-
 #include "SwitchUSBDevice.h"
 #include "ControllerHelpers.h"
 #include "log.h"
 #include <string.h>
+#include "SwitchUtils.h"
 
 namespace syscon::usb
 {
@@ -19,18 +18,18 @@ namespace syscon::usb
 
         constexpr size_t MaxUsbHsInterfacesSize = 16;
 
-        ams::os::Mutex usbMutex(false);
+        Mutex usbMutex = 0;
 
-        //Thread that waits on generic usb event
-        void UsbEventThreadFunc(void *arg);
-        //Thread that waits on sony vendor usb event
-        void UsbSonyEventThreadFunc(void *arg);
-        //Thread that waits on any disconnected usb devices
-        void UsbInterfaceChangeThreadFunc(void *arg);
+        // Thread that waits on generic usb event
+        void UsbEventThreadFunc(void* arg);
+        // Thread that waits on sony vendor usb event
+        void UsbSonyEventThreadFunc(void* arg);
+        // Thread that waits on any disconnected usb devices
+        void UsbInterfaceChangeThreadFunc(void* arg);
 
-        alignas(ams::os::ThreadStackAlignment) u8 usb_event_thread_stack[0x2000];
-        alignas(ams::os::ThreadStackAlignment) u8 sony_event_thread_stack[0x2000];
-        alignas(ams::os::ThreadStackAlignment) u8 usb_interface_change_thread_stack[0x2000];
+        alignas(SwitchUtils::ThreadStackAlignment) u8 usb_event_thread_stack[0x2000];
+        alignas(SwitchUtils::ThreadStackAlignment) u8 sony_event_thread_stack[0x2000];
+        alignas(SwitchUtils::ThreadStackAlignment) u8 usb_interface_change_thread_stack[0x2000];
 
         Thread g_usb_event_thread;
         Thread g_sony_event_thread;
@@ -46,7 +45,7 @@ namespace syscon::usb
         s32 QueryInterfaces(u8 iclass, u8 isubclass, u8 iprotocol);
         s32 QueryVendorProduct(uint16_t vendor_id, uint16_t product_id);
 
-        void UsbEventThreadFunc(void *arg)
+        void UsbEventThreadFunc(void* arg)
         {
             do
             {
@@ -54,7 +53,7 @@ namespace syscon::usb
                 {
                     WriteToLog("Catch-all event went off");
 
-                    std::scoped_lock usbLock(usbMutex);
+                    SwitchUtils::ScopedLock usbLock(usbMutex);
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
@@ -75,7 +74,7 @@ namespace syscon::usb
             } while (is_usb_event_thread_running);
         }
 
-        void UsbSonyEventThreadFunc(void *arg)
+        void UsbSonyEventThreadFunc(void* arg)
         {
             do
             {
@@ -83,7 +82,7 @@ namespace syscon::usb
                 {
                     WriteToLog("Sony event went off");
 
-                    std::scoped_lock usbLock(usbMutex);
+                    SwitchUtils::ScopedLock usbLock(usbMutex);
                     if (!controllers::IsAtControllerLimit())
                     {
                         s32 total_entries;
@@ -97,7 +96,7 @@ namespace syscon::usb
             } while (is_usb_event_thread_running);
         }
 
-        void UsbInterfaceChangeThreadFunc(void *arg)
+        void UsbInterfaceChangeThreadFunc(void* arg)
         {
             do
             {
@@ -106,8 +105,8 @@ namespace syscon::usb
                     s32 total_entries;
                     WriteToLog("Interface state was changed");
 
-                    std::scoped_lock usbLock(usbMutex);
-                    std::scoped_lock controllersLock(controllers::GetScopedLock());
+                    SwitchUtils::ScopedLock usbLock(usbMutex);
+                    SwitchUtils::ScopedLock controllersLock(controllers::GetScopedLock());
 
                     eventClear(usbHsGetInterfaceStateChangeEvent());
                     memset(interfaces, 0, sizeof(interfaces));
@@ -117,13 +116,13 @@ namespace syscon::usb
                         {
                             bool found_flag = false;
 
-                            for (auto &&ptr : (*it)->GetController()->GetDevice()->GetInterfaces())
+                            for (auto&& ptr : (*it)->GetController()->GetDevice()->GetInterfaces())
                             {
-                                //We check if a device was removed by comparing the controller's interfaces and the currently acquired interfaces
-                                //If we didn't find a single matching interface ID, we consider a controller removed
+                                // We check if a device was removed by comparing the controller's interfaces and the currently acquired interfaces
+                                // If we didn't find a single matching interface ID, we consider a controller removed
                                 for (int i = 0; i != total_entries; ++i)
                                 {
-                                    if (interfaces[i].inf.ID == static_cast<SwitchUSBInterface *>(ptr.get())->GetID())
+                                    if (interfaces[i].inf.ID == static_cast<SwitchUSBInterface*>(ptr.get())->GetID())
                                     {
                                         found_flag = true;
                                         break;

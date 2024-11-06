@@ -2,8 +2,9 @@
 #include "ControllerHelpers.h"
 #include <cmath>
 #include <array>
+#include "SwitchUtils.h"
 
-SwitchAbstractedPadHandler::SwitchAbstractedPadHandler(std::unique_ptr<IController> &&controller)
+SwitchAbstractedPadHandler::SwitchAbstractedPadHandler(std::unique_ptr<IController>&& controller)
     : SwitchVirtualGamepadHandler(std::move(controller))
 {
 }
@@ -46,7 +47,7 @@ void SwitchAbstractedPadHandler::Exit()
     ExitAbstractedPadState();
 }
 
-//Used to give out unique ids to abstracted pads
+// Used to give out unique ids to abstracted pads
 static std::array<bool, 8> uniqueIDs{};
 
 static s8 getUniqueId()
@@ -76,7 +77,7 @@ Result SwitchAbstractedPadHandler::InitAbstractedPadState()
     m_state.npadInterfaceType = HidNpadInterfaceType_USB;
     m_state.flags = 0xff;
     m_state.state.battery_level = 4;
-    ControllerConfig *config = GetController()->GetConfig();
+    ControllerConfig* config = GetController()->GetConfig();
     m_state.singleColorBody = config->bodyColor.rgbaValue;
     m_state.singleColorButtons = config->buttonsColor.rgbaValue;
 
@@ -93,7 +94,7 @@ Result SwitchAbstractedPadHandler::ExitAbstractedPadState()
     return hiddbgUnsetAutoPilotVirtualPadState(m_abstractedPadID);
 }
 
-void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData &data)
+void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData& data)
 {
     m_state.state.buttons = 0;
     m_state.state.buttons |= (data.buttons[0] ? HidNpadButton_X : 0);
@@ -113,7 +114,7 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
     m_state.state.buttons |= (data.buttons[10] ? HidNpadButton_Minus : 0);
     m_state.state.buttons |= (data.buttons[11] ? HidNpadButton_Plus : 0);
 
-    ControllerConfig *config = GetController()->GetConfig();
+    ControllerConfig* config = GetController()->GetConfig();
 
     if (config && config->swapDPADandLSTICK)
     {
@@ -124,10 +125,10 @@ void SwitchAbstractedPadHandler::FillAbstractedState(const NormalizedButtonData 
 
         float daxis_x{}, daxis_y{};
 
-        daxis_y += data.buttons[12] ? 1.0f : 0.0f;  //DUP
-        daxis_x += data.buttons[13] ? 1.0f : 0.0f;  //DRIGHT
-        daxis_y += data.buttons[14] ? -1.0f : 0.0f; //DDOWN
-        daxis_x += data.buttons[15] ? -1.0f : 0.0f; //DLEFT
+        daxis_y += data.buttons[12] ? 1.0f : 0.0f;  // DUP
+        daxis_x += data.buttons[13] ? 1.0f : 0.0f;  // DRIGHT
+        daxis_y += data.buttons[14] ? -1.0f : 0.0f; // DDOWN
+        daxis_x += data.buttons[15] ? -1.0f : 0.0f; // DLEFT
 
         ConvertAxisToSwitchAxis(daxis_x, daxis_y, 0, &m_state.state.analog_stick_l.x, &m_state.state.analog_stick_l.y);
     }

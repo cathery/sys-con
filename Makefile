@@ -1,4 +1,4 @@
-.PHONY: all build clean mrproper
+.PHONY: all build clean
 
 SOURCE_DIR		:=	source
 OUT_DIR			:=	out
@@ -21,8 +21,3 @@ build:
 clean:
 	$(MAKE) -C $(SOURCE_DIR) clean
 	rm -rf $(OUT_DIR)
-	
-mrproper:
-	$(MAKE) -C $(SOURCE_DIR) mrproper
-	rm -rf $(OUT_DIR)
-	
