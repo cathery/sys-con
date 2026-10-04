@@ -112,7 +112,7 @@ namespace syscon::usb
                     memset(interfaces, 0, sizeof(interfaces));
                     if (R_SUCCEEDED(usbHsQueryAcquiredInterfaces(interfaces, sizeof(interfaces), &total_entries)))
                     {
-                        for (auto it = controllers::Get().begin(); it != controllers::Get().end(); ++it)
+                        for (auto it = controllers::Get().begin(); it != controllers::Get().end(); )
                         {
                             bool found_flag = false;
 
@@ -133,8 +133,12 @@ namespace syscon::usb
                             if (!found_flag)
                             {
                                 WriteToLog("Erasing controller");
-                                controllers::Get().erase(it--);
+                                it = controllers::Get().erase(it);
                                 WriteToLog("Controller erased!");
+                            }
+                            else
+                            {
+                                ++it;
                             }
                         }
                     }
